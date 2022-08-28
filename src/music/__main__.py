@@ -20,6 +20,7 @@ from .render import (
     summary_stats_for_file,
 )
 from .render import main as _render
+from .upload import upload as _upload
 from .util import find_project
 
 
@@ -158,3 +159,12 @@ def stat(files: list[Path], verbose: int) -> None:
             print(fil)
         for k, v in summary_stats_for_file(fil, verbose).items():
             print(f"{k:<16}: {v:<32}")
+
+
+@cli.command()
+@click.argument("client_id", envvar="CLIENT_ID")
+@click.argument("client_secret", envvar="CLIENT_SECRET")
+@click.argument("files", nargs=-1, required=True, type=Path)
+def upload(client_id: str, client_secret: str, files: list[Path]) -> None:
+    """Upload rendered output to SoundCloud."""
+    _upload(client_id, client_secret, files)

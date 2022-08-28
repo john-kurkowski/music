@@ -14,6 +14,7 @@ dependencies = [
     "click",
     "openai",
     "python-reapy",
+    "requests",
     "rich",
 ]
 
@@ -26,6 +27,7 @@ testing = [
     "pytest-cov",
     "ruff",
     "syrupy",
+    "types-requests",
 ]
 
 [project.scripts]
