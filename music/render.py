@@ -33,6 +33,12 @@ def main() -> None:
     project = reapy.Project()
 
     threshold = find_master_limiter_threshold(project)
+    threshold_previous_value = threshold.normalized
+    threshold_louder_value = (
+        (threshold_previous_value * LIMITER_RANGE) - 2.0
+    ) / LIMITER_RANGE
+
+    vocals = [track for track in project.tracks if track.name == "Vocals"][0]
 
     # Can't seem to programmatically set "Silently increment filenames to avoid
     # overwriting." That would be nice so the user doesn't have to (wait to)
@@ -43,19 +49,14 @@ def main() -> None:
     project.set_info_string("RENDER_PATTERN", "$project")
     project.perform_action(RENDER_CMD_ID)
 
-    # TODO: mute vocals
-
-    threshold_previous_value = threshold.normalized
-    threshold_louder_value = (
-        (threshold_previous_value * LIMITER_RANGE) - 2.0
-    ) / LIMITER_RANGE
-
     try:
         set_param_value(threshold, threshold_louder_value)
+        vocals.mute()
         project.set_info_string("RENDER_PATTERN", "$project (Instrumental)")
         project.perform_action(RENDER_CMD_ID)
     finally:
         set_param_value(threshold, threshold_previous_value)
+        vocals.unmute()
         project.set_info_string("RENDER_PATTERN", "$project")
 
 
