@@ -40,7 +40,6 @@ music render
 Install for local development:
 
 ```sh
-pip install --editable .
 pip install --editable '.[testing]'
 pre-commit install
 ```
