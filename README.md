@@ -9,37 +9,31 @@ Miscellaneous tasks for publishing my music.
    ```zsh
    PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install <VERSION>
    ```
-1. Enable Python scripting in Reaper
-   1. Open Reaper
-   1. Open Preferences > Plug-Ins > ReaScript
-   1. Check "Enable Python." The dialog will initially warn that Python is not
-      detected.
-   1. Input "Custom path to Python" to something like
-      `/Users/alice/.pyenv/versions/<VERSION>/Library/Frameworks/Python.framework/Versions/3.10/lib`
-      (depending where you installed Python and which version in the earlier
-      step)
-   1. Input "Force ReaScript to use specific Python" `libpython3.10`. The dialog
-      should now say Python is installed.
-   1. Click OK
-   1. Restart Reaper
 
 ## Install
 
 1.  ```zsh
     pip install .
     ```
+1.  Open Reaper
+1.  Configure Reaper for Python (per
+    [reapy's README](https://github.com/RomeoDespres/reapy/blob/0.10.0/README.md#installation))
+    ```zsh
+    python -c "import reapy; reapy.configure_reaper()"
+    ```
+1. Restart Reaper
 
 ## Usage
 
-### Reaper Tasks
+```zsh
+music --help
+```
 
-1. Open Reaper
-1. Show action list...
-1. Select "ReaScript: Run ReaScript"
-1. Navigate to this project's source code folder, `music/`
-1. Select the desired script to run
+For example:
 
-You may also like the Reaper action "ReaScript: Run _last_ ReaScript."
+```zsh
+music render
+```
 
 ## Contribute
 
