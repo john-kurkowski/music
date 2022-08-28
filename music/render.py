@@ -2,6 +2,8 @@
 
 import reapy
 
+LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
+
 # File: Render project, using the most recent render settings, auto-close render dialog
 RENDER_CMD_ID = 42230
 
@@ -41,14 +43,12 @@ def main() -> None:
     project.set_info_string("RENDER_PATTERN", "$project")
     project.perform_action(RENDER_CMD_ID)
 
-    # TODO: need to mute vocals and set e.g. -7.0db threshold to -9.0db. Then
-    #       unmute vocals and restore threshold. Example thresholds:
-    #
-    #       0.7361111044883728
-    #       0.7083333134651184
+    # TODO: mute vocals
 
     threshold_previous_value = threshold.normalized
-    threshold_louder_value = 0.0  # TODO
+    threshold_louder_value = (
+        (threshold_previous_value * LIMITER_RANGE) - 2.0
+    ) / LIMITER_RANGE
 
     try:
         set_param_value(threshold, threshold_louder_value)
