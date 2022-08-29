@@ -162,9 +162,20 @@ def stat(files: list[Path], verbose: int) -> None:
 
 
 @cli.command()
-@click.argument("client_id", envvar="CLIENT_ID")
-@click.argument("client_secret", envvar="CLIENT_SECRET")
-@click.argument("files", nargs=-1, required=True, type=Path)
-def upload(client_id: str, client_secret: str, files: list[Path]) -> None:
+@click.argument(
+    "files",
+    nargs=-1,
+    required=True,
+    type=click.Path(exists=True, path_type=Path),
+)
+@click.option(
+    "--oauth_token",
+    envvar="SOUNDCLOUD_OAUTH_TOKEN",
+    help=(
+        "SoundCloud OAuth token. Read from the environment variable"
+        " SOUNDCLOUD_OAUTH_TOKEN."
+    ),
+)
+def upload(files: list[Path], oauth_token: str) -> None:
     """Upload rendered output to SoundCloud."""
-    _upload(client_id, client_secret, files)
+    _upload(oauth_token, files)
