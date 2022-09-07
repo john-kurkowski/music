@@ -30,7 +30,13 @@ def set_param_value(param: reapy.core.FXParam, value: float) -> None:
 
 def main() -> None:
     """Module entrypoint."""
-    project = reapy.Project()
+    try:
+        project = reapy.Project()
+    except AttributeError as aterr:
+        if "module" in str(aterr) and "reascript_api" in str(aterr):
+            raise Exception(
+                "Error while loading Reaper project. Is Reaper running?"
+            ) from aterr
 
     threshold = find_master_limiter_threshold(project)
     threshold_previous_value = threshold.normalized
