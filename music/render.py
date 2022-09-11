@@ -65,6 +65,8 @@ def main() -> None:
         vocals.unmute()
         project.set_info_string("RENDER_PATTERN", "$project")
 
+    project.save()
+
 
 if __name__ == "__main__":
     main()
