@@ -1,11 +1,22 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
+import asyncio
+import subprocess
+
 import reapy
 
 LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
 
 # File: Render project, using the most recent render settings, auto-close render dialog
 RENDER_CMD_ID = 42230
+
+
+async def close_dialog() -> None:
+    """Reaper's API doesn't expose access to dialogs. Instead, poll for a
+    dialog's appearance."""
+    while True:
+        await asyncio.sleep(2)
+        print("current window title:", get_window_title())
 
 
 def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXParam:
@@ -17,6 +28,44 @@ def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXP
 
     thresholds = [param for param in limiter.params if "Threshold" in param.name]
     return thresholds[0]
+
+
+def get_window_title() -> str:
+    """TODO"""
+    cmd = """
+        tell application "System Events"
+            set frontApp to name of first application process whose frontmost is true
+        end tell
+        tell application frontApp
+            if the (count of windows) is not 0 then
+                set window_name to name of front window
+            end if
+        end tell
+        return window_name
+    """
+    cmd = """
+    tell application "System Events"
+        set myList to name of windows of (processes whose name is "Reaper") -- get a list of lists, each sublist contains names
+    end tell
+    return myList
+    """
+    result = subprocess.run(["osascript", "-e", cmd], capture_output=True, check=False)
+    return result.stdout.decode("utf-8")
+
+
+async def render(project: reapy.core.Project) -> None:
+    """Render the project. Work around render warning dialogs. Convert sync
+    Reaper API to async, while polling for dialogs."""
+    loop = asyncio.get_running_loop()
+    executor = None
+    await asyncio.wait(
+        {
+            loop.run_in_executor(executor, project.perform_action, RENDER_CMD_ID),
+            # asyncio.create_task(close_dialog()),
+            asyncio.create_task(close_dialog()),
+        },
+        return_when=asyncio.FIRST_COMPLETED,
+    )
 
 
 def set_param_value(param: reapy.core.FXParam, value: float) -> None:
@@ -46,20 +95,14 @@ def main() -> None:
 
     vocals = [track for track in project.tracks if track.name == "Vocals"][0]
 
-    # Can't seem to programmatically set "Silently increment filenames to avoid
-    # overwriting." That would be nice so the user doesn't have to (wait to)
-    # interact with GUI elements at all.
-    #
-    # reaper_python.RPR_GetSetProjectInfo(PROJECT_ID, "RENDER_ADDTOPROJ", 16, is_set)
-
     project.set_info_string("RENDER_PATTERN", "$project")
-    project.perform_action(RENDER_CMD_ID)
+    asyncio.run(render(project))
 
     try:
         set_param_value(threshold, threshold_louder_value)
         vocals.mute()
         project.set_info_string("RENDER_PATTERN", "$project (Instrumental)")
-        project.perform_action(RENDER_CMD_ID)
+        asyncio.run(render(project))
     finally:
         set_param_value(threshold, threshold_previous_value)
         vocals.unmute()
