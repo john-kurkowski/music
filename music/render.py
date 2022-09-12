@@ -95,6 +95,7 @@ def main(
             out_dir / f"{project_name} (Instrumental).wav",
         )
 
+    # Render causes a project to have unsaved changes, no matter what. Save the user a step.
     project.save()
 
 
