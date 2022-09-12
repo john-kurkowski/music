@@ -1,5 +1,9 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
+import pathlib
+import random
+import shutil
+
 import reapy
 
 LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
@@ -46,24 +50,31 @@ def main() -> None:
 
     vocals = [track for track in project.tracks if track.name == "Vocals"][0]
 
-    # Can't seem to programmatically set "Silently increment filenames to avoid
-    # overwriting." That would be nice so the user doesn't have to (wait to)
-    # interact with GUI elements at all.
-    #
-    # reaper_python.RPR_GetSetProjectInfo(PROJECT_ID, "RENDER_ADDTOPROJ", 16, is_set)
+    project_name = pathlib.Path(project.name).stem
+    # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
+    rand_id = random.randrange(10**5, 10**6)
+    main_name = f"{project_name} {rand_id}.tmp"
+    instrumental_name = f"{project_name} (Instrumental) {rand_id}.tmp"
 
-    project.set_info_string("RENDER_PATTERN", "$project")
+    project.set_info_string("RENDER_PATTERN", main_name)
     project.perform_action(RENDER_CMD_ID)
 
     try:
         set_param_value(threshold, threshold_louder_value)
         vocals.mute()
-        project.set_info_string("RENDER_PATTERN", "$project (Instrumental)")
+        project.set_info_string("RENDER_PATTERN", instrumental_name)
         project.perform_action(RENDER_CMD_ID)
     finally:
         set_param_value(threshold, threshold_previous_value)
         vocals.unmute()
         project.set_info_string("RENDER_PATTERN", "$project")
+
+    out_dir = pathlib.Path(project.path)
+    shutil.move(out_dir / f"{main_name}.wav", out_dir / f"{project_name}.wav")
+    shutil.move(
+        out_dir / f"{instrumental_name}.wav",
+        out_dir / f"{project_name} (Instrumental).wav",
+    )
 
     project.save()
 

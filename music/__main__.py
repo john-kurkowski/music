@@ -15,7 +15,10 @@ def cli() -> None:
 
 @cli.command()
 def render() -> None:
-    """Render vocal, instrumental versions of current Reaper project."""
+    """Render vocal, instrumental versions of the current Reaper project.
+    Overwrites existing versions. Note the Reaper preference "Set media items
+    offline when application is not active" should be unchecked, or media items
+    will be silent in the render."""
     _render()
 
 
