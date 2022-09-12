@@ -1,5 +1,7 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
+import collections
+import enum
 import pathlib
 import random
 import shutil
@@ -10,6 +12,13 @@ LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
 
 # File: Render project, using the most recent render settings, auto-close render dialog
 RENDER_CMD_ID = 42230
+
+
+class SongVersion(enum.Enum):
+    """Different versions of a song to render."""
+
+    MAIN = enum.auto()
+    INSTRUMENTAL = enum.auto()
 
 
 def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXParam:
@@ -32,7 +41,11 @@ def set_param_value(param: reapy.core.FXParam, value: float) -> None:
     )
 
 
-def main() -> None:
+def main(
+    versions: collections.abc.Collection[SongVersion] = frozenset(
+        (SongVersion.MAIN, SongVersion.INSTRUMENTAL)
+    )
+) -> None:
     """Module entrypoint."""
     try:
         project = reapy.Project()
@@ -56,25 +69,31 @@ def main() -> None:
     main_name = f"{project_name} {rand_id}.tmp"
     instrumental_name = f"{project_name} (Instrumental) {rand_id}.tmp"
 
-    project.set_info_string("RENDER_PATTERN", main_name)
-    project.perform_action(RENDER_CMD_ID)
+    if SongVersion.MAIN in versions:
+        project.set_info_string("RENDER_PATTERN", main_name)
+        project.perform_action(RENDER_CMD_ID)
 
     try:
-        set_param_value(threshold, threshold_louder_value)
-        vocals.mute()
-        project.set_info_string("RENDER_PATTERN", instrumental_name)
-        project.perform_action(RENDER_CMD_ID)
+        if SongVersion.INSTRUMENTAL in versions:
+            try:
+                set_param_value(threshold, threshold_louder_value)
+                vocals.mute()
+                project.set_info_string("RENDER_PATTERN", instrumental_name)
+                project.perform_action(RENDER_CMD_ID)
+            finally:
+                set_param_value(threshold, threshold_previous_value)
+                vocals.unmute()
     finally:
-        set_param_value(threshold, threshold_previous_value)
-        vocals.unmute()
         project.set_info_string("RENDER_PATTERN", "$project")
 
     out_dir = pathlib.Path(project.path)
-    shutil.move(out_dir / f"{main_name}.wav", out_dir / f"{project_name}.wav")
-    shutil.move(
-        out_dir / f"{instrumental_name}.wav",
-        out_dir / f"{project_name} (Instrumental).wav",
-    )
+    if SongVersion.MAIN in versions:
+        shutil.move(out_dir / f"{main_name}.wav", out_dir / f"{project_name}.wav")
+    if SongVersion.INSTRUMENTAL in versions:
+        shutil.move(
+            out_dir / f"{instrumental_name}.wav",
+            out_dir / f"{project_name} (Instrumental).wav",
+        )
 
     project.save()
 
