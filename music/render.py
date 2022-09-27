@@ -10,6 +10,8 @@ from typing import Sequence, Union
 
 import reapy
 
+from .util import assert_exhaustiveness
+
 LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
 
 # File: Render project, using the most recent render settings, auto-close render dialog
@@ -50,6 +52,31 @@ def log_summary_stats(fil: pathlib.Path) -> None:
         pass
 
 
+def render_version(project: reapy.core.Project, version: SongVersion) -> None:
+    """Trigger Reaper to render the current project audio. Name the output file
+    according to the given version."""
+    project_name = pathlib.Path(project.name).stem
+    if version is SongVersion.MAIN:
+        out_name = project_name
+    elif version is SongVersion.INSTRUMENTAL:
+        out_name = f"{project_name} (Instrumental)"
+    else:
+        assert_exhaustiveness(version)
+
+    # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
+    rand_id = random.randrange(10**5, 10**6)
+    in_name = f"{out_name} {rand_id}.tmp"
+
+    project.set_info_string("RENDER_PATTERN", in_name)
+    project.perform_action(RENDER_CMD_ID)
+
+    out_dir = pathlib.Path(project.path)
+    out_fil = out_dir / f"{out_name}.wav"
+    shutil.move(out_dir / f"{in_name}.wav", out_fil)
+
+    log_summary_stats(out_fil)
+
+
 def set_param_value(param: reapy.core.FXParam, value: float) -> None:
     """Set a parameter's value. Work around bug with reapy 0.10's setter."""
     parent_fx = param.parent_list.parent_fx
@@ -81,30 +108,15 @@ def main(
 
     vocals = [track for track in project.tracks if track.name == "Vocals"][0]
 
-    out_dir = pathlib.Path(project.path)
-    project_name = pathlib.Path(project.name).stem
-    # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
-    rand_id = random.randrange(10**5, 10**6)
-    main_name = f"{project_name} {rand_id}.tmp"
-    instrumental_name = f"{project_name} (Instrumental) {rand_id}.tmp"
-
     if SongVersion.MAIN in versions:
-        project.set_info_string("RENDER_PATTERN", main_name)
-        project.perform_action(RENDER_CMD_ID)
-        out_fil = out_dir / f"{project_name}.wav"
-        shutil.move(out_dir / f"{main_name}.wav", out_fil)
-        log_summary_stats(out_fil)
+        render_version(project, SongVersion.MAIN)
 
     try:
         if SongVersion.INSTRUMENTAL in versions:
             try:
                 set_param_value(threshold, threshold_louder_value)
                 vocals.mute()
-                project.set_info_string("RENDER_PATTERN", instrumental_name)
-                project.perform_action(RENDER_CMD_ID)
-                out_fil = out_dir / f"{project_name} (Instrumental).wav"
-                shutil.move(out_dir / f"{instrumental_name}.wav", out_fil)
-                log_summary_stats(out_fil)
+                render_version(project, SongVersion.INSTRUMENTAL)
             finally:
                 set_param_value(threshold, threshold_previous_value)
                 vocals.unmute()
