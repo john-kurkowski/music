@@ -5,6 +5,8 @@ import enum
 import pathlib
 import random
 import shutil
+import subprocess
+from typing import Sequence, Union
 
 import reapy
 
@@ -30,6 +32,22 @@ def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXP
 
     thresholds = [param for param in limiter.params if "Threshold" in param.name]
     return thresholds[0]
+
+
+def log_summary_stats(fil: pathlib.Path) -> None:
+    """Log statistics for the given audio file, like LUFS-I and LRA."""
+    cmd: Sequence[Union[str, pathlib.Path]] = [
+        "ffmpeg",
+        "-i",
+        fil,
+        "-filter:a",
+        ",".join(("volumedetect", "ebur128=framelog=verbose")),
+        "-f",
+        "null",
+        "/dev/null",
+    ]
+    with subprocess.Popen(cmd):
+        pass
 
 
 def set_param_value(param: reapy.core.FXParam, value: float) -> None:
@@ -73,7 +91,9 @@ def main(
     if SongVersion.MAIN in versions:
         project.set_info_string("RENDER_PATTERN", main_name)
         project.perform_action(RENDER_CMD_ID)
-        shutil.move(out_dir / f"{main_name}.wav", out_dir / f"{project_name}.wav")
+        out_fil = out_dir / f"{project_name}.wav"
+        shutil.move(out_dir / f"{main_name}.wav", out_fil)
+        log_summary_stats(out_fil)
 
     try:
         if SongVersion.INSTRUMENTAL in versions:
@@ -82,10 +102,9 @@ def main(
                 vocals.mute()
                 project.set_info_string("RENDER_PATTERN", instrumental_name)
                 project.perform_action(RENDER_CMD_ID)
-                shutil.move(
-                    out_dir / f"{instrumental_name}.wav",
-                    out_dir / f"{project_name} (Instrumental).wav",
-                )
+                out_fil = out_dir / f"{project_name} (Instrumental).wav"
+                shutil.move(out_dir / f"{instrumental_name}.wav", out_fil)
+                log_summary_stats(out_fil)
             finally:
                 set_param_value(threshold, threshold_previous_value)
                 vocals.unmute()
