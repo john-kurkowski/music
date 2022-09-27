@@ -14,6 +14,8 @@ from .util import assert_exhaustiveness
 
 LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
 
+VOCAL_LOUDNESS_WORTH = 2.0
+
 # File: Render project, using the most recent render settings, auto-close render dialog
 RENDER_CMD_ID = 42230
 
@@ -103,7 +105,7 @@ def main(
     threshold = find_master_limiter_threshold(project)
     threshold_previous_value = threshold.normalized
     threshold_louder_value = (
-        (threshold_previous_value * LIMITER_RANGE) - 2.0
+        (threshold_previous_value * LIMITER_RANGE) - VOCAL_LOUDNESS_WORTH
     ) / LIMITER_RANGE
 
     vocals = [track for track in project.tracks if track.name == "Vocals"][0]
