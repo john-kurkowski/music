@@ -63,6 +63,7 @@ def main(
 
     vocals = [track for track in project.tracks if track.name == "Vocals"][0]
 
+    out_dir = pathlib.Path(project.path)
     project_name = pathlib.Path(project.name).stem
     # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
     rand_id = random.randrange(10**5, 10**6)
@@ -72,6 +73,7 @@ def main(
     if SongVersion.MAIN in versions:
         project.set_info_string("RENDER_PATTERN", main_name)
         project.perform_action(RENDER_CMD_ID)
+        shutil.move(out_dir / f"{main_name}.wav", out_dir / f"{project_name}.wav")
 
     try:
         if SongVersion.INSTRUMENTAL in versions:
@@ -80,20 +82,15 @@ def main(
                 vocals.mute()
                 project.set_info_string("RENDER_PATTERN", instrumental_name)
                 project.perform_action(RENDER_CMD_ID)
+                shutil.move(
+                    out_dir / f"{instrumental_name}.wav",
+                    out_dir / f"{project_name} (Instrumental).wav",
+                )
             finally:
                 set_param_value(threshold, threshold_previous_value)
                 vocals.unmute()
     finally:
         project.set_info_string("RENDER_PATTERN", "$project")
-
-    out_dir = pathlib.Path(project.path)
-    if SongVersion.MAIN in versions:
-        shutil.move(out_dir / f"{main_name}.wav", out_dir / f"{project_name}.wav")
-    if SongVersion.INSTRUMENTAL in versions:
-        shutil.move(
-            out_dir / f"{instrumental_name}.wav",
-            out_dir / f"{project_name} (Instrumental).wav",
-        )
 
     # Render causes a project to have unsaved changes, no matter what. Save the user a step.
     project.save()
