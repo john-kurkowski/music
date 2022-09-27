@@ -1,12 +1,12 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
-import collections
+from collections.abc import Container
 import enum
 import pathlib
 import random
 import shutil
 import subprocess
-from typing import Sequence, Union
+from typing import Union
 
 import reapy
 
@@ -40,7 +40,7 @@ def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXP
 
 def log_summary_stats(fil: pathlib.Path) -> None:
     """Log statistics for the given audio file, like LUFS-I and LRA."""
-    cmd: Sequence[Union[str, pathlib.Path]] = [
+    cmd: list[Union[str, pathlib.Path]] = [
         "ffmpeg",
         "-i",
         fil,
@@ -89,7 +89,7 @@ def set_param_value(param: reapy.core.FXParam, value: float) -> None:
 
 
 def main(
-    versions: collections.abc.Collection[SongVersion] = frozenset(
+    versions: Container[SongVersion] = frozenset(
         (SongVersion.MAIN, SongVersion.INSTRUMENTAL)
     )
 ) -> None:
