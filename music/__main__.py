@@ -24,7 +24,7 @@ def cli() -> None:
         "Whether to render the main version. Defaults to rendering all versions, unless"
         ' one of the "--include-*" flags is set.'
     ),
-    is_flag=True,
+    type=SongVersion,
 )
 @click.option(
     "--include-instrumental",
@@ -34,7 +34,7 @@ def cli() -> None:
         "Whether to render the instrumental version. Defaults to rendering all"
         ' versions, unless one of the "--include-*" flags is set.'
     ),
-    is_flag=True,
+    type=SongVersion,
 )
 def render(
     include_main: Optional[SongVersion], include_instrumental: Optional[SongVersion]
@@ -43,15 +43,8 @@ def render(
     Overwrites existing versions. Note the Reaper preference "Set media items
     offline when application is not active" should be unchecked, or media items
     will be silent in the render."""
-    if any(opt is not None for opt in (include_main, include_instrumental)):
-        versions = {
-            version
-            for version in (
-                SongVersion.MAIN if include_main else None,
-                SongVersion.INSTRUMENTAL if include_instrumental else None,
-            )
-            if version
-        }
+    versions = {version for version in (include_main, include_instrumental) if version}
+    if versions:
         _render(versions)
     else:
         _render()
