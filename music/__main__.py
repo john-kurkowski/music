@@ -3,8 +3,6 @@
 
 """CLI for this package."""
 
-from typing import Optional
-
 import click
 
 from .render import SongVersion, main as _render
@@ -37,7 +35,7 @@ def cli() -> None:
     type=SongVersion,
 )
 def render(
-    include_main: Optional[SongVersion], include_instrumental: Optional[SongVersion]
+    include_main: SongVersion | None, include_instrumental: SongVersion | None
 ) -> None:
     """Render vocal, instrumental versions of the current Reaper project.
     Overwrites existing versions. Note the Reaper preference "Set media items

@@ -6,7 +6,6 @@ import pathlib
 import random
 import shutil
 import subprocess
-from typing import Union
 
 import reapy
 
@@ -40,7 +39,7 @@ def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXP
 
 def log_summary_stats(fil: pathlib.Path) -> None:
     """Log statistics for the given audio file, like LUFS-I and LRA."""
-    cmd: list[Union[str, pathlib.Path]] = [
+    cmd: list[str | pathlib.Path] = [
         "ffmpeg",
         "-i",
         fil,
