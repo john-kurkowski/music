@@ -69,7 +69,10 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> None:
     in_name = f"{out_name} {rand_id}.tmp"
 
     project.set_info_string("RENDER_PATTERN", in_name)
-    project.perform_action(RENDER_CMD_ID)
+    try:
+        project.perform_action(RENDER_CMD_ID)
+    finally:
+        project.set_info_string("RENDER_PATTERN", "$project")
 
     out_dir = pathlib.Path(project.path)
     out_fil = out_dir / f"{out_name}.wav"
@@ -97,17 +100,14 @@ def main(
     if SongVersion.MAIN in versions:
         render_version(project, SongVersion.MAIN)
 
-    try:
-        if SongVersion.INSTRUMENTAL in versions:
-            try:
-                set_param_value(threshold, threshold_louder_value)
-                vocals.mute()
-                render_version(project, SongVersion.INSTRUMENTAL)
-            finally:
-                set_param_value(threshold, threshold_previous_value)
-                vocals.unmute()
-    finally:
-        project.set_info_string("RENDER_PATTERN", "$project")
+    if SongVersion.INSTRUMENTAL in versions:
+        try:
+            set_param_value(threshold, threshold_louder_value)
+            vocals.mute()
+            render_version(project, SongVersion.INSTRUMENTAL)
+        finally:
+            set_param_value(threshold, threshold_previous_value)
+            vocals.unmute()
 
     # Render causes a project to have unsaved changes, no matter what. Save the user a step.
     project.save()
