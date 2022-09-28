@@ -29,8 +29,9 @@ def cli() -> None:
     default=None,
     flag_value=SongVersion.INSTRUMENTAL,
     help=(
-        "Whether to render the instrumental version. Defaults to rendering all"
-        ' versions, unless one of the "--include-*" flags is set.'
+        "Whether to render the instrumental version. Rendering this version is skipped"
+        " if no vocals exist. Defaults to rendering all versions, unless one of the"
+        ' "--include-*" flags is set.'
     ),
     type=SongVersion,
 )

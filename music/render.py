@@ -7,6 +7,7 @@ import random
 import shutil
 import subprocess
 
+import click
 import reapy
 
 from .util import assert_exhaustiveness, find_project, set_param_value
@@ -95,12 +96,16 @@ def main(
         (threshold_previous_value * LIMITER_RANGE) - VOCAL_LOUDNESS_WORTH
     ) / LIMITER_RANGE
 
-    vocals = [track for track in project.tracks if track.name == "Vocals"][0]
+    vocals = next((track for track in project.tracks if track.name == "Vocals"), None)
+
+    did_something = False
 
     if SongVersion.MAIN in versions:
+        did_something = True
         render_version(project, SongVersion.MAIN)
 
-    if SongVersion.INSTRUMENTAL in versions:
+    if SongVersion.INSTRUMENTAL in versions and vocals:
+        did_something = True
         try:
             set_param_value(threshold, threshold_louder_value)
             vocals.mute()
@@ -108,6 +113,9 @@ def main(
         finally:
             set_param_value(threshold, threshold_previous_value)
             vocals.unmute()
+
+    if not did_something:
+        raise click.UsageError("nothing to render")
 
     # Render causes a project to have unsaved changes, no matter what. Save the user a step.
     project.save()
