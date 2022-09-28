@@ -9,7 +9,7 @@ import subprocess
 
 import reapy
 
-from .util import assert_exhaustiveness
+from .util import assert_exhaustiveness, find_project, set_param_value
 
 LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
 
@@ -78,28 +78,13 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> None:
     log_summary_stats(out_fil)
 
 
-def set_param_value(param: reapy.core.FXParam, value: float) -> None:
-    """Set a parameter's value. Work around bug with reapy 0.10's setter."""
-    parent_fx = param.parent_list.parent_fx
-    parent = parent_fx.parent
-    param.functions["SetParamNormalized"](  # type: ignore[operator]
-        parent.id, parent_fx.index, param.index, value
-    )
-
-
 def main(
     versions: Container[SongVersion] = frozenset(
         (SongVersion.MAIN, SongVersion.INSTRUMENTAL)
     )
 ) -> None:
     """Module entrypoint."""
-    try:
-        project = reapy.Project()
-    except AttributeError as aterr:
-        if "module" in str(aterr) and "reascript_api" in str(aterr):
-            raise Exception(
-                "Error while loading Reaper project. Is Reaper running?"
-            ) from aterr
+    project = find_project()
 
     threshold = find_master_limiter_threshold(project)
     threshold_previous_value = threshold.normalized
