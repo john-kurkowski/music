@@ -34,7 +34,18 @@ def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXP
         raise ValueError("Master limiter not found")
     limiter = limiters[0]
 
-    thresholds = [param for param in limiter.params if "Threshold" in param.name]
+    def safe_param_name(param: reapy.core.FXParam) -> str:
+        """Work around uncaught exception for non-UTF-8 strings in parameter names."""
+        try:
+            return param.name
+        except reapy.errors.DistError as ex:
+            if "UnicodeDecodeError" in str(ex):
+                return ""
+            raise
+
+    thresholds = [
+        param for param in limiter.params if "Threshold" in safe_param_name(param)
+    ]
     return thresholds[0]
 
 
