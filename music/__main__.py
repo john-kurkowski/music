@@ -42,11 +42,10 @@ def render(
     Overwrites existing versions. Note the Reaper preference "Set media items
     offline when application is not active" should be unchecked, or media items
     will be silent in the render."""
-    versions = {version for version in (include_main, include_instrumental) if version}
-    if versions:
-        _render(versions)
-    else:
-        _render()
+    versions = {
+        version for version in (include_main, include_instrumental) if version
+    } or None
+    _render(versions)
 
 
 if __name__ == "__main__":

@@ -93,12 +93,12 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> None:
     log_summary_stats(out_fil)
 
 
-def main(
-    versions: Container[SongVersion] = frozenset(
-        (SongVersion.MAIN, SongVersion.INSTRUMENTAL)
-    )
-) -> None:
+def main(versions: Container[SongVersion] | None = None) -> None:
     """Module entrypoint."""
+
+    if versions is None:
+        versions = set(SongVersion)
+
     project = find_project()
 
     threshold = find_master_limiter_threshold(project)
