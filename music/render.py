@@ -113,6 +113,8 @@ def main(
 
     if SongVersion.MAIN in versions:
         did_something = True
+        if vocals:
+            vocals.unmute()
         render_version(project, SongVersion.MAIN)
 
     if SongVersion.INSTRUMENTAL in versions and vocals:
