@@ -49,8 +49,8 @@ def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXP
     return thresholds[0]
 
 
-def log_summary_stats(fil: pathlib.Path) -> None:
-    """Log statistics for the given audio file, like LUFS-I and LRA."""
+def print_summary_stats(fil: pathlib.Path) -> None:
+    """Print statistics for the given audio file, like LUFS-I and LRA."""
     cmd: list[str | pathlib.Path] = [
         "ffmpeg",
         "-i",
@@ -90,7 +90,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> None:
     out_fil = out_dir / f"{out_name}.wav"
     shutil.move(out_dir / f"{in_name}.wav", out_fil)
 
-    log_summary_stats(out_fil)
+    print_summary_stats(out_fil)
 
 
 def main(versions: Container[SongVersion] | None = None) -> None:

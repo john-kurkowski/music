@@ -3,9 +3,11 @@
 
 """CLI for this package."""
 
+from pathlib import Path
+
 import click
 
-from .render import SongVersion, main as _render
+from .render import SongVersion, print_summary_stats, main as _render
 
 
 @click.group()
@@ -46,6 +48,14 @@ def render(
         version for version in (include_main, include_instrumental) if version
     } or None
     _render(versions)
+
+
+@cli.command()
+@click.argument("files", nargs=-1, required=True, type=Path)
+def stat(files: list[Path]) -> None:
+    """Print statistics for the given audio files, like LUFS-I and LRA."""
+    for fil in files:
+        print_summary_stats(fil)
 
 
 if __name__ == "__main__":
