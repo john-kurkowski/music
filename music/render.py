@@ -61,8 +61,7 @@ def print_summary_stats(fil: pathlib.Path) -> None:
         "null",
         "/dev/null",
     ]
-    with subprocess.Popen(cmd):
-        pass
+    subprocess.check_call(cmd)
 
 
 def render_version(project: reapy.core.Project, version: SongVersion) -> None:
