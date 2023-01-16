@@ -57,6 +57,8 @@ def print_summary_stats(fil: pathlib.Path) -> None:
         fil,
         "-filter:a",
         ",".join(("volumedetect", "ebur128=framelog=verbose")),
+        "-hide_banner",
+        "-nostats",
         "-f",
         "null",
         "/dev/null",
