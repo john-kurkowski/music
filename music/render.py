@@ -1,11 +1,11 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
-from collections.abc import Container
 import enum
 import pathlib
 import random
 import shutil
 import subprocess
+from collections.abc import Container
 
 import click
 import reapy
@@ -66,8 +66,10 @@ def print_summary_stats(fil: pathlib.Path) -> None:
 
 
 def render_version(project: reapy.core.Project, version: SongVersion) -> None:
-    """Trigger Reaper to render the current project audio. Name the output file
-    according to the given version."""
+    """Trigger Reaper to render the current project audio.
+
+    Names the output file according to the given version.
+    """
     project_name = pathlib.Path(project.name).stem
     if version is SongVersion.MAIN:
         out_name = project_name
@@ -95,7 +97,6 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> None:
 
 def main(versions: Container[SongVersion] | None = None) -> None:
     """Module entrypoint."""
-
     if versions is None:
         versions = set(SongVersion)
 

@@ -3,3 +3,11 @@ check_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
+
+[tool.ruff]
+select = ["A", "B", "C", "D", "E", "F", "I", "N", "W"]
+# E501 - line too long; if Black does its job, I'm not worried about the rare long line
+ignore = ["E501"]
+
+[tool.ruff.pydocstyle]
+convention = "pep257"

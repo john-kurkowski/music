@@ -9,10 +9,10 @@ repos:
     hooks:
     -   id: mypy
         language: system
--   repo: https://github.com/PyCQA/pylint
-    rev: v2.13.8  # key required by pre-commit, but ignored in practice, because we use the "system" version of the tool, set in setup.cfg
+-   repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.222  # key required by pre-commit, but ignored in practice, because we use the "system" version of the tool, set in setup.cfg
     hooks:
-    -   id: pylint
+    -   id: ruff
         language: system
 -   repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.8.0

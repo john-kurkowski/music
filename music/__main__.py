@@ -7,7 +7,8 @@ from pathlib import Path
 
 import click
 
-from .render import SongVersion, print_summary_stats, main as _render
+from .render import SongVersion, print_summary_stats
+from .render import main as _render
 
 
 @click.group()
@@ -41,9 +42,13 @@ def render(
     include_main: SongVersion | None, include_instrumental: SongVersion | None
 ) -> None:
     """Render vocal, instrumental versions of the current Reaper project.
+
     Overwrites existing versions. Note the Reaper preference "Set media items
     offline when application is not active" should be unchecked, or media items
-    will be silent in the render."""
+    will be silent in the render.
+
+    Prints statistics for each output file as it is rendered.
+    """
     versions = {
         version for version in (include_main, include_instrumental) if version
     } or None
