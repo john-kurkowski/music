@@ -97,7 +97,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> None:
 
 
 def main(versions: Container[SongVersion] | None = None) -> None:
-    """Module entrypoint."""
+    """Render the given versions of the current Reaper project."""
     if versions is None:
         versions = set(SongVersion)
 
