@@ -14,6 +14,7 @@ select = [
   "F",
   "I",
   "N",
+  "UP",
   "W",
 ]
 # E501 - line too long; if Black does its job, I'm not worried about the rare long line
