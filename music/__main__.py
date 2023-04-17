@@ -7,7 +7,7 @@ from pathlib import Path
 
 import click
 
-from .render import SongVersion, print_summary_stats
+from .render import VOCAL_LOUDNESS_WORTH, SongVersion, print_summary_stats
 from .render import main as _render
 
 
@@ -38,8 +38,21 @@ def cli() -> None:
     ),
     type=SongVersion,
 )
+@click.option(
+    "--vocal-loudness-worth",
+    "-vlw",
+    default=VOCAL_LOUDNESS_WORTH,
+    help=(
+        "How many dBs the vocals in the given track account for, to make up when they"
+        " are not present, when rendering only the instrumental. Defaults to"
+        f" ${VOCAL_LOUDNESS_WORTH}."
+    ),
+    type=float,
+)
 def render(
-    include_main: SongVersion | None, include_instrumental: SongVersion | None
+    include_main: SongVersion | None,
+    include_instrumental: SongVersion | None,
+    vocal_loudness_worth: float,
 ) -> None:
     """Render vocal, instrumental versions of the current Reaper project.
 
@@ -52,7 +65,7 @@ def render(
     versions = {
         version for version in (include_main, include_instrumental) if version
     } or None
-    _render(versions)
+    _render(versions, vocal_loudness_worth)
 
 
 @cli.command()

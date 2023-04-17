@@ -12,8 +12,10 @@ import reapy
 
 from .util import assert_exhaustiveness, find_project, set_param_value
 
+# Experimentally determined dB scale for Reaper's built-in VST: ReaLimit
 LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
 
+# The typical loudness of vocals, in dBs, relative to the instrumental
 VOCAL_LOUDNESS_WORTH = 2.0
 
 # File: Render project, using the most recent render settings, auto-close render dialog
@@ -96,7 +98,10 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> None:
     print_summary_stats(out_fil)
 
 
-def main(versions: Container[SongVersion] | None = None) -> None:
+def main(
+    versions: Container[SongVersion] | None = None,
+    vocal_loudness_worth: float = VOCAL_LOUDNESS_WORTH,
+) -> None:
     """Render the given versions of the current Reaper project."""
     if versions is None:
         versions = set(SongVersion)
@@ -106,7 +111,7 @@ def main(versions: Container[SongVersion] | None = None) -> None:
     threshold = find_master_limiter_threshold(project)
     threshold_previous_value = threshold.normalized
     threshold_louder_value = (
-        (threshold_previous_value * LIMITER_RANGE) - VOCAL_LOUDNESS_WORTH
+        (threshold_previous_value * LIMITER_RANGE) - vocal_loudness_worth
     ) / LIMITER_RANGE
 
     vocals = next((track for track in project.tracks if track.name == "Vocals"), None)
