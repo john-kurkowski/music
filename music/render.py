@@ -1,6 +1,7 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
 import enum
+import os
 import pathlib
 import random
 import shutil
@@ -65,7 +66,43 @@ def print_summary_stats(fil: pathlib.Path) -> None:
         "null",
         "/dev/null",
     ]
-    subprocess.check_call(cmd)
+
+    try:
+        import openai
+
+        openai.api_key = os.environ["OPENAI_API_KEY"]
+    except (IndexError, KeyError):
+        subprocess.check_call(cmd)
+        return
+
+    _print_summary_stats_with_ai(cmd)
+
+
+def _print_summary_stats_with_ai(cmd: list[str | pathlib.Path]) -> None:
+    import openai
+
+    assert openai.api_key
+
+    proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
+    proc_output = proc.stderr
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a CLI. When you print parsed statistics, you tabularize them."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                "Parse the following output for max volume, LUFS-I, and"
+                f" LRA.\n\n{proc_output}"
+            ),
+        },
+    ]
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)  # type: ignore[no-untyped-call]
+    print(response.choices[0].message["content"])
 
 
 def render_version(project: reapy.core.Project, version: SongVersion) -> None:
