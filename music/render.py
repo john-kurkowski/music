@@ -88,9 +88,7 @@ def _print_summary_stats_with_ai(cmd: list[str | pathlib.Path]) -> None:
     messages = [
         {
             "role": "system",
-            "content": (
-                "You are a CLI. When you print parsed statistics, you tabularize them."
-            ),
+            "content": "You are a CLI.",
         },
         {
             "role": "user",
@@ -100,7 +98,7 @@ def _print_summary_stats_with_ai(cmd: list[str | pathlib.Path]) -> None:
             ),
         },
     ]
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)  # type: ignore[no-untyped-call]
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages, temperature=0)  # type: ignore[no-untyped-call]
     print(response.choices[0].message["content"])
 
 
