@@ -70,7 +70,8 @@ def render(
 
 @cli.command()
 @click.argument("files", nargs=-1, required=True, type=Path)
-def stat(files: list[Path]) -> None:
+@click.option("--verbose", "-v", count=True)
+def stat(files: list[Path], verbose: int) -> None:
     """Print statistics for the given audio files, like LUFS-I and LRA.
 
     If the OpenAI library is installed and the API key is set, summarizes
@@ -82,7 +83,7 @@ def stat(files: list[Path]) -> None:
             print()
         if len(files) > 1:
             print(fil)
-        print_summary_stats(fil)
+        print_summary_stats(fil, verbose)
 
 
 if __name__ == "__main__":

@@ -52,7 +52,7 @@ def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXP
     return thresholds[0]
 
 
-def print_summary_stats(fil: pathlib.Path) -> None:
+def print_summary_stats(fil: pathlib.Path, verbose: int = 0) -> None:
     """Print statistics for the given audio file, like LUFS-I and LRA."""
     cmd: list[str | pathlib.Path] = [
         "ffmpeg",
@@ -68,13 +68,13 @@ def print_summary_stats(fil: pathlib.Path) -> None:
     ]
 
     try:
-        _print_summary_stats_with_ai(cmd)
+        _print_summary_stats_with_ai(cmd, verbose)
     except FeatureUnavailableError:
         subprocess.check_call(cmd)
         return
 
 
-def _print_summary_stats_with_ai(cmd: list[str | pathlib.Path]) -> None:
+def _print_summary_stats_with_ai(cmd: list[str | pathlib.Path], verbose: int) -> None:
     try:
         import openai
 
@@ -100,6 +100,9 @@ def _print_summary_stats_with_ai(cmd: list[str | pathlib.Path]) -> None:
     ]
     response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages, temperature=0)  # type: ignore[no-untyped-call]
     print(response.choices[0].message["content"])
+
+    if verbose:
+        print(response.usage)
 
 
 def render_version(project: reapy.core.Project, version: SongVersion) -> pathlib.Path:
@@ -134,6 +137,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> pathlib
 def main(
     versions: Collection[SongVersion] | None = None,
     vocal_loudness_worth: float = VOCAL_LOUDNESS_WORTH,
+    verbose: int = 0,
 ) -> None:
     """Render the given versions of the current Reaper project."""
     if versions is None:
@@ -158,7 +162,7 @@ def main(
         out_fil = render_version(project, SongVersion.MAIN)
         if len(versions) > 1:
             print(out_fil)
-        print_summary_stats(out_fil)
+        print_summary_stats(out_fil, verbose)
 
     if SongVersion.INSTRUMENTAL in versions and vocals:
         did_something = True
@@ -169,7 +173,7 @@ def main(
             if len(versions) > 1:
                 print()
                 print(out_fil)
-            print_summary_stats(out_fil)
+            print_summary_stats(out_fil, verbose)
         finally:
             set_param_value(threshold, threshold_previous_value)
             vocals.unmute()
