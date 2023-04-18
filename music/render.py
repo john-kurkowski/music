@@ -68,20 +68,19 @@ def print_summary_stats(fil: pathlib.Path) -> None:
     ]
 
     try:
-        import openai
-
-        openai.api_key = os.environ["OPENAI_API_KEY"]
-    except (IndexError, KeyError):
+        _print_summary_stats_with_ai(cmd)
+    except FeatureUnavailableError:
         subprocess.check_call(cmd)
         return
 
-    _print_summary_stats_with_ai(cmd)
-
 
 def _print_summary_stats_with_ai(cmd: list[str | pathlib.Path]) -> None:
-    import openai
+    try:
+        import openai
 
-    assert openai.api_key
+        openai.api_key = os.environ["OPENAI_API_KEY"]
+    except (ImportError, KeyError):
+        raise FeatureUnavailableError() from None
 
     proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
     proc_output = proc.stderr
@@ -176,6 +175,10 @@ def main(
 
     # Render causes a project to have unsaved changes, no matter what. Save the user a step.
     project.save()
+
+
+class FeatureUnavailableError(RuntimeError):
+    """Raised when a feature is unavailable, e.g. due to missing dependencies."""
 
 
 if __name__ == "__main__":
