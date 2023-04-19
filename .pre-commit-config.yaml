@@ -8,6 +8,7 @@ repos:
     rev: v1.2.0  # key required by pre-commit, but ignored in practice, because we use the "system" version of the tool, set in setup.cfg
     hooks:
     -   id: mypy
+        args: []
         language: system
 -   repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.0.261  # key required by pre-commit, but ignored in practice, because we use the "system" version of the tool, set in setup.cfg
