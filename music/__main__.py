@@ -77,7 +77,11 @@ def stat(files: list[Path]) -> None:
     statistics from the underlying analysis tool. Otherwise, prints the
     underlying analysis tool's output, which is verbose and unstructured.
     """
-    for fil in files:
+    for i, fil in enumerate(files):
+        if i > 0:
+            print()
+        if len(files) > 1:
+            print(fil)
         print_summary_stats(fil)
 
 

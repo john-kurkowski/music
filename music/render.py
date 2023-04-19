@@ -6,7 +6,7 @@ import pathlib
 import random
 import shutil
 import subprocess
-from collections.abc import Container
+from collections.abc import Collection
 
 import click
 import reapy
@@ -104,8 +104,8 @@ def _print_summary_stats_with_ai(cmd: list[str | pathlib.Path]) -> None:
     print(response.choices[0].message["content"])
 
 
-def render_version(project: reapy.core.Project, version: SongVersion) -> None:
-    """Trigger Reaper to render the current project audio.
+def render_version(project: reapy.core.Project, version: SongVersion) -> pathlib.Path:
+    """Trigger Reaper to render the current project audio. Returns the output file.
 
     Names the output file according to the given version.
     """
@@ -130,12 +130,11 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> None:
     out_dir = pathlib.Path(project.path)
     out_fil = out_dir / f"{out_name}.wav"
     shutil.move(out_dir / f"{in_name}.wav", out_fil)
-
-    print_summary_stats(out_fil)
+    return out_fil
 
 
 def main(
-    versions: Container[SongVersion] | None = None,
+    versions: Collection[SongVersion] | None = None,
     vocal_loudness_worth: float = VOCAL_LOUDNESS_WORTH,
 ) -> None:
     """Render the given versions of the current Reaper project."""
@@ -158,14 +157,21 @@ def main(
         did_something = True
         if vocals:
             vocals.unmute()
-        render_version(project, SongVersion.MAIN)
+        out_fil = render_version(project, SongVersion.MAIN)
+        if len(versions) > 1:
+            print(out_fil)
+        print_summary_stats(out_fil)
 
     if SongVersion.INSTRUMENTAL in versions and vocals:
         did_something = True
         try:
             set_param_value(threshold, threshold_louder_value)
             vocals.mute()
-            render_version(project, SongVersion.INSTRUMENTAL)
+            out_fil = render_version(project, SongVersion.INSTRUMENTAL)
+            if len(versions) > 1:
+                print()
+                print(out_fil)
+            print_summary_stats(out_fil)
         finally:
             set_param_value(threshold, threshold_previous_value)
             vocals.unmute()
