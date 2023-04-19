@@ -3,6 +3,10 @@ check_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
+exclude = [
+    "__codegen__",
+]
+follow_imports = "silent"
 
 [tool.ruff]
 extend-exclude = [
