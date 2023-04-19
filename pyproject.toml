@@ -5,6 +5,9 @@ disallow_untyped_calls = true
 disallow_untyped_defs = true
 
 [tool.ruff]
+extend-exclude = [
+    "__codegen__",
+]
 select = [
   "A",
   "B",
