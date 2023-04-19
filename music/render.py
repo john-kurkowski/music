@@ -1,6 +1,7 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
 import enum
+import os
 import pathlib
 import random
 import shutil
@@ -65,7 +66,42 @@ def print_summary_stats(fil: pathlib.Path) -> None:
         "null",
         "/dev/null",
     ]
-    subprocess.check_call(cmd)
+
+    try:
+        _print_summary_stats_with_ai(cmd)
+    except FeatureUnavailableError:
+        subprocess.check_call(cmd)
+        return
+
+
+def _print_summary_stats_with_ai(cmd: list[str | pathlib.Path]) -> None:
+    try:
+        import openai
+
+        openai.api_key = os.environ["OPENAI_API_KEY"]
+    except (ImportError, KeyError):
+        raise FeatureUnavailableError() from None
+
+    proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
+    proc_output = proc.stderr
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a CLI. When you print parsed statistics, you tabularize them."
+            ),
+        },
+        {
+            "role": "user",
+            "content": (
+                "Parse the following output for max volume, LUFS-I, and"
+                f" LRA.\n\n{proc_output}"
+            ),
+        },
+    ]
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)  # type: ignore[no-untyped-call]
+    print(response.choices[0].message["content"])
 
 
 def render_version(project: reapy.core.Project, version: SongVersion) -> None:
@@ -139,6 +175,10 @@ def main(
 
     # Render causes a project to have unsaved changes, no matter what. Save the user a step.
     project.save()
+
+
+class FeatureUnavailableError(RuntimeError):
+    """Raised when a feature is unavailable, e.g. due to missing dependencies."""
 
 
 if __name__ == "__main__":

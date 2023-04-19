@@ -71,7 +71,12 @@ def render(
 @cli.command()
 @click.argument("files", nargs=-1, required=True, type=Path)
 def stat(files: list[Path]) -> None:
-    """Print statistics for the given audio files, like LUFS-I and LRA."""
+    """Print statistics for the given audio files, like LUFS-I and LRA.
+
+    If the OpenAI library is installed and the API key is set, summarizes
+    statistics from the underlying analysis tool. Otherwise, prints the
+    underlying analysis tool's output, which is verbose and unstructured.
+    """
     for fil in files:
         print_summary_stats(fil)
 
