@@ -1,7 +1,6 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
 import enum
-import os
 import pathlib
 import random
 import shutil
@@ -11,6 +10,7 @@ from collections.abc import Collection
 import click
 import reapy
 
+from .__codegen__.stats import parse_summary_stats
 from .util import assert_exhaustiveness, find_project, set_param_value
 
 # Experimentally determined dB scale for Reaper's built-in VST: ReaLimit
@@ -54,7 +54,17 @@ def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXP
 
 def print_summary_stats(fil: pathlib.Path, verbose: int = 0) -> None:
     """Print statistics for the given audio file, like LUFS-I and LRA."""
-    cmd: list[str | pathlib.Path] = [
+    cmd = _cmd_for_stats(fil)
+    proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
+    proc_output = proc.stderr
+
+    stats = parse_summary_stats(proc_output)
+    for k, v in stats.items():
+        print(f"{k:<16}: {v:<32}")
+
+
+def _cmd_for_stats(fil: pathlib.Path) -> list[str | pathlib.Path]:
+    return [
         "ffmpeg",
         "-i",
         fil,
@@ -66,43 +76,6 @@ def print_summary_stats(fil: pathlib.Path, verbose: int = 0) -> None:
         "null",
         "/dev/null",
     ]
-
-    try:
-        _print_summary_stats_with_ai(cmd, verbose)
-    except FeatureUnavailableError:
-        subprocess.check_call(cmd)
-        return
-
-
-def _print_summary_stats_with_ai(cmd: list[str | pathlib.Path], verbose: int) -> None:
-    try:
-        import openai
-
-        openai.api_key = os.environ["OPENAI_API_KEY"]
-    except (ImportError, KeyError):
-        raise FeatureUnavailableError() from None
-
-    proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
-    proc_output = proc.stderr
-
-    messages = [
-        {
-            "role": "system",
-            "content": "You are a CLI.",
-        },
-        {
-            "role": "user",
-            "content": (
-                "Parse the following output for max volume, LUFS-I, and"
-                f" LRA.\n\n{proc_output}"
-            ),
-        },
-    ]
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages, temperature=0)  # type: ignore[no-untyped-call]
-    print(response.choices[0].message["content"])
-
-    if verbose:
-        print(response.usage)
 
 
 def render_version(project: reapy.core.Project, version: SongVersion) -> pathlib.Path:

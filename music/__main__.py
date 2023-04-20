@@ -7,6 +7,7 @@ from pathlib import Path
 
 import click
 
+from .codegen import main as _codegen
 from .render import VOCAL_LOUDNESS_WORTH, SongVersion, print_summary_stats
 from .render import main as _render
 
@@ -14,6 +15,21 @@ from .render import main as _render
 @click.group()
 def cli() -> None:
     """Miscellaneous tasks for publishing my music."""
+
+
+@cli.command()
+@click.argument(
+    "example_audio_file",
+    nargs=1,
+    required=True,
+    type=Path,
+)
+def codegen(example_audio_file: Path) -> None:
+    """Generate code for this package.
+
+    Requires an EXAMPLE_AUDIO_FILE from which to generate a parser.
+    """
+    _codegen(example_audio_file)
 
 
 @cli.command()
