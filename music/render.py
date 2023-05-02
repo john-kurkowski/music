@@ -133,8 +133,7 @@ def main(
         if vocals:
             vocals.unmute()
         out_fil = render_version(project, SongVersion.MAIN)
-        if len(versions) > 1:
-            print(out_fil)
+        print(out_fil)
         print_summary_stats(out_fil, verbose)
 
     if SongVersion.INSTRUMENTAL in versions and vocals:
@@ -145,7 +144,7 @@ def main(
             out_fil = render_version(project, SongVersion.INSTRUMENTAL)
             if len(versions) > 1:
                 print()
-                print(out_fil)
+            print(out_fil)
             print_summary_stats(out_fil, verbose)
         finally:
             set_param_value(threshold, threshold_previous_value)
