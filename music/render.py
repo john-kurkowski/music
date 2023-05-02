@@ -28,6 +28,7 @@ class SongVersion(enum.Enum):
 
     MAIN = enum.auto()
     INSTRUMENTAL = enum.auto()
+    ACAPPELLA = enum.auto()
 
 
 def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXParam:
@@ -88,6 +89,8 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> pathlib
         out_name = project_name
     elif version is SongVersion.INSTRUMENTAL:
         out_name = f"{project_name} (Instrumental)"
+    elif version is SongVersion.ACAPPELLA:
+        out_name = f"{project_name} (A Cappella)"
     else:
         assert_exhaustiveness(version)
 
@@ -114,7 +117,7 @@ def main(
 ) -> None:
     """Render the given versions of the current Reaper project."""
     if versions is None:
-        versions = set(SongVersion)
+        versions = {SongVersion.MAIN, SongVersion.INSTRUMENTAL}
 
     project = find_project()
 
@@ -131,6 +134,7 @@ def main(
     if SongVersion.MAIN in versions:
         did_something = True
         if vocals:
+            vocals.unsolo()
             vocals.unmute()
         out_fil = render_version(project, SongVersion.MAIN)
         print(out_fil)
@@ -138,6 +142,7 @@ def main(
 
     if SongVersion.INSTRUMENTAL in versions and vocals:
         did_something = True
+
         try:
             set_param_value(threshold, threshold_louder_value)
             vocals.mute()
@@ -149,6 +154,21 @@ def main(
         finally:
             set_param_value(threshold, threshold_previous_value)
             vocals.unmute()
+
+    if SongVersion.ACAPPELLA in versions and vocals:
+        did_something = True
+
+        try:
+            set_param_value(threshold, threshold_louder_value)
+            vocals.solo()
+            out_fil = render_version(project, SongVersion.ACAPPELLA)
+            if len(versions) > 1:
+                print()
+            print(out_fil)
+            print_summary_stats(out_fil, verbose)
+        finally:
+            set_param_value(threshold, threshold_previous_value)
+            vocals.unsolo()
 
     if not did_something:
         raise click.UsageError("nothing to render")
