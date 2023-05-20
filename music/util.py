@@ -1,5 +1,6 @@
 """Misc. utilities."""
 
+from collections.abc import Iterator
 from typing import NoReturn
 
 import reapy
@@ -29,3 +30,11 @@ def set_param_value(param: reapy.core.FXParam, value: float) -> None:
     param.functions["SetParamNormalized"](  # type: ignore[operator]
         parent.id, parent_fx.index, param.index, value
     )
+
+
+def track_and_parents(track: reapy.core.Track) -> Iterator[reapy.core.Track]:
+    """List a track and all of its parent tracks."""
+    next_track: reapy.Track | None = track
+    while next_track:
+        yield next_track
+        next_track = next_track.parent_track

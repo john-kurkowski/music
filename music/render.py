@@ -11,7 +11,12 @@ import click
 import reapy
 
 from .__codegen__.stats import parse_summary_stats
-from .util import assert_exhaustiveness, find_project, set_param_value
+from .util import (
+    assert_exhaustiveness,
+    find_project,
+    set_param_value,
+    track_and_parents,
+)
 
 # Experimentally determined dB scale for Reaper's built-in VST: ReaLimit
 LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
@@ -29,6 +34,27 @@ class SongVersion(enum.Enum):
     MAIN = enum.auto()
     INSTRUMENTAL = enum.auto()
     ACAPPELLA = enum.auto()
+
+
+def find_acappella_tracks_to_mute(
+    project: reapy.core.Project,
+) -> list[reapy.core.Track]:
+    """Find tracks to mute when rendering the a cappella version of the song.
+
+    reapy.core.Track.solo() doesn't work as expected, so we have to mute
+    multiple tracks by hand. Skip tracks that are already muted (wouldn't want
+    to ultimately unmute them). Skip tracks that contain no media items
+    themselves and still might contribute to the vocal, e.g. sends with FX.
+    """
+
+    def is_vocal(track: reapy.Track) -> bool:
+        return any(track.name == "Vocals" for track in track_and_parents(track))
+
+    return [
+        track
+        for track in project.tracks
+        if not track.is_muted and bool(track.items) and not is_vocal(track)
+    ]
 
 
 def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXParam:
@@ -110,7 +136,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> pathlib
     return out_fil
 
 
-def main(
+def main(  # noqa: C901
     versions: Collection[SongVersion] | None = None,
     vocal_loudness_worth: float = VOCAL_LOUDNESS_WORTH,
     verbose: int = 0,
@@ -158,9 +184,11 @@ def main(
     if SongVersion.ACAPPELLA in versions and vocals:
         did_something = True
 
+        tracks_to_mute = find_acappella_tracks_to_mute(project)
         try:
             set_param_value(threshold, threshold_louder_value)
-            vocals.solo()
+            for track in tracks_to_mute:
+                track.mute()
             out_fil = render_version(project, SongVersion.ACAPPELLA)
             if len(versions) > 1:
                 print()
@@ -168,7 +196,8 @@ def main(
             print_summary_stats(out_fil, verbose)
         finally:
             set_param_value(threshold, threshold_previous_value)
-            vocals.unsolo()
+            for track in tracks_to_mute:
+                track.unmute()
 
     if not did_something:
         raise click.UsageError("nothing to render")
