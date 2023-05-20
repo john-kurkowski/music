@@ -136,6 +136,39 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> pathlib
     return out_fil
 
 
+def trim_silence(fil: pathlib.Path) -> None:
+    """Trim leading and trailing silence from the given audio file, in-place.
+
+    H/T https://superuser.com/a/1715017
+    """
+    leading_silence_duration_s = 1.0
+    trailing_silence_duration_s = 3.0
+
+    rand_id = random.randrange(10**5, 10**6)
+    tmp_fil = f"{fil} {rand_id}.tmp.wav"
+
+    cmd: list[str | pathlib.Path] = [
+        "ffmpeg",
+        "-i",
+        fil,
+        "-filter:a",
+        ",".join(
+            (
+                "areverse",
+                "atrim=start=0.2",
+                f"silenceremove=start_periods=1:start_silence={trailing_silence_duration_s}:start_threshold=0.02",
+                "areverse",
+                "atrim=start=0.2",
+                f"silenceremove=start_periods=1:start_silence={leading_silence_duration_s}:start_threshold=0.02",
+            )
+        ),
+        tmp_fil,
+    ]
+    subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
+
+    shutil.move(tmp_fil, fil)
+
+
 def main(  # noqa: C901
     versions: Collection[SongVersion] | None = None,
     vocal_loudness_worth: float = VOCAL_LOUDNESS_WORTH,
@@ -193,6 +226,7 @@ def main(  # noqa: C901
             if len(versions) > 1:
                 print()
             print(out_fil)
+            trim_silence(out_fil)
             print_summary_stats(out_fil, verbose)
         finally:
             set_param_value(threshold, threshold_previous_value)
