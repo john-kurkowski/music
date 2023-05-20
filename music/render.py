@@ -14,8 +14,8 @@ from .__codegen__.stats import parse_summary_stats
 from .util import (
     assert_exhaustiveness,
     find_project,
+    recurse_property,
     set_param_value,
-    track_and_parents,
 )
 
 # Experimentally determined dB scale for Reaper's built-in VST: ReaLimit
@@ -48,7 +48,9 @@ def find_acappella_tracks_to_mute(
     """
 
     def is_vocal(track: reapy.Track) -> bool:
-        return any(track.name == "Vocals" for track in track_and_parents(track))
+        return any(
+            track.name == "Vocals" for track in recurse_property("parent_track", track)
+        )
 
     return [
         track

@@ -1,9 +1,11 @@
 """Misc. utilities."""
 
 from collections.abc import Iterator
-from typing import NoReturn
+from typing import NoReturn, TypeVar
 
 import reapy
+
+T = TypeVar("T")
 
 
 def assert_exhaustiveness(no_return: NoReturn) -> NoReturn:
@@ -23,6 +25,13 @@ def find_project() -> reapy.core.Project:
         raise
 
 
+def recurse_property(prop: str, obj: T | None) -> Iterator[T]:
+    """Recursively yield the given optional, recursive property, starting with the given object."""
+    while obj is not None:
+        yield obj
+        obj = getattr(obj, prop, None)
+
+
 def set_param_value(param: reapy.core.FXParam, value: float) -> None:
     """Set a parameter's value. Work around bug with reapy 0.10's setter."""
     parent_fx = param.parent_list.parent_fx
@@ -30,11 +39,3 @@ def set_param_value(param: reapy.core.FXParam, value: float) -> None:
     param.functions["SetParamNormalized"](  # type: ignore[operator]
         parent.id, parent_fx.index, param.index, value
     )
-
-
-def track_and_parents(track: reapy.core.Track) -> Iterator[reapy.core.Track]:
-    """List a track and all of its parent tracks."""
-    next_track: reapy.Track | None = track
-    while next_track:
-        yield next_track
-        next_track = next_track.parent_track
