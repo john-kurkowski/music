@@ -242,9 +242,5 @@ def main(  # noqa: C901
     project.save()
 
 
-class FeatureUnavailableError(RuntimeError):
-    """Raised when a feature is unavailable, e.g. due to missing dependencies."""
-
-
 if __name__ == "__main__":
     main()
