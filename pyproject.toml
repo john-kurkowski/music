@@ -1,3 +1,8 @@
+[project]
+name = "music"
+license = "MIT"
+version = "1.0.0"
+
 [tool.mypy]
 check_untyped_defs = true
 disallow_incomplete_defs = true

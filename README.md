@@ -2,6 +2,10 @@
 
 Miscellaneous tasks for publishing my music.
 
+The code is idiosyncratic with my music project conventions and therefore
+applicable mainly to me. However, the code may be a useful example for using
+[Reaper](https://reaper.fm)'s Python API.
+
 ## Prerequisites
 
 1. A Python install _with framework_. For example, with
@@ -21,7 +25,7 @@ Miscellaneous tasks for publishing my music.
     ```zsh
     python -c "import reapy; reapy.configure_reaper()"
     ```
-1. Restart Reaper
+1.  Restart Reaper
 
 ## Usage
 
