@@ -1,11 +1,12 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
+import contextlib
 import enum
 import pathlib
 import random
 import shutil
 import subprocess
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
 
 import click
 import reapy
@@ -59,10 +60,11 @@ def _find_acappella_tracks_to_mute(
     ]
 
 
-def _find_master_limiter_threshold(
+@contextlib.contextmanager
+def _adjust_master_limiter_threshold(
     project: reapy.core.Project, vocal_loudness_worth: float
-) -> tuple[reapy.core.FXParam, float, float]:
-    """Find the master track's master limiter's threshold parameter and its value before and after the vocal is added."""
+) -> Iterator[None]:
+    """Find the master track's master limiter's threshold parameter and adjust its value without the vocal, then set it back to its original value."""
     limiters = [fx for fx in project.master_track.fxs[::-1] if "Limit" in fx.name]
     if not limiters:
         raise ValueError("Master limiter not found")
@@ -86,7 +88,19 @@ def _find_master_limiter_threshold(
         (threshold_previous_value * LIMITER_RANGE) - vocal_loudness_worth
     ) / LIMITER_RANGE
 
-    return (threshold, threshold_previous_value, threshold_louder_value)
+    set_param_value(threshold, threshold_louder_value)
+    yield
+    set_param_value(threshold, threshold_previous_value)
+
+
+@contextlib.contextmanager
+def _mute(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
+    """Mute all tracks in the given collection, then unmute them."""
+    for track in tracks:
+        track.mute()
+    yield
+    for track in tracks:
+        track.unmute()
 
 
 def print_summary_stats(fil: pathlib.Path, verbose: int = 0) -> None:
@@ -197,23 +211,14 @@ def _render_instrumental(
     vocal_loudness_worth: float,
     verbose: int,
 ) -> None:
-    (
-        threshold,
-        threshold_previous_value,
-        threshold_louder_value,
-    ) = _find_master_limiter_threshold(project, vocal_loudness_worth)
-
-    try:
-        set_param_value(threshold, threshold_louder_value)
-        vocals.mute()
+    with _adjust_master_limiter_threshold(project, vocal_loudness_worth), _mute(
+        (vocals,)
+    ):
         out_fil = render_version(project, SongVersion.INSTRUMENTAL)
         if len(versions) > 1:
             print()
         print(out_fil)
         print_summary_stats(out_fil, verbose)
-    finally:
-        set_param_value(threshold, threshold_previous_value)
-        vocals.unmute()
 
 
 def _render_a_cappella(
@@ -222,28 +227,17 @@ def _render_a_cappella(
     vocal_loudness_worth: float,
     verbose: int,
 ) -> None:
-    (
-        threshold,
-        threshold_previous_value,
-        threshold_louder_value,
-    ) = _find_master_limiter_threshold(project, vocal_loudness_worth)
-
     tracks_to_mute = _find_acappella_tracks_to_mute(project)
 
-    try:
-        set_param_value(threshold, threshold_louder_value)
-        for track in tracks_to_mute:
-            track.mute()
+    with _adjust_master_limiter_threshold(project, vocal_loudness_worth), _mute(
+        tracks_to_mute
+    ):
         out_fil = render_version(project, SongVersion.ACAPPELLA)
         if len(versions) > 1:
             print()
         print(out_fil)
         trim_silence(out_fil)
         print_summary_stats(out_fil, verbose)
-    finally:
-        set_param_value(threshold, threshold_previous_value)
-        for track in tracks_to_mute:
-            track.unmute()
 
 
 def main(
