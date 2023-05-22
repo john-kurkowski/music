@@ -36,7 +36,7 @@ class SongVersion(enum.Enum):
     ACAPPELLA = enum.auto()
 
 
-def find_acappella_tracks_to_mute(
+def _find_acappella_tracks_to_mute(
     project: reapy.core.Project,
 ) -> list[reapy.core.Track]:
     """Find tracks to mute when rendering the a cappella version of the song.
@@ -59,8 +59,10 @@ def find_acappella_tracks_to_mute(
     ]
 
 
-def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXParam:
-    """Find the master track's master limiter's threshold parameter."""
+def _find_master_limiter_threshold(
+    project: reapy.core.Project, vocal_loudness_worth: float
+) -> tuple[reapy.core.FXParam, float, float]:
+    """Find the master track's master limiter's threshold parameter and its value before and after the vocal is added."""
     limiters = [fx for fx in project.master_track.fxs[::-1] if "Limit" in fx.name]
     if not limiters:
         raise ValueError("Master limiter not found")
@@ -78,7 +80,13 @@ def find_master_limiter_threshold(project: reapy.core.Project) -> reapy.core.FXP
     thresholds = [
         param for param in limiter.params if "Threshold" in safe_param_name(param)
     ]
-    return thresholds[0]
+    threshold = thresholds[0]
+    threshold_previous_value = threshold.normalized
+    threshold_louder_value = (
+        (threshold_previous_value * LIMITER_RANGE) - vocal_loudness_worth
+    ) / LIMITER_RANGE
+
+    return (threshold, threshold_previous_value, threshold_louder_value)
 
 
 def print_summary_stats(fil: pathlib.Path, verbose: int = 0) -> None:
@@ -171,7 +179,74 @@ def trim_silence(fil: pathlib.Path) -> None:
     shutil.move(tmp_fil, fil)
 
 
-def main(  # noqa: C901
+def _render_main(
+    project: reapy.core.Project, vocals: reapy.core.Track | None, verbose: int
+) -> None:
+    if vocals:
+        vocals.unsolo()
+        vocals.unmute()
+    out_fil = render_version(project, SongVersion.MAIN)
+    print(out_fil)
+    print_summary_stats(out_fil, verbose)
+
+
+def _render_instrumental(
+    versions: Collection[SongVersion],
+    project: reapy.core.Project,
+    vocals: reapy.core.Track,
+    vocal_loudness_worth: float,
+    verbose: int,
+) -> None:
+    (
+        threshold,
+        threshold_previous_value,
+        threshold_louder_value,
+    ) = _find_master_limiter_threshold(project, vocal_loudness_worth)
+
+    try:
+        set_param_value(threshold, threshold_louder_value)
+        vocals.mute()
+        out_fil = render_version(project, SongVersion.INSTRUMENTAL)
+        if len(versions) > 1:
+            print()
+        print(out_fil)
+        print_summary_stats(out_fil, verbose)
+    finally:
+        set_param_value(threshold, threshold_previous_value)
+        vocals.unmute()
+
+
+def _render_a_cappella(
+    versions: Collection[SongVersion],
+    project: reapy.core.Project,
+    vocal_loudness_worth: float,
+    verbose: int,
+) -> None:
+    (
+        threshold,
+        threshold_previous_value,
+        threshold_louder_value,
+    ) = _find_master_limiter_threshold(project, vocal_loudness_worth)
+
+    tracks_to_mute = _find_acappella_tracks_to_mute(project)
+
+    try:
+        set_param_value(threshold, threshold_louder_value)
+        for track in tracks_to_mute:
+            track.mute()
+        out_fil = render_version(project, SongVersion.ACAPPELLA)
+        if len(versions) > 1:
+            print()
+        print(out_fil)
+        trim_silence(out_fil)
+        print_summary_stats(out_fil, verbose)
+    finally:
+        set_param_value(threshold, threshold_previous_value)
+        for track in tracks_to_mute:
+            track.unmute()
+
+
+def main(
     versions: Collection[SongVersion] | None = None,
     vocal_loudness_worth: float = VOCAL_LOUDNESS_WORTH,
     verbose: int = 0,
@@ -182,58 +257,21 @@ def main(  # noqa: C901
 
     project = find_project()
 
-    threshold = find_master_limiter_threshold(project)
-    threshold_previous_value = threshold.normalized
-    threshold_louder_value = (
-        (threshold_previous_value * LIMITER_RANGE) - vocal_loudness_worth
-    ) / LIMITER_RANGE
-
     vocals = next((track for track in project.tracks if track.name == "Vocals"), None)
 
     did_something = False
 
     if SongVersion.MAIN in versions:
         did_something = True
-        if vocals:
-            vocals.unsolo()
-            vocals.unmute()
-        out_fil = render_version(project, SongVersion.MAIN)
-        print(out_fil)
-        print_summary_stats(out_fil, verbose)
+        _render_main(project, vocals, verbose)
 
     if SongVersion.INSTRUMENTAL in versions and vocals:
         did_something = True
-
-        try:
-            set_param_value(threshold, threshold_louder_value)
-            vocals.mute()
-            out_fil = render_version(project, SongVersion.INSTRUMENTAL)
-            if len(versions) > 1:
-                print()
-            print(out_fil)
-            print_summary_stats(out_fil, verbose)
-        finally:
-            set_param_value(threshold, threshold_previous_value)
-            vocals.unmute()
+        _render_instrumental(versions, project, vocals, vocal_loudness_worth, verbose)
 
     if SongVersion.ACAPPELLA in versions and vocals:
         did_something = True
-
-        tracks_to_mute = find_acappella_tracks_to_mute(project)
-        try:
-            set_param_value(threshold, threshold_louder_value)
-            for track in tracks_to_mute:
-                track.mute()
-            out_fil = render_version(project, SongVersion.ACAPPELLA)
-            if len(versions) > 1:
-                print()
-            print(out_fil)
-            trim_silence(out_fil)
-            print_summary_stats(out_fil, verbose)
-        finally:
-            set_param_value(threshold, threshold_previous_value)
-            for track in tracks_to_mute:
-                track.unmute()
+        _render_a_cappella(versions, project, vocal_loudness_worth, verbose)
 
     if not did_something:
         raise click.UsageError("nothing to render")
