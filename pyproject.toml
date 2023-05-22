@@ -1,7 +1,9 @@
 [project]
 name = "music"
-license = "MIT"
 version = "1.0.0"
+
+[project.license]
+text = "MIT"
 
 [tool.mypy]
 check_untyped_defs = true
