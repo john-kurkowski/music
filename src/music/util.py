@@ -8,7 +8,7 @@ import reapy
 T = TypeVar("T")
 
 
-def assert_exhaustiveness(no_return: NoReturn) -> NoReturn:
+def assert_exhaustiveness(no_return: NoReturn) -> NoReturn:  # pragma: no cover
     """Provide an assertion at type-check time that this function is never called."""
     raise AssertionError(f"Invalid value: {no_return!r}")
 

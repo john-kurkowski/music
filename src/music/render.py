@@ -141,7 +141,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> pathlib
         out_name = f"{project_name} (Instrumental)"
     elif version is SongVersion.ACAPPELLA:
         out_name = f"{project_name} (A Cappella)"
-    else:
+    else:  # pragma: no cover
         assert_exhaustiveness(version)
 
     # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
@@ -211,8 +211,9 @@ def _render_instrumental(
     vocal_loudness_worth: float,
     verbose: int,
 ) -> None:
-    with _adjust_master_limiter_threshold(project, vocal_loudness_worth), _mute(
-        (vocals,)
+    with (
+        _adjust_master_limiter_threshold(project, vocal_loudness_worth),
+        _mute((vocals,)),
     ):
         out_fil = render_version(project, SongVersion.INSTRUMENTAL)
         if len(versions) > 1:
@@ -229,8 +230,9 @@ def _render_a_cappella(
 ) -> None:
     tracks_to_mute = _find_acappella_tracks_to_mute(project)
 
-    with _adjust_master_limiter_threshold(project, vocal_loudness_worth), _mute(
-        tracks_to_mute
+    with (
+        _adjust_master_limiter_threshold(project, vocal_loudness_worth),
+        _mute(tracks_to_mute),
     ):
         out_fil = render_version(project, SongVersion.ACAPPELLA)
         if len(versions) > 1:
