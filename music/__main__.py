@@ -71,8 +71,8 @@ def codegen(example_audio_file: Path) -> None:
     default=VOCAL_LOUDNESS_WORTH,
     help=(
         "How many dBs the vocals in the given track account for, to make up when they"
-        " are not present, when rendering only the instrumental. Defaults to"
-        f" ${VOCAL_LOUDNESS_WORTH}."
+        " are not present, when rendering only the instrumental or a cappella."
+        f" Defaults to {VOCAL_LOUDNESS_WORTH}."
     ),
     type=float,
 )
@@ -84,11 +84,11 @@ def render(
 ) -> None:
     """Render vocal, instrumental versions of the current Reaper project.
 
-    Overwrites existing versions. Note the Reaper preference "Set media items
-    offline when application is not active" should be unchecked, or media items
-    will be silent in the render.
+    Overwrites existing versions. Prints statistics for each output file as it
+    is rendered.
 
-    Prints statistics for each output file as it is rendered.
+    Note the Reaper preference "Set media items offline when application is not
+    active" should be unchecked, or media items will be silent in the render.
     """
     versions = {
         version
