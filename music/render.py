@@ -272,7 +272,3 @@ def main(
 
     # Render causes a project to have unsaved changes, no matter what. Save the user a step.
     project.save()
-
-
-if __name__ == "__main__":
-    main()

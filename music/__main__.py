@@ -114,7 +114,3 @@ def stat(files: list[Path], verbose: int) -> None:
         if len(files) > 1:
             print(fil)
         print_summary_stats(fil, verbose)
-
-
-if __name__ == "__main__":
-    cli()
