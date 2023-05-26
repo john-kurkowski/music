@@ -24,6 +24,7 @@ testing = [
     "pytest",
     "pytest-cov",
     "ruff",
+    "syrupy",
 ]
 
 [project.scripts]

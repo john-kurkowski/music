@@ -11,7 +11,7 @@ from collections.abc import Collection, Iterator
 import click
 import reapy
 
-from .__codegen__.stats import parse_summary_stats
+from .__codegen__ import stats
 from .util import (
     assert_exhaustiveness,
     find_project,
@@ -109,8 +109,7 @@ def print_summary_stats(fil: pathlib.Path, verbose: int = 0) -> None:
     proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
     proc_output = proc.stderr
 
-    stats = parse_summary_stats(proc_output)
-    for k, v in stats.items():
+    for k, v in stats.parse_summary_stats(proc_output).items():
         print(f"{k:<16}: {v:<32}")
 
 

@@ -1,0 +1,71 @@
+# serializer version: 1
+# name: test_main_main_version
+  '''
+  TMP_PATH_HERE/Song of Myself.wav
+  duration        : 1.0                             
+  size            : 42.0                            
+  
+  '''
+# ---
+# name: test_main_main_version.1
+  _CallList([
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Song of Myself.tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'perform_action',
+      tuple(
+        42230,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'save',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_main_main_version.2
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself.wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+  ])
+# ---
