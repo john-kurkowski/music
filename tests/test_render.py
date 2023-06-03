@@ -157,6 +157,39 @@ def test_main_main_version(
     assert project.method_calls == snapshot(matcher=without_tmp_path(tmp_path))
 
 
+def test_main_default_versions(
+    capsys: pytest.CaptureFixture,
+    parse_summary_stats: mock.Mock,
+    project: mock.Mock,
+    snapshot: syrupy.SnapshotAssertion,
+    subprocess: mock.Mock,
+    tmp_path: Path,
+) -> None:
+    render_patterns = []
+
+    def collect_render_patterns(key: str, value: str) -> None:
+        if key == "RENDER_PATTERN":
+            render_patterns.append(value)
+
+    def render_fake_file(cmd_id: int) -> None:
+        if cmd_id == RENDER_CMD_ID:
+            (project.path / f"{render_patterns[-1]}.wav").touch()
+
+    project.tracks = [Track(name="Vocals"), Track(name="Drums")]
+    project.set_info_string.side_effect = collect_render_patterns
+    project.perform_action.side_effect = render_fake_file
+    parse_summary_stats.return_value = {"duration": 1.0, "size": 42.0}
+
+    main()
+
+    out, err = capsys.readouterr()
+
+    assert out == snapshot(matcher=without_tmp_path(tmp_path))
+    assert not err
+
+    assert project.method_calls == snapshot(matcher=without_tmp_path(tmp_path))
+
+
 def test_main_all_versions(
     capsys: pytest.CaptureFixture,
     parse_summary_stats: mock.Mock,

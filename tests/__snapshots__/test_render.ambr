@@ -191,6 +191,129 @@
     ),
   ])
 # ---
+# name: test_main_default_versions
+  '''
+  TMP_PATH_HERE/Song of Myself.wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
+  duration        : 1.0                             
+  size            : 42.0                            
+  
+  TMP_PATH_HERE/Song of Myself (Instrumental).wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
+  duration        : 1.0                             
+  size            : 42.0                            
+  
+  '''
+# ---
+# name: test_main_default_versions.1
+  _CallList([
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Song of Myself.tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'perform_action',
+      tuple(
+        42230,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Song of Myself (Instrumental).tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'perform_action',
+      tuple(
+        42230,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'save',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_main_default_versions.2
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself.wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself (Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+  ])
+# ---
 # name: test_main_main_version
   '''
   TMP_PATH_HERE/Song of Myself.wav
