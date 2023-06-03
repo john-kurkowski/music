@@ -385,3 +385,7 @@
     ),
   ])
 # ---
+# name: test_main_noop
+  _CallList([
+  ])
+# ---

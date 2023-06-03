@@ -28,7 +28,12 @@ def parse_summary_stats() -> Iterator[mock.Mock]:
 
 
 @pytest.fixture
-def project(tmp_path: Path) -> Iterator[mock.Mock]:
+def project(parse_summary_stats: mock.Mock, tmp_path: Path) -> Iterator[mock.Mock]:
+    threshold = mock.Mock()
+    threshold.name = "Threshold"
+    threshold.normalized = -42.0
+    threshold.functions = {"SetParamNormalized": mock.Mock()}
+
     with (
         mock.patch("reapy.Project") as mock_project_class,
         mock.patch(
@@ -36,19 +41,30 @@ def project(tmp_path: Path) -> Iterator[mock.Mock]:
         ) as mock_duration_delta,
     ):
         project = mock_project_class.return_value
+
+        render_patterns = []
+
+        def collect_render_patterns(key: str, value: str) -> None:
+            if key == "RENDER_PATTERN":
+                render_patterns.append(value)
+
+        def render_fake_file(cmd_id: int) -> None:
+            if cmd_id == RENDER_CMD_ID:
+                (project.path / f"{render_patterns[-1]}.wav").touch()
+
         project.name = "Song of Myself"
         project.path = tmp_path
-
-        threshold = mock.Mock()
-        threshold.name = "Threshold"
-        threshold.normalized = -42.0
-        threshold.functions = {"SetParamNormalized": mock.Mock()}
 
         project.master_track.fxs = [
             Track("ReaEQ"),
             Track("ReaXComp"),
             Track("Master Limiter", params=[threshold]),
         ]
+
+        project.tracks = [Track(name="Vocals"), Track(name="Drums")]
+        project.set_info_string.side_effect = collect_render_patterns
+        project.perform_action.side_effect = render_fake_file
+        parse_summary_stats.return_value = {"duration": 1.0, "size": 42.0}
 
         mock_duration_delta.return_value = datetime.timedelta(seconds=10)
 
@@ -120,33 +136,22 @@ def test_render_result_render_speedup(subprocess: mock.Mock, tmp_path: Path) -> 
     assert obj2.render_speedup == math.inf
 
 
-def test_main_noop(project: mock.Mock) -> None:
+def test_main_noop(
+    project: mock.Mock, snapshot: syrupy.SnapshotAssertion, tmp_path: Path
+) -> None:
     with pytest.raises(click.UsageError, match="nothing"):
         main({})
+
+    assert project.method_calls == snapshot(matcher=without_tmp_path(tmp_path))
 
 
 def test_main_main_version(
     capsys: pytest.CaptureFixture,
-    parse_summary_stats: mock.Mock,
     project: mock.Mock,
     snapshot: syrupy.SnapshotAssertion,
     subprocess: mock.Mock,
     tmp_path: Path,
 ) -> None:
-    render_patterns = []
-
-    def collect_render_patterns(key: str, value: str) -> None:
-        if key == "RENDER_PATTERN":
-            render_patterns.append(value)
-
-    def render_fake_file(cmd_id: int) -> None:
-        if cmd_id == RENDER_CMD_ID:
-            (project.path / f"{render_patterns[-1]}.wav").touch()
-
-    project.set_info_string.side_effect = collect_render_patterns
-    project.perform_action.side_effect = render_fake_file
-    parse_summary_stats.return_value = {"duration": 1.0, "size": 42.0}
-
     main({SongVersion.MAIN})
 
     out, err = capsys.readouterr()
@@ -159,27 +164,11 @@ def test_main_main_version(
 
 def test_main_default_versions(
     capsys: pytest.CaptureFixture,
-    parse_summary_stats: mock.Mock,
     project: mock.Mock,
     snapshot: syrupy.SnapshotAssertion,
     subprocess: mock.Mock,
     tmp_path: Path,
 ) -> None:
-    render_patterns = []
-
-    def collect_render_patterns(key: str, value: str) -> None:
-        if key == "RENDER_PATTERN":
-            render_patterns.append(value)
-
-    def render_fake_file(cmd_id: int) -> None:
-        if cmd_id == RENDER_CMD_ID:
-            (project.path / f"{render_patterns[-1]}.wav").touch()
-
-    project.tracks = [Track(name="Vocals"), Track(name="Drums")]
-    project.set_info_string.side_effect = collect_render_patterns
-    project.perform_action.side_effect = render_fake_file
-    parse_summary_stats.return_value = {"duration": 1.0, "size": 42.0}
-
     main()
 
     out, err = capsys.readouterr()
@@ -192,27 +181,11 @@ def test_main_default_versions(
 
 def test_main_all_versions(
     capsys: pytest.CaptureFixture,
-    parse_summary_stats: mock.Mock,
     project: mock.Mock,
     snapshot: syrupy.SnapshotAssertion,
     subprocess: mock.Mock,
     tmp_path: Path,
 ) -> None:
-    render_patterns = []
-
-    def collect_render_patterns(key: str, value: str) -> None:
-        if key == "RENDER_PATTERN":
-            render_patterns.append(value)
-
-    def render_fake_file(cmd_id: int) -> None:
-        if cmd_id == RENDER_CMD_ID:
-            (project.path / f"{render_patterns[-1]}.wav").touch()
-
-    project.tracks = [Track(name="Vocals"), Track(name="Drums")]
-    project.set_info_string.side_effect = collect_render_patterns
-    project.perform_action.side_effect = render_fake_file
-    parse_summary_stats.return_value = {"duration": 1.0, "size": 42.0}
-
     main(list(SongVersion))
 
     out, err = capsys.readouterr()
