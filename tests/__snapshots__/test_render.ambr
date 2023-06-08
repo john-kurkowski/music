@@ -2,14 +2,17 @@
 # name: test_main_all_versions
   '''
   TMP_PATH_HERE/Song of Myself.wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
   
   TMP_PATH_HERE/Song of Myself (Instrumental).wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
   
   TMP_PATH_HERE/Song of Myself (A Cappella).wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
   
@@ -191,6 +194,7 @@
 # name: test_main_main_version
   '''
   TMP_PATH_HERE/Song of Myself.wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
   

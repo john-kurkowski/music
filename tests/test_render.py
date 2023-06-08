@@ -1,5 +1,7 @@
 """Render tests."""
 
+import datetime
+import math
 import re
 from collections.abc import Iterator
 from pathlib import Path
@@ -9,7 +11,7 @@ from unittest import mock
 import click
 import pytest
 import syrupy
-from music.render import RENDER_CMD_ID, SongVersion, main
+from music.render import RENDER_CMD_ID, RenderResult, SongVersion, main
 
 
 def Track(name: str, params: list[mock.Mock] | None = None) -> mock.Mock:  # noqa: N802
@@ -27,7 +29,12 @@ def parse_summary_stats() -> Iterator[mock.Mock]:
 
 @pytest.fixture
 def project(tmp_path: Path) -> Iterator[mock.Mock]:
-    with mock.patch("reapy.Project") as mock_project_class:
+    with (
+        mock.patch("reapy.Project") as mock_project_class,
+        mock.patch(
+            "music.render.RenderResult.duration_delta", new_callable=mock.PropertyMock
+        ) as mock_duration_delta,
+    ):
         project = mock_project_class.return_value
         project.name = "Song of Myself"
         project.path = tmp_path
@@ -42,6 +49,8 @@ def project(tmp_path: Path) -> Iterator[mock.Mock]:
             Track("ReaXComp"),
             Track("Master Limiter", params=[threshold]),
         ]
+
+        mock_duration_delta.return_value = datetime.timedelta(seconds=10)
 
         yield project
 
@@ -92,6 +101,23 @@ def without_tmp_path(tmp_path: Path) -> syrupy.types.PropertyMatcher:
         return data
 
     return matcher
+
+
+@mock.patch("subprocess.run")
+def test_render_result_render_speedup(subprocess: mock.Mock, tmp_path: Path) -> None:
+    proc = mock.Mock()
+    proc.stdout = """
+    [FORMAT]
+    duration=23.209501
+    [/FORMAT]
+    """
+    subprocess.return_value = proc
+
+    obj1 = RenderResult(tmp_path, datetime.timedelta(seconds=4.5))
+    obj2 = RenderResult(tmp_path, datetime.timedelta(seconds=0.1))
+
+    assert obj1.render_speedup == 5.75
+    assert obj2.render_speedup == math.inf
 
 
 def test_main_noop(project: mock.Mock) -> None:

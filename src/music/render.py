@@ -1,12 +1,17 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
 import contextlib
+import datetime
 import enum
+import math
 import pathlib
 import random
+import re
 import shutil
 import subprocess
 from collections.abc import Collection, Iterator
+from functools import cached_property
+from timeit import default_timer as timer
 
 import click
 import reapy
@@ -27,6 +32,39 @@ VOCAL_LOUDNESS_WORTH = 2.0
 
 # File: Render project, using the most recent render settings, auto-close render dialog
 RENDER_CMD_ID = 42230
+
+
+class RenderResult:
+    """Summary statistics of an audio render.
+
+    Rounds times to the nearest second. Microseconds are irrelevant for human DAW operators.
+    """
+
+    def __init__(  # noqa: D107
+        self, fil: pathlib.Path, render_delta: datetime.timedelta
+    ):
+        self.fil = fil
+        self.render_delta = datetime.timedelta(seconds=round(render_delta.seconds))
+
+    @cached_property
+    def duration_delta(self) -> datetime.timedelta:
+        """How long the audio file is."""
+        proc = subprocess.run(
+            ["ffprobe", "-i", self.fil, "-show_entries", "format=duration"],
+            capture_output=True,
+            check=True,
+            text=True,
+        )
+        proc_output = proc.stdout
+        delta_str = re.search(r"duration=(\S+)", proc_output).group(1)  # type: ignore[union-attr]
+        return datetime.timedelta(seconds=round(float(delta_str)))
+
+    @property
+    def render_speedup(self) -> float:
+        """How much faster the render was than the audio file's duration."""
+        return (
+            (self.duration_delta / self.render_delta) if self.render_delta else math.inf
+        )
 
 
 class SongVersion(enum.Enum):
@@ -103,6 +141,16 @@ def _mute(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
         track.unmute()
 
 
+def print_render_stats(out: RenderResult) -> None:
+    """Print statistics for the performance of the render."""
+    print(out.fil)
+
+    print(
+        f"Rendered {out.duration_delta} in"
+        f" {out.render_delta}, a {out.render_speedup:.1f}x speedup"
+    )
+
+
 def print_summary_stats(fil: pathlib.Path, verbose: int = 0) -> None:
     """Print statistics for the given audio file, like LUFS-I and LRA."""
     cmd = _cmd_for_stats(fil)
@@ -128,7 +176,7 @@ def _cmd_for_stats(fil: pathlib.Path) -> list[str | pathlib.Path]:
     ]
 
 
-def render_version(project: reapy.core.Project, version: SongVersion) -> pathlib.Path:
+def render_version(project: reapy.core.Project, version: SongVersion) -> RenderResult:
     """Trigger Reaper to render the current project audio. Returns the output file.
 
     Names the output file according to the given version.
@@ -148,15 +196,18 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> pathlib
     in_name = f"{out_name} {rand_id}.tmp"
 
     project.set_info_string("RENDER_PATTERN", in_name)
+    time_start = timer()
     try:
         project.perform_action(RENDER_CMD_ID)
+        time_end = timer()
     finally:
         project.set_info_string("RENDER_PATTERN", "$project")
 
     out_dir = pathlib.Path(project.path)
     out_fil = out_dir / f"{out_name}.wav"
     shutil.move(out_dir / f"{in_name}.wav", out_fil)
-    return out_fil
+
+    return RenderResult(out_fil, datetime.timedelta(seconds=time_end - time_start))
 
 
 def trim_silence(fil: pathlib.Path) -> None:
@@ -198,9 +249,9 @@ def _render_main(
     if vocals:
         vocals.unsolo()
         vocals.unmute()
-    out_fil = render_version(project, SongVersion.MAIN)
-    print(out_fil)
-    print_summary_stats(out_fil, verbose)
+    out = render_version(project, SongVersion.MAIN)
+    print_render_stats(out)
+    print_summary_stats(out.fil, verbose)
 
 
 def _render_instrumental(
@@ -214,11 +265,11 @@ def _render_instrumental(
         _adjust_master_limiter_threshold(project, vocal_loudness_worth),
         _mute((vocals,)),
     ):
-        out_fil = render_version(project, SongVersion.INSTRUMENTAL)
+        out = render_version(project, SongVersion.INSTRUMENTAL)
         if len(versions) > 1:
             print()
-        print(out_fil)
-        print_summary_stats(out_fil, verbose)
+        print_render_stats(out)
+        print_summary_stats(out.fil, verbose)
 
 
 def _render_a_cappella(
@@ -233,12 +284,12 @@ def _render_a_cappella(
         _adjust_master_limiter_threshold(project, vocal_loudness_worth),
         _mute(tracks_to_mute),
     ):
-        out_fil = render_version(project, SongVersion.ACAPPELLA)
+        out = render_version(project, SongVersion.ACAPPELLA)
         if len(versions) > 1:
             print()
-        print(out_fil)
-        trim_silence(out_fil)
-        print_summary_stats(out_fil, verbose)
+        print_render_stats(out)
+        trim_silence(out.fil)
+        print_summary_stats(out.fil, verbose)
 
 
 def main(
