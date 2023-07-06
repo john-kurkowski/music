@@ -1,15 +1,18 @@
 # serializer version: 1
 # name: test_main_all_versions
   '''
+  Song of Myself
   TMP_PATH_HERE/Song of Myself.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
+  Song of Myself (Instrumental)
   
   TMP_PATH_HERE/Song of Myself (Instrumental).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
+  Song of Myself (A Cappella)
   
   TMP_PATH_HERE/Song of Myself (A Cappella).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
@@ -193,10 +196,12 @@
 # ---
 # name: test_main_default_versions
   '''
+  Song of Myself
   TMP_PATH_HERE/Song of Myself.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
+  Song of Myself (Instrumental)
   
   TMP_PATH_HERE/Song of Myself (Instrumental).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
@@ -316,6 +321,7 @@
 # ---
 # name: test_main_main_version
   '''
+  Song of Myself
   TMP_PATH_HERE/Song of Myself.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             

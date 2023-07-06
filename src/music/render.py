@@ -74,6 +74,18 @@ class SongVersion(enum.Enum):
     INSTRUMENTAL = enum.auto()
     ACAPPELLA = enum.auto()
 
+    def name_for_project(self, project: reapy.core.Project) -> str:
+        """Name of the project for the given song version."""
+        project_name = pathlib.Path(project.name).stem
+        if self is SongVersion.MAIN:
+            return project_name
+        elif self is SongVersion.INSTRUMENTAL:
+            return f"{project_name} (Instrumental)"
+        elif self is SongVersion.ACAPPELLA:
+            return f"{project_name} (A Cappella)"
+        else:  # pragma: no cover
+            assert_exhaustiveness(self)
+
 
 def _find_acappella_tracks_to_mute(
     project: reapy.core.Project,
@@ -181,15 +193,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
 
     Names the output file according to the given version.
     """
-    project_name = pathlib.Path(project.name).stem
-    if version is SongVersion.MAIN:
-        out_name = project_name
-    elif version is SongVersion.INSTRUMENTAL:
-        out_name = f"{project_name} (Instrumental)"
-    elif version is SongVersion.ACAPPELLA:
-        out_name = f"{project_name} (A Cappella)"
-    else:  # pragma: no cover
-        assert_exhaustiveness(version)
+    out_name = version.name_for_project(project)
 
     # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
     rand_id = random.randrange(10**5, 10**6)
@@ -246,6 +250,8 @@ def trim_silence(fil: pathlib.Path) -> None:
 def _render_main(
     project: reapy.core.Project, vocals: reapy.core.Track | None, verbose: int
 ) -> None:
+    print(SongVersion.MAIN.name_for_project(project))
+
     if vocals:
         vocals.unsolo()
         vocals.unmute()
@@ -261,6 +267,8 @@ def _render_instrumental(
     vocal_loudness_worth: float,
     verbose: int,
 ) -> None:
+    print(SongVersion.INSTRUMENTAL.name_for_project(project))
+
     with (
         _adjust_master_limiter_threshold(project, vocal_loudness_worth),
         _mute((vocals,)),
@@ -278,6 +286,8 @@ def _render_a_cappella(
     vocal_loudness_worth: float,
     verbose: int,
 ) -> None:
+    print(SongVersion.ACAPPELLA.name_for_project(project))
+
     tracks_to_mute = _find_acappella_tracks_to_mute(project)
 
     with (
