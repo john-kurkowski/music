@@ -309,7 +309,7 @@ def main(
 ) -> None:
     """Render the given versions of the current Reaper project."""
     if versions is None:
-        versions = {SongVersion.MAIN, SongVersion.INSTRUMENTAL}
+        versions = set(SongVersion)
 
     project = find_project()
 

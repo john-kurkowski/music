@@ -38,8 +38,8 @@ def codegen(example_audio_file: Path) -> None:
     default=None,
     flag_value=SongVersion.MAIN,
     help=(
-        "Whether to render the main version. Defaults to rendering main and"
-        ' instrumental versions, unless one of the "--include-*" flags is set.'
+        "Whether to render the main version. Defaults to rendering all versions,"
+        ' unless one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
 )
@@ -49,7 +49,7 @@ def codegen(example_audio_file: Path) -> None:
     flag_value=SongVersion.INSTRUMENTAL,
     help=(
         "Whether to render the instrumental version. Rendering this version is skipped"
-        " if no vocals exist. Defaults to rendering main and instrumental versions,"
+        " if no vocals exist. Defaults to rendering all versions,"
         ' unless one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -60,7 +60,7 @@ def codegen(example_audio_file: Path) -> None:
     flag_value=SongVersion.ACAPPELLA,
     help=(
         "Whether to render the a cappella version. Rendering this version is skipped if"
-        " no vocals exist. Defaults to rendering main and instrumental versions, unless"
+        " no vocals exist. Defaults to rendering all versions, unless"
         ' one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -82,7 +82,7 @@ def render(
     include_acappella: SongVersion | None,
     vocal_loudness_worth: float,
 ) -> None:
-    """Render vocal, instrumental versions of the current Reaper project.
+    """Render vocal, instrumental, etc. versions of the current Reaper project.
 
     Overwrites existing versions. Prints statistics for each output file as it
     is rendered.

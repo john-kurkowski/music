@@ -207,6 +207,12 @@
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
+  Song of Myself (A Cappella)
+  
+  TMP_PATH_HERE/Song of Myself (A Cappella).wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
+  duration        : 1.0                             
+  size            : 42.0                            
   
   '''
 # ---
@@ -243,6 +249,32 @@
       tuple(
         'RENDER_PATTERN',
         'Song of Myself (Instrumental).tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'perform_action',
+      tuple(
+        42230,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Song of Myself (A Cappella).tmp',
       ),
       dict({
       }),
@@ -302,6 +334,44 @@
           'ffmpeg',
           '-i',
           'TMP_PATH_HERE/Song of Myself (Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          '-filter:a',
+          'areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=3.0:start_threshold=0.02,areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=1.0:start_threshold=0.02',
+          'TMP_PATH_HERE/Song of Myself (A Cappella).wav.tmp.wav',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
