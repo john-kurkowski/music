@@ -17,7 +17,7 @@ def cli() -> None:
     """Miscellaneous tasks for publishing my music."""
 
 
-@cli.command()
+@cli.command()  # type: ignore[attr-defined,arg-type]
 @click.argument(
     "example_audio_file",
     nargs=1,
@@ -32,7 +32,7 @@ def codegen(example_audio_file: Path) -> None:
     _codegen(example_audio_file)
 
 
-@cli.command()
+@cli.command()  # type: ignore[attr-defined,arg-type]
 @click.option(
     "--include-main",
     default=None,
@@ -98,7 +98,7 @@ def render(
     _render(versions, vocal_loudness_worth)
 
 
-@cli.command()
+@cli.command()  # type: ignore[attr-defined,arg-type]
 @click.argument("files", nargs=-1, required=True, type=Path)
 @click.option("--verbose", "-v", count=True)
 def stat(files: list[Path], verbose: int) -> None:
