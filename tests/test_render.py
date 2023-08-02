@@ -14,6 +14,7 @@ from music.render import RENDER_CMD_ID, RenderResult, SongVersion, main
 
 
 def Track(name: str, params: list[mock.Mock] | None = None) -> mock.Mock:  # noqa: N802
+    """Mock reapy's Track class."""
     rv = mock.Mock()
     rv.name = name
     rv.params = params if params else []
@@ -22,12 +23,18 @@ def Track(name: str, params: list[mock.Mock] | None = None) -> mock.Mock:  # noq
 
 @pytest.fixture
 def parse_summary_stats() -> Iterator[mock.Mock]:
+    """Stub parsing ffmpeg output. The test module does not run or test external commands."""
     with mock.patch("music.__codegen__.stats.parse_summary_stats") as parse:
         yield parse
 
 
 @pytest.fixture
 def project(parse_summary_stats: mock.Mock, tmp_path: Path) -> Iterator[mock.Mock]:
+    """Mock reapy's Project class.
+
+    Intercepts all the actions that would be taken by the render command and
+    returns fake output. Sets up the expected FX that would be in a project.
+    """
     threshold = mock.Mock()
     threshold.name = "Threshold"
     threshold.normalized = -42.0
@@ -103,6 +110,7 @@ def subprocess(
 
 @mock.patch("subprocess.run")
 def test_render_result_render_speedup(subprocess: mock.Mock, tmp_path: Path) -> None:
+    """Test RenderResult.render_speedup."""
     proc = mock.Mock()
     proc.stdout = """
     [FORMAT]
@@ -121,6 +129,7 @@ def test_render_result_render_speedup(subprocess: mock.Mock, tmp_path: Path) -> 
 def test_main_noop(
     project: mock.Mock, snapshot: syrupy.SnapshotAssertion, tmp_path: Path
 ) -> None:
+    """Test main with no arguments."""
     with pytest.raises(click.UsageError, match="nothing"):
         main({})
 
@@ -134,6 +143,7 @@ def test_main_main_version(
     subprocess: mock.Mock,
     tmp_path: Path,
 ) -> None:
+    """Test main with main version."""
     main({SongVersion.MAIN})
 
     out, err = capsys.readouterr()
@@ -151,6 +161,7 @@ def test_main_default_versions(
     subprocess: mock.Mock,
     tmp_path: Path,
 ) -> None:
+    """Test main with default versions."""
     main()
 
     out, err = capsys.readouterr()
@@ -168,6 +179,7 @@ def test_main_all_versions(
     subprocess: mock.Mock,
     tmp_path: Path,
 ) -> None:
+    """Test main with all versions."""
     main(list(SongVersion))
 
     out, err = capsys.readouterr()

@@ -8,6 +8,7 @@ from music.__main__ import cli
 
 @mock.patch("reapy.Project")
 def test_reaper_not_running(project: mock.Mock) -> None:
+    """Test command handling when Reaper is not running."""
     project.side_effect = AttributeError("module doesn't have reascript_api, yo")
     result = CliRunner().invoke(cli, ["render"])
     assert result.exit_code == 1
