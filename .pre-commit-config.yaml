@@ -9,7 +9,7 @@ repos:
     hooks:
     -   id: mypy
         args: []
-        entry: mypy src
+        entry: mypy src tests
         language: system
         pass_filenames: false
 -   repo: https://github.com/charliermarsh/ruff-pre-commit
