@@ -2,7 +2,6 @@
 
 import datetime
 import math
-import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -99,24 +98,7 @@ def subprocess(
         yield mock_run
 
         assert mock_run.call_count
-        assert mock_run.call_args_list == snapshot(matcher=without_tmp_path(tmp_path))
-
-
-def without_tmp_path(tmp_path: Path) -> syrupy.types.PropertyMatcher:
-    """Strip temporary paths and tokens from any paths in the snapshot."""
-    tmp_path_str = str(tmp_path)
-    tmp_id_re = re.compile(r"(?P<tmp_id>\s*\d+)(?P<ext>\.tmp)")
-
-    def matcher(data: Any, path: Any) -> Any:
-        if isinstance(data, Path):
-            return str(data).replace(tmp_path_str, "TMP_PATH_HERE")
-        elif isinstance(data, str):
-            without_tmp_id = tmp_id_re.sub(r"\g<ext>", data)
-            without_path = without_tmp_id.replace(tmp_path_str, "TMP_PATH_HERE")
-            return without_path
-        return data
-
-    return matcher
+        assert mock_run.call_args_list == snapshot
 
 
 @mock.patch("subprocess.run")
@@ -142,7 +124,7 @@ def test_main_noop(
     with pytest.raises(click.UsageError, match="nothing"):
         main({})
 
-    assert project.method_calls == snapshot(matcher=without_tmp_path(tmp_path))
+    assert project.method_calls == snapshot
 
 
 def test_main_main_version(
@@ -156,10 +138,10 @@ def test_main_main_version(
 
     out, err = capsys.readouterr()
 
-    assert out == snapshot(matcher=without_tmp_path(tmp_path))
+    assert out == snapshot
     assert not err
 
-    assert project.method_calls == snapshot(matcher=without_tmp_path(tmp_path))
+    assert project.method_calls == snapshot
 
 
 def test_main_default_versions(
@@ -173,10 +155,10 @@ def test_main_default_versions(
 
     out, err = capsys.readouterr()
 
-    assert out == snapshot(matcher=without_tmp_path(tmp_path))
+    assert out == snapshot
     assert not err
 
-    assert project.method_calls == snapshot(matcher=without_tmp_path(tmp_path))
+    assert project.method_calls == snapshot
 
 
 def test_main_all_versions(
@@ -190,7 +172,7 @@ def test_main_all_versions(
 
     out, err = capsys.readouterr()
 
-    assert out == snapshot(matcher=without_tmp_path(tmp_path))
+    assert out == snapshot
     assert not err
 
-    assert project.method_calls == snapshot(matcher=without_tmp_path(tmp_path))
+    assert project.method_calls == snapshot

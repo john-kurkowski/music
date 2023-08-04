@@ -1,0 +1,34 @@
+"""pytest conventional configuration file."""
+
+import re
+from pathlib import Path
+from typing import Any
+
+import pytest
+import syrupy
+
+
+@pytest.fixture
+def snapshot(
+    snapshot: syrupy.SnapshotAssertion, tmp_path: Path
+) -> syrupy.SnapshotAssertion:
+    """Override. Make syrupy's snapshot fixture strip temporary paths and tokens from any paths within a snapshot."""
+    tmp_path_str = str(tmp_path)
+    tmp_id_re = re.compile(r"(?P<tmp_id>\s*\d+)(?P<ext>\.tmp)")
+
+    def without_tmp_path(data: Any, path: Any) -> Any:
+        if isinstance(data, Path):
+            return str(data).replace(tmp_path_str, "TMP_PATH_HERE")
+        elif isinstance(data, str):
+            without_tmp_id = tmp_id_re.sub(r"\g<ext>", data)
+            without_path = without_tmp_id.replace(tmp_path_str, "TMP_PATH_HERE")
+            return without_path
+        return data
+
+    class WithoutTmpPathExtension(syrupy.extensions.amber.AmberSnapshotExtension):
+        def serialize(self, data: syrupy.types.SerializableData, **kwargs: Any) -> str:
+            """Override."""
+            new_kwargs = kwargs | {"matcher": without_tmp_path}
+            return super().serialize(data, **new_kwargs)
+
+    return snapshot.use_extension(WithoutTmpPathExtension)
