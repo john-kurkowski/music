@@ -12,6 +12,7 @@ import subprocess
 from collections.abc import Collection, Iterator
 from functools import cached_property
 from timeit import default_timer as timer
+from typing import cast
 
 import click
 import reapy
@@ -302,17 +303,18 @@ def _render_a_cappella(
         print_summary_stats(out.fil, verbose)
 
 
-def main(
-    versions: Collection[SongVersion] | None = None,
-    vocal_loudness_worth: float = VOCAL_LOUDNESS_WORTH,
-    verbose: int = 0,
-) -> None:
-    """Render the given versions of the current Reaper project."""
-    if versions is None:
-        versions = set(SongVersion)
+def _render_project(
+    project: reapy.core.Project,
+    versions: Collection[SongVersion],
+    vocal_loudness_worth: float,
+    verbose: int,
+) -> bool:
+    """Render the given versions of the given Reaper project.
 
-    project = find_project()
-
+    Returns True if anything was rendered, False otherwise. For example, if a
+    project does not have vocals, rendering an a capella or instrumental
+    version are skipped.
+    """
     vocals = next((track for track in project.tracks if track.name == "Vocals"), None)
 
     did_something = False
@@ -329,8 +331,34 @@ def main(
         did_something = True
         _render_a_cappella(versions, project, vocal_loudness_worth, verbose)
 
-    if not did_something:
-        raise click.UsageError("nothing to render")
+    if did_something:
+        # Render causes a project to have unsaved changes, no matter what. Save the user a step.
+        project.save()
 
-    # Render causes a project to have unsaved changes, no matter what. Save the user a step.
-    project.save()
+    return did_something
+
+
+def main(
+    project_dirs: list[pathlib.Path],
+    versions: Collection[SongVersion] | None = None,
+    vocal_loudness_worth: float = VOCAL_LOUDNESS_WORTH,
+    verbose: int = 0,
+) -> None:
+    """Render the given versions of the given Reaper projects.
+
+    If no projects are given, renders the currently open project.
+    """
+    maybe_project_dirs = cast(list[pathlib.Path | None], project_dirs) or [None]
+
+    if versions is None:
+        versions = set(SongVersion)
+
+    did_somethings = [
+        _render_project(
+            find_project(project_dir), versions, vocal_loudness_worth, verbose
+        )
+        for project_dir in maybe_project_dirs
+    ]
+
+    if not any(did_somethings):
+        raise click.UsageError("nothing to render")

@@ -1,6 +1,7 @@
 """Misc. utilities."""
 
 from collections.abc import Iterator
+from pathlib import Path
 from typing import NoReturn, TypeVar
 
 import reapy
@@ -13,16 +14,26 @@ def assert_exhaustiveness(no_return: NoReturn) -> NoReturn:  # pragma: no cover
     raise AssertionError(f"Invalid value: {no_return!r}")
 
 
-def find_project() -> reapy.core.Project:
-    """Find the target Reaper project."""
+def find_project(project_dir: Path | None = None) -> reapy.core.Project:
+    """Find the target Reaper project, or current project if unspecified."""
     try:
-        return reapy.Project()
+        project = reapy.Project()
     except AttributeError as aterr:
         if "module" in str(aterr) and "reascript_api" in str(aterr):
             raise Exception(
                 "Error while loading Reaper project. Is Reaper running?"
             ) from aterr
         raise
+
+    if project_dir is None or str(project_dir.resolve()) == project.path:
+        return project
+
+    project_file = (
+        project_dir
+        if project_dir.suffix == ".rpp"
+        else project_dir / f"{project_dir.name}.rpp"
+    )
+    return reapy.open_project(str(project_file))
 
 
 def recurse_property(prop: str, obj: T | None) -> Iterator[T]:

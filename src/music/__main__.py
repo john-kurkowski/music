@@ -33,6 +33,11 @@ def codegen(example_audio_file: Path) -> None:
 
 
 @cli.command()  # type: ignore[attr-defined,arg-type]
+@click.argument(
+    "project_dirs",
+    nargs=-1,
+    type=click.Path(exists=True, path_type=Path),
+)
 @click.option(
     "--include-main",
     default=None,
@@ -77,12 +82,15 @@ def codegen(example_audio_file: Path) -> None:
     type=float,
 )
 def render(
+    project_dirs: list[Path],
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_acappella: SongVersion | None,
     vocal_loudness_worth: float,
 ) -> None:
-    """Render vocal, instrumental, etc. versions of the current Reaper project.
+    """Render vocal, instrumental, etc. versions of the given PROJECT_DIRS Reaper projects.
+
+    Defaults to rendering the currently open project.
 
     Overwrites existing versions. Prints statistics for each output file as it
     is rendered.
@@ -95,7 +103,7 @@ def render(
         for version in (include_main, include_instrumental, include_acappella)
         if version
     } or None
-    _render(versions, vocal_loudness_worth)
+    _render(project_dirs, versions, vocal_loudness_worth)
 
 
 @cli.command()  # type: ignore[attr-defined,arg-type]

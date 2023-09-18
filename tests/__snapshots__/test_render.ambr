@@ -194,6 +194,10 @@
     ),
   ])
 # ---
+# name: test_main_all_versions.3
+  _CallList([
+  ])
+# ---
 # name: test_main_default_versions
   '''
   Song of Myself
@@ -389,6 +393,405 @@
     ),
   ])
 # ---
+# name: test_main_default_versions.3
+  _CallList([
+  ])
+# ---
+# name: test_main_filenames_all_versions
+  '''
+  Song of Myself
+  TMP_PATH_HERE/Song of Myself.wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
+  duration        : 1.0                             
+  size            : 42.0                            
+  Song of Myself (Instrumental)
+  
+  TMP_PATH_HERE/Song of Myself (Instrumental).wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
+  duration        : 1.0                             
+  size            : 42.0                            
+  Song of Myself (A Cappella)
+  
+  TMP_PATH_HERE/Song of Myself (A Cappella).wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
+  duration        : 1.0                             
+  size            : 42.0                            
+  Song of Myself
+  TMP_PATH_HERE/Song of Myself.wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
+  duration        : 1.0                             
+  size            : 42.0                            
+  Song of Myself (Instrumental)
+  
+  TMP_PATH_HERE/Song of Myself (Instrumental).wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
+  duration        : 1.0                             
+  size            : 42.0                            
+  Song of Myself (A Cappella)
+  
+  TMP_PATH_HERE/Song of Myself (A Cappella).wav
+  Rendered 0:00:10 in 0:00:00, a infx speedup
+  duration        : 1.0                             
+  size            : 42.0                            
+  
+  '''
+# ---
+# name: test_main_filenames_all_versions.1
+  _CallList([
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Song of Myself.tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'perform_action',
+      tuple(
+        42230,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Song of Myself (Instrumental).tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'perform_action',
+      tuple(
+        42230,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Song of Myself (A Cappella).tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'perform_action',
+      tuple(
+        42230,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'save',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Song of Myself.tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'perform_action',
+      tuple(
+        42230,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Song of Myself (Instrumental).tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'perform_action',
+      tuple(
+        42230,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Song of Myself (A Cappella).tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'perform_action',
+      tuple(
+        42230,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'save',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_main_filenames_all_versions.2
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself.wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself (Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          '-filter:a',
+          'areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=3.0:start_threshold=0.02,areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=1.0:start_threshold=0.02',
+          'TMP_PATH_HERE/Song of Myself (A Cappella).wav.tmp.wav',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself.wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself (Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          '-filter:a',
+          'areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=3.0:start_threshold=0.02,areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=1.0:start_threshold=0.02',
+          'TMP_PATH_HERE/Song of Myself (A Cappella).wav.tmp.wav',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+  ])
+# ---
+# name: test_main_filenames_all_versions.3
+  _CallList([
+    _Call(
+      tuple(
+        'path/to/some project/some project.rpp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      tuple(
+        'path/to/another project/another project.rpp',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
 # name: test_main_main_version
   '''
   Song of Myself
@@ -461,7 +864,15 @@
     ),
   ])
 # ---
+# name: test_main_main_version.3
+  _CallList([
+  ])
+# ---
 # name: test_main_noop
+  _CallList([
+  ])
+# ---
+# name: test_main_noop.1
   _CallList([
   ])
 # ---

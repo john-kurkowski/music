@@ -29,7 +29,9 @@ def parse_summary_stats() -> Iterator[mock.Mock]:
 
 
 @pytest.fixture
-def project(parse_summary_stats: mock.Mock, tmp_path: Path) -> Iterator[mock.Mock]:
+def project(
+    parse_summary_stats: mock.Mock, snapshot: syrupy.SnapshotAssertion, tmp_path: Path
+) -> Iterator[mock.Mock]:
     """Mock reapy's Project class.
 
     Intercepts all the actions that would be taken by the render command and
@@ -41,12 +43,13 @@ def project(parse_summary_stats: mock.Mock, tmp_path: Path) -> Iterator[mock.Moc
     threshold.functions = {"SetParamNormalized": mock.Mock()}
 
     with (
+        mock.patch("reapy.open_project") as mock_open_project,
         mock.patch("reapy.Project") as mock_project_class,
         mock.patch(
             "music.render.RenderResult.duration_delta", new_callable=mock.PropertyMock
         ) as mock_duration_delta,
     ):
-        project = mock_project_class.return_value
+        project = mock_open_project.return_value = mock_project_class.return_value
 
         render_patterns = []
 
@@ -75,6 +78,8 @@ def project(parse_summary_stats: mock.Mock, tmp_path: Path) -> Iterator[mock.Moc
         mock_duration_delta.return_value = datetime.timedelta(seconds=10)
 
         yield project
+
+        assert mock_open_project.call_args_list == snapshot
 
 
 @pytest.fixture
@@ -131,7 +136,7 @@ def test_main_noop(
 ) -> None:
     """Test main with no arguments."""
     with pytest.raises(click.UsageError, match="nothing"):
-        main({})
+        main([], {})
 
     assert project.method_calls == snapshot
 
@@ -144,7 +149,7 @@ def test_main_main_version(
     tmp_path: Path,
 ) -> None:
     """Test main with main version."""
-    main({SongVersion.MAIN})
+    main([], {SongVersion.MAIN})
 
     out, err = capsys.readouterr()
 
@@ -162,7 +167,7 @@ def test_main_default_versions(
     tmp_path: Path,
 ) -> None:
     """Test main with default versions."""
-    main()
+    main([])
 
     out, err = capsys.readouterr()
 
@@ -180,7 +185,28 @@ def test_main_all_versions(
     tmp_path: Path,
 ) -> None:
     """Test main with all versions."""
-    main(list(SongVersion))
+    main([], list(SongVersion))
+
+    out, err = capsys.readouterr()
+
+    assert out == snapshot
+    assert not err
+
+    assert project.method_calls == snapshot
+
+
+def test_main_filenames_all_versions(
+    capsys: pytest.CaptureFixture,
+    project: mock.Mock,
+    snapshot: syrupy.SnapshotAssertion,
+    subprocess: mock.Mock,
+    tmp_path: Path,
+) -> None:
+    """Test main with filenames and versions."""
+    main(
+        [Path("path/to/some project"), Path("path/to/another project")],
+        list(SongVersion),
+    )
 
     out, err = capsys.readouterr()
 
