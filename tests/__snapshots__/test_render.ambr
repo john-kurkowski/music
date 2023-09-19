@@ -1,20 +1,20 @@
 # serializer version: 1
 # name: test_main_all_versions
   '''
-  Song of Myself
-  TMP_PATH_HERE/Song of Myself.wav
+  Stub Song Title
+  TMP_PATH_HERE/Stub Song Title.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
-  Song of Myself (Instrumental)
+  Stub Song Title (Instrumental)
   
-  TMP_PATH_HERE/Song of Myself (Instrumental).wav
+  TMP_PATH_HERE/Stub Song Title (Instrumental).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
-  Song of Myself (A Cappella)
+  Stub Song Title (A Cappella)
   
-  TMP_PATH_HERE/Song of Myself (A Cappella).wav
+  TMP_PATH_HERE/Stub Song Title (A Cappella).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
@@ -27,7 +27,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself.tmp',
+        'Stub Song Title.tmp',
       ),
       dict({
       }),
@@ -53,7 +53,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself (Instrumental).tmp',
+        'Stub Song Title (Instrumental).tmp',
       ),
       dict({
       }),
@@ -79,7 +79,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself (A Cappella).tmp',
+        'Stub Song Title (A Cappella).tmp',
       ),
       dict({
       }),
@@ -117,7 +117,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself.wav',
+          'TMP_PATH_HERE/Stub Song Title.wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -138,7 +138,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (Instrumental).wav',
+          'TMP_PATH_HERE/Stub Song Title (Instrumental).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -159,10 +159,10 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav',
           '-filter:a',
           'areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=3.0:start_threshold=0.02,areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=1.0:start_threshold=0.02',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav.tmp.wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav.tmp.wav',
         ]),
       ),
       dict({
@@ -176,7 +176,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -200,20 +200,20 @@
 # ---
 # name: test_main_default_versions
   '''
-  Song of Myself
-  TMP_PATH_HERE/Song of Myself.wav
+  Stub Song Title
+  TMP_PATH_HERE/Stub Song Title.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
-  Song of Myself (Instrumental)
+  Stub Song Title (Instrumental)
   
-  TMP_PATH_HERE/Song of Myself (Instrumental).wav
+  TMP_PATH_HERE/Stub Song Title (Instrumental).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
-  Song of Myself (A Cappella)
+  Stub Song Title (A Cappella)
   
-  TMP_PATH_HERE/Song of Myself (A Cappella).wav
+  TMP_PATH_HERE/Stub Song Title (A Cappella).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
@@ -226,7 +226,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself.tmp',
+        'Stub Song Title.tmp',
       ),
       dict({
       }),
@@ -252,7 +252,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself (Instrumental).tmp',
+        'Stub Song Title (Instrumental).tmp',
       ),
       dict({
       }),
@@ -278,7 +278,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself (A Cappella).tmp',
+        'Stub Song Title (A Cappella).tmp',
       ),
       dict({
       }),
@@ -316,7 +316,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself.wav',
+          'TMP_PATH_HERE/Stub Song Title.wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -337,7 +337,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (Instrumental).wav',
+          'TMP_PATH_HERE/Stub Song Title (Instrumental).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -358,10 +358,10 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav',
           '-filter:a',
           'areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=3.0:start_threshold=0.02,areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=1.0:start_threshold=0.02',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav.tmp.wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav.tmp.wav',
         ]),
       ),
       dict({
@@ -375,7 +375,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -399,37 +399,37 @@
 # ---
 # name: test_main_filenames_all_versions
   '''
-  Song of Myself
-  TMP_PATH_HERE/Song of Myself.wav
+  Stub Song Title
+  TMP_PATH_HERE/Stub Song Title.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
-  Song of Myself (Instrumental)
+  Stub Song Title (Instrumental)
   
-  TMP_PATH_HERE/Song of Myself (Instrumental).wav
+  TMP_PATH_HERE/Stub Song Title (Instrumental).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
-  Song of Myself (A Cappella)
+  Stub Song Title (A Cappella)
   
-  TMP_PATH_HERE/Song of Myself (A Cappella).wav
+  TMP_PATH_HERE/Stub Song Title (A Cappella).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
-  Song of Myself
-  TMP_PATH_HERE/Song of Myself.wav
+  Stub Song Title
+  TMP_PATH_HERE/Stub Song Title.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
-  Song of Myself (Instrumental)
+  Stub Song Title (Instrumental)
   
-  TMP_PATH_HERE/Song of Myself (Instrumental).wav
+  TMP_PATH_HERE/Stub Song Title (Instrumental).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
-  Song of Myself (A Cappella)
+  Stub Song Title (A Cappella)
   
-  TMP_PATH_HERE/Song of Myself (A Cappella).wav
+  TMP_PATH_HERE/Stub Song Title (A Cappella).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
@@ -442,7 +442,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself.tmp',
+        'Stub Song Title.tmp',
       ),
       dict({
       }),
@@ -468,7 +468,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself (Instrumental).tmp',
+        'Stub Song Title (Instrumental).tmp',
       ),
       dict({
       }),
@@ -494,7 +494,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself (A Cappella).tmp',
+        'Stub Song Title (A Cappella).tmp',
       ),
       dict({
       }),
@@ -527,7 +527,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself.tmp',
+        'Stub Song Title.tmp',
       ),
       dict({
       }),
@@ -553,7 +553,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself (Instrumental).tmp',
+        'Stub Song Title (Instrumental).tmp',
       ),
       dict({
       }),
@@ -579,7 +579,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself (A Cappella).tmp',
+        'Stub Song Title (A Cappella).tmp',
       ),
       dict({
       }),
@@ -617,7 +617,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself.wav',
+          'TMP_PATH_HERE/Stub Song Title.wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -638,7 +638,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (Instrumental).wav',
+          'TMP_PATH_HERE/Stub Song Title (Instrumental).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -659,10 +659,10 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav',
           '-filter:a',
           'areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=3.0:start_threshold=0.02,areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=1.0:start_threshold=0.02',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav.tmp.wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav.tmp.wav',
         ]),
       ),
       dict({
@@ -676,7 +676,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -697,7 +697,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself.wav',
+          'TMP_PATH_HERE/Stub Song Title.wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -718,7 +718,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (Instrumental).wav',
+          'TMP_PATH_HERE/Stub Song Title (Instrumental).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -739,10 +739,10 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav',
           '-filter:a',
           'areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=3.0:start_threshold=0.02,areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=1.0:start_threshold=0.02',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav.tmp.wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav.tmp.wav',
         ]),
       ),
       dict({
@@ -756,7 +756,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself (A Cappella).wav',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -794,8 +794,8 @@
 # ---
 # name: test_main_main_version
   '''
-  Song of Myself
-  TMP_PATH_HERE/Song of Myself.wav
+  Stub Song Title
+  TMP_PATH_HERE/Stub Song Title.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
   duration        : 1.0                             
   size            : 42.0                            
@@ -808,7 +808,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        'Song of Myself.tmp',
+        'Stub Song Title.tmp',
       ),
       dict({
       }),
@@ -846,7 +846,7 @@
         list([
           'ffmpeg',
           '-i',
-          'TMP_PATH_HERE/Song of Myself.wav',
+          'TMP_PATH_HERE/Stub Song Title.wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',

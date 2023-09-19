@@ -34,8 +34,16 @@ def project(
 ) -> Iterator[mock.Mock]:
     """Mock reapy's Project class.
 
-    Intercepts all the actions that would be taken by the render command and
-    returns fake output. Sets up the expected FX that would be in a project.
+    Stubs and occasionally fakes enough of a Project for coverage of this
+    codebase, without actually interacting with Reaper.
+
+    * Intercepts all the actions that would be taken by the render command.
+        * Mostly returns stub output, ignoring the input.
+        * The exception is after naming a render (via the "RENDER_PATTERN"
+          action) and rendering, writes a fake file with the expected filename.
+    * Sets up the expected FX that would be in a project.
+
+
     """
     threshold = mock.Mock()
     threshold.name = "Threshold"
@@ -61,7 +69,7 @@ def project(
             if cmd_id == RENDER_CMD_ID:
                 (project.path / f"{render_patterns[-1]}.wav").touch()
 
-        project.name = "Song of Myself"
+        project.name = "Stub Song Title"
         project.path = tmp_path
 
         project.master_track.fxs = [
