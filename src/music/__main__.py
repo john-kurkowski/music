@@ -110,12 +110,7 @@ def render(
 @click.argument("files", nargs=-1, required=True, type=Path)
 @click.option("--verbose", "-v", count=True)
 def stat(files: list[Path], verbose: int) -> None:
-    """Print statistics for the given audio files, like LUFS-I and LRA.
-
-    If the OpenAI library is installed and the API key is set, summarizes
-    statistics from the underlying analysis tool. Otherwise, prints the
-    underlying analysis tool's output, which is verbose and unstructured.
-    """
+    """Print statistics for the given audio files, like LUFS-I and LRA."""
     for i, fil in enumerate(files):
         if i > 0:
             print()
