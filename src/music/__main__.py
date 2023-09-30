@@ -10,6 +10,7 @@ import click
 from .codegen import main as _codegen
 from .render import VOCAL_LOUDNESS_WORTH, SongVersion, print_summary_stats
 from .render import main as _render
+from .util import find_project
 
 
 @click.group()
@@ -107,10 +108,22 @@ def render(
 
 
 @cli.command()  # type: ignore[attr-defined,arg-type]
-@click.argument("files", nargs=-1, required=True, type=Path)
+@click.argument("files", nargs=-1, type=Path)
 @click.option("--verbose", "-v", count=True)
 def stat(files: list[Path], verbose: int) -> None:
-    """Print statistics for the given audio files, like LUFS-I and LRA."""
+    """Print statistics, like LUFS-I and LRA, for the given audio files FILES.
+
+    Defaults FILES to all rendered versions of the currently open project.
+    """
+    if not files:
+        project = find_project()
+        files = [
+            fil
+            for version in SongVersion
+            if (fil := Path(project.path) / f"{version.name_for_project(project)}.wav")
+            and fil.exists()
+        ]
+
     for i, fil in enumerate(files):
         if i > 0:
             print()
