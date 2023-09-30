@@ -9,13 +9,17 @@ import random
 import re
 import shutil
 import subprocess
+import warnings
 from collections.abc import Collection, Iterator
 from functools import cached_property
 from timeit import default_timer as timer
 from typing import cast
 
 import click
-import reapy
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", message="Can't reach distant API")
+    import reapy
 
 from .__codegen__ import stats
 from .util import (

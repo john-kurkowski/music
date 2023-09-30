@@ -1,10 +1,13 @@
 """Misc. utilities."""
 
+import warnings
 from collections.abc import Iterator
 from pathlib import Path
 from typing import NoReturn, TypeVar
 
-import reapy
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", message="Can't reach distant API")
+    import reapy
 
 T = TypeVar("T")
 
