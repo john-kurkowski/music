@@ -18,7 +18,7 @@ def cli() -> None:
     """Miscellaneous tasks for publishing my music."""
 
 
-@cli.command()  # type: ignore[attr-defined,arg-type]
+@cli.command()
 @click.argument(
     "example_audio_file",
     nargs=1,
@@ -33,7 +33,7 @@ def codegen(example_audio_file: Path) -> None:
     _codegen(example_audio_file)
 
 
-@cli.command()  # type: ignore[attr-defined,arg-type]
+@cli.command()
 @click.argument(
     "project_dirs",
     nargs=-1,
@@ -120,7 +120,7 @@ def render(
         raise click.UsageError("nothing to render")
 
 
-@cli.command()  # type: ignore[attr-defined,arg-type]
+@cli.command()
 @click.argument("files", nargs=-1, type=Path)
 @click.option("--verbose", "-v", count=True)
 def stat(files: list[Path], verbose: int) -> None:

@@ -8,10 +8,10 @@ from typing import Any
 from unittest import mock
 
 import pytest
-import syrupy
 from click.testing import CliRunner
 from music.__main__ import render
 from music.render import RENDER_CMD_ID, RenderResult
+from syrupy.assertion import SnapshotAssertion
 
 
 def Track(name: str, params: list[mock.Mock] | None = None) -> mock.Mock:  # noqa: N802
@@ -31,7 +31,7 @@ def parse_summary_stats() -> Iterator[mock.Mock]:
 
 @pytest.fixture
 def project(
-    parse_summary_stats: mock.Mock, snapshot: syrupy.SnapshotAssertion, tmp_path: Path
+    parse_summary_stats: mock.Mock, snapshot: SnapshotAssertion, tmp_path: Path
 ) -> Iterator[mock.Mock]:
     """Mock reapy's Project class.
 
@@ -92,9 +92,7 @@ def project(
 
 
 @pytest.fixture
-def subprocess(
-    snapshot: syrupy.SnapshotAssertion, tmp_path: Path
-) -> Iterator[mock.Mock]:
+def subprocess(snapshot: SnapshotAssertion, tmp_path: Path) -> Iterator[mock.Mock]:
     """Stub subprocess.run.
 
     During unit tests, we don't want to actually run subprocesses. But we do
@@ -140,7 +138,7 @@ def test_render_result_render_speedup(subprocess: mock.Mock, tmp_path: Path) -> 
     assert obj2.render_speedup == math.inf
 
 
-def test_main_noop(project: mock.Mock, snapshot: syrupy.SnapshotAssertion) -> None:
+def test_main_noop(project: mock.Mock, snapshot: SnapshotAssertion) -> None:
     """Test a project with nothing to do.
 
     If a project has no vocals, it does not make sense to render its instrumental nor cappella.
@@ -160,7 +158,7 @@ def test_main_noop(project: mock.Mock, snapshot: syrupy.SnapshotAssertion) -> No
 
 def test_main_main_version(
     project: mock.Mock,
-    snapshot: syrupy.SnapshotAssertion,
+    snapshot: SnapshotAssertion,
     subprocess: mock.Mock,
 ) -> None:
     """Test main with main version."""
@@ -174,7 +172,7 @@ def test_main_main_version(
 
 def test_main_default_versions(
     project: mock.Mock,
-    snapshot: syrupy.SnapshotAssertion,
+    snapshot: SnapshotAssertion,
     subprocess: mock.Mock,
 ) -> None:
     """Test main with default versions."""
@@ -188,7 +186,7 @@ def test_main_default_versions(
 
 def test_main_all_versions(
     project: mock.Mock,
-    snapshot: syrupy.SnapshotAssertion,
+    snapshot: SnapshotAssertion,
     subprocess: mock.Mock,
 ) -> None:
     """Test main with all versions."""
@@ -204,7 +202,7 @@ def test_main_all_versions(
 
 def test_main_filenames_all_versions(
     project: mock.Mock,
-    snapshot: syrupy.SnapshotAssertion,
+    snapshot: SnapshotAssertion,
     subprocess: mock.Mock,
     tmp_path: Path,
 ) -> None:
