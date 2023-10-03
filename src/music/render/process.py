@@ -80,7 +80,7 @@ async def render_version(
     in_name = f"{out_name} {rand_id}.tmp"
 
     with (
-        avoid_fx_tails(),
+        avoid_fx_tails(project),
         adjust_render_settings(project, version),
         adjust_render_pattern(project, Path(in_name).joinpath(*version.pattern)),
     ):

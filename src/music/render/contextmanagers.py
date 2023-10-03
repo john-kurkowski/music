@@ -96,9 +96,10 @@ def adjust_render_settings(
 
 
 @contextlib.contextmanager
-def avoid_fx_tails() -> Iterator[None]:
+def avoid_fx_tails(project: ExtendedProject) -> Iterator[None]:
     """Change global settings to avoid FX tails at the beginning of the render, then restore the global settings' original values."""
     off = 0
+    start_time = 0.0
 
     with (
         get_set_restore(
@@ -118,6 +119,11 @@ def avoid_fx_tails() -> Iterator[None]:
             ),
             partial(reapy.reascript_api.SNM_SetIntConfigVar, "runafterstop"),  # type: ignore[attr-defined]
             off,
+        ),
+        get_set_restore(
+            partial(getattr, project, "cursor_position"),
+            partial(setattr, project, "cursor_position"),
+            start_time,
         ),
     ):
         yield
