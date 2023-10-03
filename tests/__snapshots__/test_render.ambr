@@ -778,14 +778,14 @@
   _CallList([
     _Call(
       tuple(
-        'path/to/some project/some project.rpp',
+        'TMP_PATH_HERE/path/to/some project/some project.rpp',
       ),
       dict({
       }),
     ),
     _Call(
       tuple(
-        'path/to/another project/another project.rpp',
+        'TMP_PATH_HERE/path/to/another project/another project.rpp',
       ),
       dict({
       }),
@@ -869,10 +869,19 @@
   ])
 # ---
 # name: test_main_noop
+  '''
+  Usage: render [OPTIONS] [PROJECT_DIRS]...
+  Try 'render --help' for help.
+  
+  Error: nothing to render
+  
+  '''
+# ---
+# name: test_main_noop.1
   _CallList([
   ])
 # ---
-# name: test_main_noop.1
+# name: test_main_noop.2
   _CallList([
   ])
 # ---

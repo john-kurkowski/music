@@ -99,12 +99,25 @@ def render(
     Note the Reaper preference "Set media items offline when application is not
     active" should be unchecked, or media items will be silent in the render.
     """
+    projects = (
+        [find_project(path) for path in project_dirs]
+        if project_dirs
+        else [find_project()]
+    )
+
     versions = {
         version
         for version in (include_main, include_instrumental, include_acappella)
         if version
-    } or None
-    _render(project_dirs, versions, vocal_loudness_worth)
+    } or set(SongVersion)
+
+    did_somethings = [
+        _render(project, versions, vocal_loudness_worth, verbose=0)
+        for project in projects
+    ]
+
+    if not any(did_somethings):
+        raise click.UsageError("nothing to render")
 
 
 @cli.command()  # type: ignore[attr-defined,arg-type]

@@ -7,10 +7,11 @@ from pathlib import Path
 from typing import Any
 from unittest import mock
 
-import click
 import pytest
 import syrupy
-from music.render import RENDER_CMD_ID, RenderResult, SongVersion, main
+from click.testing import CliRunner
+from music.__main__ import render
+from music.render import RENDER_CMD_ID, RenderResult
 
 
 def Track(name: str, params: list[mock.Mock] | None = None) -> mock.Mock:  # noqa: N802
@@ -139,86 +140,93 @@ def test_render_result_render_speedup(subprocess: mock.Mock, tmp_path: Path) -> 
     assert obj2.render_speedup == math.inf
 
 
-def test_main_noop(
-    project: mock.Mock, snapshot: syrupy.SnapshotAssertion, tmp_path: Path
-) -> None:
-    """Test main with no arguments."""
-    with pytest.raises(click.UsageError, match="nothing"):
-        main([], {})
+def test_main_noop(project: mock.Mock, snapshot: syrupy.SnapshotAssertion) -> None:
+    """Test a project with nothing to do.
+
+    If a project has no vocals, it does not make sense to render its instrumental nor cappella.
+    """
+    project.tracks = [t for t in project.tracks if t.name != "Vocals"]
+
+    result = CliRunner(mix_stderr=False).invoke(
+        render, ["--include-instrumental", "--include-acappella"]
+    )
+
+    assert result.exit_code == 2
+    assert not result.stdout
+    assert result.stderr == snapshot
 
     assert project.method_calls == snapshot
 
 
 def test_main_main_version(
-    capsys: pytest.CaptureFixture,
     project: mock.Mock,
     snapshot: syrupy.SnapshotAssertion,
     subprocess: mock.Mock,
-    tmp_path: Path,
 ) -> None:
     """Test main with main version."""
-    main([], {SongVersion.MAIN})
+    result = CliRunner(mix_stderr=False).invoke(render, ["--include-main"])
 
-    out, err = capsys.readouterr()
-
-    assert out == snapshot
-    assert not err
+    assert result.stdout == snapshot
+    assert not result.stderr
 
     assert project.method_calls == snapshot
 
 
 def test_main_default_versions(
-    capsys: pytest.CaptureFixture,
     project: mock.Mock,
     snapshot: syrupy.SnapshotAssertion,
     subprocess: mock.Mock,
-    tmp_path: Path,
 ) -> None:
     """Test main with default versions."""
-    main([])
+    result = CliRunner(mix_stderr=False).invoke(render, [])
 
-    out, err = capsys.readouterr()
-
-    assert out == snapshot
-    assert not err
+    assert result.stdout == snapshot
+    assert not result.stderr
 
     assert project.method_calls == snapshot
 
 
 def test_main_all_versions(
-    capsys: pytest.CaptureFixture,
     project: mock.Mock,
     snapshot: syrupy.SnapshotAssertion,
     subprocess: mock.Mock,
-    tmp_path: Path,
 ) -> None:
     """Test main with all versions."""
-    main([], list(SongVersion))
+    result = CliRunner(mix_stderr=False).invoke(
+        render, ["--include-main", "--include-instrumental", "--include-acappella"]
+    )
 
-    out, err = capsys.readouterr()
-
-    assert out == snapshot
-    assert not err
+    assert result.stdout == snapshot
+    assert not result.stderr
 
     assert project.method_calls == snapshot
 
 
 def test_main_filenames_all_versions(
-    capsys: pytest.CaptureFixture,
     project: mock.Mock,
     snapshot: syrupy.SnapshotAssertion,
     subprocess: mock.Mock,
     tmp_path: Path,
 ) -> None:
     """Test main with filenames and versions."""
-    main(
-        [Path("path/to/some project"), Path("path/to/another project")],
-        list(SongVersion),
+    some_paths = [
+        tmp_path / "path" / "to" / "some project",
+        tmp_path / "path" / "to" / "another project",
+    ]
+    for path in some_paths:
+        path.mkdir(parents=True)
+
+    result = CliRunner(mix_stderr=False).invoke(
+        render,
+        [
+            "--include-main",
+            "--include-instrumental",
+            "--include-acappella",
+            *[str(path.resolve()) for path in some_paths],
+        ],
     )
 
-    out, err = capsys.readouterr()
-
-    assert out == snapshot
-    assert not err
+    assert result.stdout == snapshot
+    assert not result.stderr
 
     assert project.method_calls == snapshot

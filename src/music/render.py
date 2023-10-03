@@ -13,9 +13,6 @@ import warnings
 from collections.abc import Collection, Iterator
 from functools import cached_property
 from timeit import default_timer as timer
-from typing import cast
-
-import click
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -24,7 +21,6 @@ with warnings.catch_warnings():
 from .__codegen__ import stats
 from .util import (
     assert_exhaustiveness,
-    find_project,
     recurse_property,
     set_param_value,
 )
@@ -307,7 +303,7 @@ def _render_a_cappella(
         print_summary_stats(out.fil, verbose)
 
 
-def _render_project(
+def main(
     project: reapy.core.Project,
     versions: Collection[SongVersion],
     vocal_loudness_worth: float,
@@ -340,29 +336,3 @@ def _render_project(
         project.save()
 
     return did_something
-
-
-def main(
-    project_dirs: list[pathlib.Path],
-    versions: Collection[SongVersion] | None = None,
-    vocal_loudness_worth: float = VOCAL_LOUDNESS_WORTH,
-    verbose: int = 0,
-) -> None:
-    """Render the given versions of the given Reaper projects.
-
-    If no projects are given, renders the currently open project.
-    """
-    maybe_project_dirs = cast(list[pathlib.Path | None], project_dirs) or [None]
-
-    if versions is None:
-        versions = set(SongVersion)
-
-    did_somethings = [
-        _render_project(
-            find_project(project_dir), versions, vocal_loudness_worth, verbose
-        )
-        for project_dir in maybe_project_dirs
-    ]
-
-    if not any(did_somethings):
-        raise click.UsageError("nothing to render")
