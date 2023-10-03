@@ -199,13 +199,16 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
     # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
     rand_id = random.randrange(10**5, 10**6)
     in_name = f"{out_name} {rand_id}.tmp"
+    prev_cursor_position = project.cursor_position
 
     project.set_info_string("RENDER_PATTERN", in_name)
+    project.cursor_position = 0.0
     time_start = timer()
     try:
         project.perform_action(RENDER_CMD_ID)
         time_end = timer()
     finally:
+        project.cursor_position = prev_cursor_position
         project.set_info_string("RENDER_PATTERN", "$project")
 
     out_dir = pathlib.Path(project.path)
