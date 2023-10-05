@@ -4,20 +4,32 @@
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │        │ 1.0   │
+  │ size     │        │ 42.0  │
+  └──────────┴────────┴───────┘
   Stub Song Title (Instrumental)
   
   TMP_PATH_HERE/Stub Song Title (Instrumental).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │        │ 250.1 │
+  │ size     │        │ 1024  │
+  └──────────┴────────┴───────┘
   Stub Song Title (A Cappella)
   
   TMP_PATH_HERE/Stub Song Title (A Cappella).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │        │ 1.0   │
+  │ size     │        │ 42.0  │
+  └──────────┴────────┴───────┘
   
   '''
 # ---
@@ -203,20 +215,32 @@
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │        │ 1.0   │
+  │ size     │        │ 42.0  │
+  └──────────┴────────┴───────┘
   Stub Song Title (Instrumental)
   
   TMP_PATH_HERE/Stub Song Title (Instrumental).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │        │ 250.1 │
+  │ size     │        │ 1024  │
+  └──────────┴────────┴───────┘
   Stub Song Title (A Cappella)
   
   TMP_PATH_HERE/Stub Song Title (A Cappella).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │        │ 1.0   │
+  │ size     │        │ 42.0  │
+  └──────────┴────────┴───────┘
   
   '''
 # ---
@@ -402,37 +426,61 @@
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │        │ 1.0   │
+  │ size     │        │ 42.0  │
+  └──────────┴────────┴───────┘
   Stub Song Title (Instrumental)
   
   TMP_PATH_HERE/Stub Song Title (Instrumental).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │        │ 250.1 │
+  │ size     │        │ 1024  │
+  └──────────┴────────┴───────┘
   Stub Song Title (A Cappella)
   
   TMP_PATH_HERE/Stub Song Title (A Cappella).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │        │ 1.0   │
+  │ size     │        │ 42.0  │
+  └──────────┴────────┴───────┘
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │ 250.1  │ 1.0   │
+  │ size     │ 1024   │ 42.0  │
+  └──────────┴────────┴───────┘
   Stub Song Title (Instrumental)
   
   TMP_PATH_HERE/Stub Song Title (Instrumental).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │ 250.1  │ 1.0   │
+  │ size     │ 1024   │ 42.0  │
+  └──────────┴────────┴───────┘
   Stub Song Title (A Cappella)
   
   TMP_PATH_HERE/Stub Song Title (A Cappella).wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │ 250.1  │ 1.0   │
+  │ size     │ 1024   │ 42.0  │
+  └──────────┴────────┴───────┘
   
   '''
 # ---
@@ -718,7 +766,70 @@
         list([
           'ffmpeg',
           '-i',
+          'TMP_PATH_HERE/Stub Song Title.wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
           'TMP_PATH_HERE/Stub Song Title (Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Stub Song Title (Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Stub Song Title (A Cappella).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -797,8 +908,12 @@
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
   Rendered 0:00:10 in 0:00:00, a infx speedup
-  duration        : 1.0                             
-  size            : 42.0                            
+  ┏━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┓
+  ┃          ┃ Before ┃ After ┃
+  ┡━━━━━━━━━━╇━━━━━━━━╇━━━━━━━┩
+  │ duration │        │ 1.0   │
+  │ size     │        │ 42.0  │
+  └──────────┴────────┴───────┘
   
   '''
 # ---

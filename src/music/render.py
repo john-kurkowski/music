@@ -18,6 +18,8 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
     import reapy
 
+import rich.table
+
 from .__codegen__ import stats
 from .util import (
     assert_exhaustiveness,
@@ -154,6 +156,26 @@ def _mute(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
         track.unmute()
 
 
+@contextlib.contextmanager
+def _print_summary_stats(
+    project: reapy.core.Project, version: SongVersion, verbose: int
+) -> Iterator[None]:
+    """Collect and print before and after summary statistics for the given project."""
+    name = version.name_for_project(project)
+    print(name)
+
+    out_fil = pathlib.Path(project.path) / f"{name}.wav"
+
+    before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
+
+    yield
+
+    after_stats = summary_stats_for_file(out_fil, verbose)
+
+    table = _dicts_to_table({"Before": before_stats, "After": after_stats})
+    rich.print(table)
+
+
 def print_render_stats(out: RenderResult) -> None:
     """Print statistics for the performance of the render."""
     print(out.fil)
@@ -170,6 +192,25 @@ def summary_stats_for_file(fil: pathlib.Path, verbose: int = 0) -> dict[str, flo
     proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
     proc_output = proc.stderr
     return stats.parse_summary_stats(proc_output)
+
+
+def _dicts_to_table(dicts: dict[str, dict[str, float]]) -> rich.table.Table:
+    """Convert the given dictionaries to a table.
+
+    The outermost set of dictionary keys label the columns of the table. The
+    innermost dictionary keys label the first column of each row, after the
+    first header row. The innermost dictionary values are the cells of each
+    row, after the first label column.
+    """
+    table = rich.table.Table()
+    table.add_column("")
+    for di_name in dicts:
+        table.add_column(di_name)
+    keys = sorted({k for di in dicts.values() for k in di})
+    for k in keys:
+        table.add_row(k, *[str(di.get(k, "")) for di in dicts.values()])
+
+    return table
 
 
 def _cmd_for_stats(fil: pathlib.Path) -> list[str | pathlib.Path]:
@@ -252,15 +293,11 @@ def trim_silence(fil: pathlib.Path) -> None:
 def _render_main(
     project: reapy.core.Project, vocals: reapy.core.Track | None, verbose: int
 ) -> None:
-    print(SongVersion.MAIN.name_for_project(project))
-
     if vocals:
         vocals.unsolo()
         vocals.unmute()
     out = render_version(project, SongVersion.MAIN)
     print_render_stats(out)
-    for k, v in summary_stats_for_file(out.fil, verbose).items():
-        print(f"{k:<16}: {v:<32}")
 
 
 def _render_instrumental(
@@ -270,18 +307,15 @@ def _render_instrumental(
     vocal_loudness_worth: float,
     verbose: int,
 ) -> None:
-    print(SongVersion.INSTRUMENTAL.name_for_project(project))
-
     with (
         _adjust_master_limiter_threshold(project, vocal_loudness_worth),
         _mute((vocals,)),
     ):
         out = render_version(project, SongVersion.INSTRUMENTAL)
-        if len(versions) > 1:
-            print()
-        print_render_stats(out)
-        for k, v in summary_stats_for_file(out.fil, verbose).items():
-            print(f"{k:<16}: {v:<32}")
+
+    if len(versions) > 1:
+        print()
+    print_render_stats(out)
 
 
 def _render_a_cappella(
@@ -290,8 +324,6 @@ def _render_a_cappella(
     vocal_loudness_worth: float,
     verbose: int,
 ) -> None:
-    print(SongVersion.ACAPPELLA.name_for_project(project))
-
     tracks_to_mute = _find_acappella_tracks_to_mute(project)
 
     with (
@@ -299,12 +331,11 @@ def _render_a_cappella(
         _mute(tracks_to_mute),
     ):
         out = render_version(project, SongVersion.ACAPPELLA)
-        if len(versions) > 1:
-            print()
-        print_render_stats(out)
-        trim_silence(out.fil)
-        for k, v in summary_stats_for_file(out.fil, verbose).items():
-            print(f"{k:<16}: {v:<32}")
+
+    if len(versions) > 1:
+        print()
+    print_render_stats(out)
+    trim_silence(out.fil)
 
 
 def main(
@@ -325,15 +356,20 @@ def main(
 
     if SongVersion.MAIN in versions:
         did_something = True
-        _render_main(project, vocals, verbose)
+        with _print_summary_stats(project, SongVersion.MAIN, verbose):
+            _render_main(project, vocals, verbose)
 
     if SongVersion.INSTRUMENTAL in versions and vocals:
         did_something = True
-        _render_instrumental(versions, project, vocals, vocal_loudness_worth, verbose)
+        with _print_summary_stats(project, SongVersion.INSTRUMENTAL, verbose):
+            _render_instrumental(
+                versions, project, vocals, vocal_loudness_worth, verbose
+            )
 
     if SongVersion.ACAPPELLA in versions and vocals:
         did_something = True
-        _render_a_cappella(versions, project, vocal_loudness_worth, verbose)
+        with _print_summary_stats(project, SongVersion.ACAPPELLA, verbose):
+            _render_a_cappella(versions, project, vocal_loudness_worth, verbose)
 
     if did_something:
         # Render causes a project to have unsaved changes, no matter what. Save the user a step.

@@ -14,6 +14,7 @@ dependencies = [
     "click",
     "openai",
     "python-reapy",
+    "rich",
 ]
 
 [project.optional-dependencies]

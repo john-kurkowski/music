@@ -1,6 +1,7 @@
 """Render tests."""
 
 import datetime
+import itertools
 import math
 from collections.abc import Iterator
 from pathlib import Path
@@ -82,7 +83,12 @@ def project(
         project.tracks = [Track(name="Vocals"), Track(name="Drums")]
         project.set_info_string.side_effect = collect_render_patterns
         project.perform_action.side_effect = render_fake_file
-        parse_summary_stats.return_value = {"duration": 1.0, "size": 42.0}
+        parse_summary_stats.side_effect = itertools.cycle(
+            [
+                {"duration": 1.0, "size": 42.0},
+                {"duration": 250.1, "size": 1024},
+            ]
+        )
 
         mock_duration_delta.return_value = datetime.timedelta(seconds=10)
 
