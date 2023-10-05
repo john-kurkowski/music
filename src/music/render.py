@@ -164,14 +164,12 @@ def print_render_stats(out: RenderResult) -> None:
     )
 
 
-def print_summary_stats(fil: pathlib.Path, verbose: int = 0) -> None:
+def summary_stats_for_file(fil: pathlib.Path, verbose: int = 0) -> dict[str, float]:
     """Print statistics for the given audio file, like LUFS-I and LRA."""
     cmd = _cmd_for_stats(fil)
     proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
     proc_output = proc.stderr
-
-    for k, v in stats.parse_summary_stats(proc_output).items():
-        print(f"{k:<16}: {v:<32}")
+    return stats.parse_summary_stats(proc_output)
 
 
 def _cmd_for_stats(fil: pathlib.Path) -> list[str | pathlib.Path]:
@@ -261,7 +259,8 @@ def _render_main(
         vocals.unmute()
     out = render_version(project, SongVersion.MAIN)
     print_render_stats(out)
-    print_summary_stats(out.fil, verbose)
+    for k, v in summary_stats_for_file(out.fil, verbose).items():
+        print(f"{k:<16}: {v:<32}")
 
 
 def _render_instrumental(
@@ -281,7 +280,8 @@ def _render_instrumental(
         if len(versions) > 1:
             print()
         print_render_stats(out)
-        print_summary_stats(out.fil, verbose)
+        for k, v in summary_stats_for_file(out.fil, verbose).items():
+            print(f"{k:<16}: {v:<32}")
 
 
 def _render_a_cappella(
@@ -303,7 +303,8 @@ def _render_a_cappella(
             print()
         print_render_stats(out)
         trim_silence(out.fil)
-        print_summary_stats(out.fil, verbose)
+        for k, v in summary_stats_for_file(out.fil, verbose).items():
+            print(f"{k:<16}: {v:<32}")
 
 
 def main(

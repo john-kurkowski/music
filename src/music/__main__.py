@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 
 from .codegen import main as _codegen
-from .render import VOCAL_LOUDNESS_WORTH, SongVersion, print_summary_stats
+from .render import VOCAL_LOUDNESS_WORTH, SongVersion, summary_stats_for_file
 from .render import main as _render
 from .util import find_project
 
@@ -142,4 +142,5 @@ def stat(files: list[Path], verbose: int) -> None:
             print()
         if len(files) > 1:
             print(fil)
-        print_summary_stats(fil, verbose)
+        for k, v in summary_stats_for_file(fil, verbose).items():
+            print(f"{k:<16}: {v:<32}")
