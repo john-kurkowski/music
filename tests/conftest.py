@@ -10,8 +10,16 @@ from syrupy.assertion import SnapshotAssertion
 
 
 @pytest.fixture
-def snapshot(snapshot: SnapshotAssertion, tmp_path: Path) -> SnapshotAssertion:
-    """Override. Make syrupy's snapshot fixture strip temporary paths and tokens from any paths within a snapshot."""
+def snapshot(
+    monkeypatch: pytest.MonkeyPatch, snapshot: SnapshotAssertion, tmp_path: Path
+) -> SnapshotAssertion:
+    """Override. Make syrupy's snapshot fixture strip temporary paths and tokens from any paths within a snapshot.
+
+    In the case of console output, ensure no text wrapping occurs, so the
+    regular expression matches.
+    """
+    monkeypatch.setattr("music.render._CONSOLE_WIDTH", 999)
+
     tmp_path_str = str(tmp_path)
     tmp_id_re = re.compile(r"(?P<tmp_id>\s*\d+)(?P<ext>\.tmp)")
 
