@@ -25,7 +25,10 @@ def Track(name: str, params: list[mock.Mock] | None = None) -> mock.Mock:  # noq
 
 @pytest.fixture
 def parse_summary_stats() -> Iterator[mock.Mock]:
-    """Stub parsing ffmpeg output. The test module does not run or test external commands."""
+    """Stub parsing ffmpeg output.
+
+    The unit test module should not run or test external commands.
+    """
     with mock.patch("music.__codegen__.stats.parse_summary_stats") as parse:
         yield parse
 
@@ -96,13 +99,20 @@ def project(
 
 
 @pytest.fixture
-def subprocess(snapshot: SnapshotAssertion, tmp_path: Path) -> Iterator[mock.Mock]:
+def subprocess() -> Iterator[mock.Mock]:
     """Stub subprocess.run.
 
-    During unit tests, we don't want to actually run subprocesses. But we do
-    want to check that the arguments passed are expected, and simulate
-    subprocesses writing output files.
+    The unit test module should not run or test external commands.
     """
+    with mock.patch("subprocess.run") as mock_run:
+        yield mock_run
+
+
+@pytest.fixture
+def subprocess_with_output(
+    snapshot: SnapshotAssertion, subprocess: mock.Mock, tmp_path: Path
+) -> Iterator[mock.Mock]:
+    """Stub subprocess.run and simulate subprocesses writing output files."""
 
     def write_out_file(*args: list[str | Path], **kwargs: Any) -> mock.Mock:
         rv = mock.Mock()
@@ -116,16 +126,13 @@ def subprocess(snapshot: SnapshotAssertion, tmp_path: Path) -> Iterator[mock.Moc
 
         return rv
 
-    with mock.patch("subprocess.run") as mock_run:
-        mock_run.side_effect = write_out_file
-        yield mock_run
-
-        assert mock_run.call_count
-        assert mock_run.call_args_list == snapshot
+    subprocess.side_effect = write_out_file
+    yield subprocess
 
 
-@mock.patch("subprocess.run")
-def test_render_result_render_speedup(subprocess: mock.Mock, tmp_path: Path) -> None:
+def test_render_result_render_speedup(
+    snapshot: SnapshotAssertion, subprocess: mock.Mock, tmp_path: Path
+) -> None:
     """Test RenderResult.render_speedup."""
     proc = mock.Mock()
     proc.stdout = """
@@ -140,6 +147,9 @@ def test_render_result_render_speedup(subprocess: mock.Mock, tmp_path: Path) -> 
 
     assert obj1.render_speedup == 5.75
     assert obj2.render_speedup == math.inf
+
+    assert subprocess.call_count
+    assert subprocess.call_args_list == snapshot
 
 
 def test_main_noop(project: mock.Mock, snapshot: SnapshotAssertion) -> None:
@@ -163,7 +173,7 @@ def test_main_noop(project: mock.Mock, snapshot: SnapshotAssertion) -> None:
 def test_main_main_version(
     project: mock.Mock,
     snapshot: SnapshotAssertion,
-    subprocess: mock.Mock,
+    subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with main version."""
     result = CliRunner(mix_stderr=False).invoke(render, ["--include-main"])
@@ -172,12 +182,14 @@ def test_main_main_version(
     assert not result.stderr
 
     assert project.method_calls == snapshot
+    assert subprocess_with_output.call_count
+    assert subprocess_with_output.call_args_list == snapshot
 
 
 def test_main_default_versions(
     project: mock.Mock,
     snapshot: SnapshotAssertion,
-    subprocess: mock.Mock,
+    subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with default versions."""
     result = CliRunner(mix_stderr=False).invoke(render, [])
@@ -186,12 +198,14 @@ def test_main_default_versions(
     assert not result.stderr
 
     assert project.method_calls == snapshot
+    assert subprocess_with_output.call_count
+    assert subprocess_with_output.call_args_list == snapshot
 
 
 def test_main_all_versions(
     project: mock.Mock,
     snapshot: SnapshotAssertion,
-    subprocess: mock.Mock,
+    subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with all versions."""
     result = CliRunner(mix_stderr=False).invoke(
@@ -202,12 +216,14 @@ def test_main_all_versions(
     assert not result.stderr
 
     assert project.method_calls == snapshot
+    assert subprocess_with_output.call_count
+    assert subprocess_with_output.call_args_list == snapshot
 
 
 def test_main_filenames_all_versions(
     project: mock.Mock,
     snapshot: SnapshotAssertion,
-    subprocess: mock.Mock,
+    subprocess_with_output: mock.Mock,
     tmp_path: Path,
 ) -> None:
     """Test main with filenames and versions."""
@@ -232,3 +248,5 @@ def test_main_filenames_all_versions(
     assert not result.stderr
 
     assert project.method_calls == snapshot
+    assert subprocess_with_output.call_count
+    assert subprocess_with_output.call_args_list == snapshot

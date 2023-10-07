@@ -979,3 +979,23 @@
   _CallList([
   ])
 # ---
+# name: test_render_result_render_speedup
+  _CallList([
+    _Call(
+      tuple(
+        list([
+          'ffprobe',
+          '-i',
+          'TMP_PATH_HERE',
+          '-show_entries',
+          'format=duration',
+        ]),
+      ),
+      dict({
+        'capture_output': True,
+        'check': True,
+        'text': True,
+      }),
+    ),
+  ])
+# ---
