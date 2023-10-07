@@ -1,7 +1,6 @@
 # serializer version: 1
 # name: test_main_all_versions
   '''
-  
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
              ╷        ╷        
@@ -216,7 +215,6 @@
 # ---
 # name: test_main_default_versions
   '''
-  
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
              ╷        ╷        
@@ -431,7 +429,6 @@
 # ---
 # name: test_main_filenames_all_versions
   '''
-  
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
              ╷        ╷        
@@ -464,7 +461,6 @@
              ╵        ╵        
   Rendered 0:00:10 in 0:00:00, 
          a infx speedup        
-  
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
              ╷        ╷        
@@ -921,7 +917,6 @@
 # ---
 # name: test_main_main_version
   '''
-  
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
              ╷        ╷        

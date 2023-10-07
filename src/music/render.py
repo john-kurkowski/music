@@ -174,7 +174,6 @@ def _print_stats_for_render(
     out_fil = pathlib.Path(project.path) / f"{name}.wav"
 
     console = rich.console.Console(width=_CONSOLE_WIDTH)
-    console.print()
     with console.status(f'[bold green]Rendering "{name}"'):
         before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
         out = render()
@@ -351,6 +350,8 @@ def main(
         )
 
     if SongVersion.INSTRUMENTAL in versions and vocals:
+        if did_something:
+            print()
         did_something = True
         _print_stats_for_render(
             project,
@@ -365,6 +366,8 @@ def main(
         )
 
     if SongVersion.ACAPPELLA in versions and vocals:
+        if did_something:
+            print()
         did_something = True
         _print_stats_for_render(
             project,
