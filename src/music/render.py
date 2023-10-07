@@ -180,7 +180,7 @@ def _print_stats_for_render(
         out = render()
         after_stats = summary_stats_for_file(out_fil, verbose)
 
-    console.print(f"[b]{name}[/b]")
+    console.print(f"[b default]{name}[/b default]")
     console.print(f"[default dim italic]{out.fil}[/default dim italic]")
 
     table = rich.table.Table(
