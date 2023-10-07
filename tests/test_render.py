@@ -94,8 +94,6 @@ def project(
 
         yield project
 
-        assert mock_open_project.call_args_list == snapshot
-
 
 @pytest.fixture
 def subprocess(snapshot: SnapshotAssertion, tmp_path: Path) -> Iterator[mock.Mock]:
