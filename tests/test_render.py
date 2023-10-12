@@ -12,7 +12,7 @@ from unittest import mock
 import pytest
 from click.testing import CliRunner
 from music.__main__ import render
-from music.render import RENDER_CMD_ID, RenderResult
+from music.render import RENDER_CMD_ID, AudioFile, RenderResult
 from syrupy.assertion import SnapshotAssertion
 
 
@@ -79,7 +79,7 @@ def render_mocks(
         mock.patch("reapy.open_project") as mock_open_project,
         mock.patch("reapy.Project") as mock_project_class,
         mock.patch(
-            "music.render.RenderResult.duration_delta", new_callable=mock.PropertyMock
+            "music.render.AudioFile.duration_delta", new_callable=mock.PropertyMock
         ) as mock_duration_delta,
         mock.patch(
             "reapy.reascript_api.SNM_GetIntConfigVar", create=True
@@ -181,8 +181,8 @@ def test_render_result_render_speedup(
     """
     subprocess.return_value = proc
 
-    obj1 = RenderResult(tmp_path, datetime.timedelta(seconds=4.5))
-    obj2 = RenderResult(tmp_path, datetime.timedelta(seconds=0.1))
+    obj1 = RenderResult(AudioFile(tmp_path), datetime.timedelta(seconds=4.5))
+    obj2 = RenderResult(AudioFile(tmp_path), datetime.timedelta(seconds=0.1))
 
     assert obj1.render_speedup == 5.75
     assert obj2.render_speedup == math.inf
