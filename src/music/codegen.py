@@ -39,8 +39,9 @@ def main(example_audio_file: Path) -> None:
             "role": "user",
             "content": (
                 f"Write a Python file containing a function named {fn_name} to parse"
-                " the following output for max volume, LUFS-I, and LRA. Use regular"
-                f" expressions. Return the values in a dict.\n\n{proc_output}"
+                " the following output for audio duration, max volume, LUFS-I, and"
+                " LRA. Use regular expressions. Return the values in a"
+                f" dict.\n\n{proc_output}"
             ),
         },
     ]
