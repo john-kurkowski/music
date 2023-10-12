@@ -178,6 +178,7 @@ def test_main_main_version(
     """Test main with main version."""
     result = CliRunner(mix_stderr=False).invoke(render, ["--include-main"])
 
+    assert not result.exception
     assert result.stdout == snapshot
     assert not result.stderr
 
@@ -194,6 +195,7 @@ def test_main_default_versions(
     """Test main with default versions."""
     result = CliRunner(mix_stderr=False).invoke(render, [])
 
+    assert not result.exception
     assert result.stdout == snapshot
     assert not result.stderr
 
@@ -212,6 +214,7 @@ def test_main_all_versions(
         render, ["--include-main", "--include-instrumental", "--include-acappella"]
     )
 
+    assert not result.exception
     assert result.stdout == snapshot
     assert not result.stderr
 
@@ -244,6 +247,7 @@ def test_main_filenames_all_versions(
         ],
     )
 
+    assert not result.exception
     assert result.stdout == snapshot
     assert not result.stderr
 
