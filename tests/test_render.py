@@ -1,5 +1,6 @@
 """Render tests."""
 
+import dataclasses
 import datetime
 import itertools
 import math
@@ -33,11 +34,32 @@ def parse_summary_stats() -> Iterator[mock.Mock]:
         yield parse
 
 
+@dataclasses.dataclass(kw_only=True)
+class RenderMocks:
+    """Collection of all mocked classes and functions to render a song."""
+
+    duration_delta: mock.Mock
+    get_int_config_var: mock.Mock
+    open_project: mock.Mock
+    project: mock.Mock
+    set_int_config_var: mock.Mock
+
+    @property
+    def mock_calls(self) -> dict[str, Any]:
+        """A dictionary of calls, methods, magic methods, and return value mocks made for each attribute of this class.
+
+        See also unittest.mock.Mock.mock_calls.
+        """
+        return {
+            k.name: getattr(self, k.name).mock_calls for k in dataclasses.fields(self)
+        }
+
+
 @pytest.fixture
-def project(
-    parse_summary_stats: mock.Mock, snapshot: SnapshotAssertion, tmp_path: Path
-) -> Iterator[mock.Mock]:
-    """Mock reapy's Project class.
+def render_mocks(
+    parse_summary_stats: mock.Mock, tmp_path: Path
+) -> Iterator[RenderMocks]:
+    """Mock reapy's Project class and global settings functions.
 
     Stubs and occasionally fakes enough of a Project for coverage of this
     codebase, without actually interacting with Reaper.
@@ -47,8 +69,6 @@ def project(
         * The exception is after naming a render (via the "RENDER_PATTERN"
           action) and rendering, writes a fake file with the expected filename.
     * Sets up the expected FX that would be in a project.
-
-
     """
     threshold = mock.Mock()
     threshold.name = "Threshold"
@@ -64,7 +84,9 @@ def project(
         mock.patch(
             "reapy.reascript_api.SNM_GetIntConfigVar", create=True
         ) as mock_get_int_config_var,
-        mock.patch("reapy.reascript_api.SNM_SetIntConfigVar", create=True),
+        mock.patch(
+            "reapy.reascript_api.SNM_SetIntConfigVar", create=True
+        ) as mock_set_int_config_var,
     ):
         project = mock_open_project.return_value = mock_project_class.return_value
 
@@ -99,9 +121,20 @@ def project(
 
         mock_duration_delta.return_value = datetime.timedelta(seconds=10)
 
-        mock_get_int_config_var.return_value = 0
+        def get_int_config_var(key: str, _: int) -> int:
+            if key == "offlineinact":
+                return 0
+            return 999
 
-        yield project
+        mock_get_int_config_var.side_effect = get_int_config_var
+
+        yield RenderMocks(
+            duration_delta=mock_duration_delta,
+            get_int_config_var=mock_get_int_config_var,
+            open_project=mock_open_project,
+            project=project,
+            set_int_config_var=mock_set_int_config_var,
+        )
 
 
 @pytest.fixture
@@ -171,7 +204,7 @@ def test_main_reaper_not_running(project: mock.Mock) -> None:
 @mock.patch("reapy.reascript_api.SNM_GetIntConfigVar", create=True)
 def test_main_reaper_not_configured(
     mock_get_int_config_var: mock.Mock,
-    project: mock.Mock,
+    render_mocks: RenderMocks,
 ) -> None:
     """Test command handling when Reaper is not configured correctly for render."""
     mock_get_int_config_var.return_value = 1
@@ -180,12 +213,14 @@ def test_main_reaper_not_configured(
     assert "media items offline" in result.output
 
 
-def test_main_noop(project: mock.Mock, snapshot: SnapshotAssertion) -> None:
+def test_main_noop(render_mocks: RenderMocks, snapshot: SnapshotAssertion) -> None:
     """Test a project with nothing to do.
 
     If a project has no vocals, it does not make sense to render its instrumental nor cappella.
     """
-    project.tracks = [t for t in project.tracks if t.name != "Vocals"]
+    render_mocks.project.tracks = [
+        t for t in render_mocks.project.tracks if t.name != "Vocals"
+    ]
 
     result = CliRunner(mix_stderr=False).invoke(
         render, ["--include-instrumental", "--include-acappella"]
@@ -195,11 +230,11 @@ def test_main_noop(project: mock.Mock, snapshot: SnapshotAssertion) -> None:
     assert not result.stdout
     assert result.stderr == snapshot
 
-    assert project.method_calls == snapshot
+    assert render_mocks.project.method_calls == snapshot
 
 
 def test_main_main_version(
-    project: mock.Mock,
+    render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
 ) -> None:
@@ -210,13 +245,13 @@ def test_main_main_version(
     assert result.stdout == snapshot
     assert not result.stderr
 
-    assert project.method_calls == snapshot
+    assert render_mocks.project.method_calls == snapshot
     assert subprocess_with_output.call_count
     assert subprocess_with_output.call_args_list == snapshot
 
 
 def test_main_default_versions(
-    project: mock.Mock,
+    render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
 ) -> None:
@@ -227,13 +262,13 @@ def test_main_default_versions(
     assert result.stdout == snapshot
     assert not result.stderr
 
-    assert project.method_calls == snapshot
+    assert render_mocks.project.method_calls == snapshot
     assert subprocess_with_output.call_count
     assert subprocess_with_output.call_args_list == snapshot
 
 
 def test_main_all_versions(
-    project: mock.Mock,
+    render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
 ) -> None:
@@ -246,13 +281,13 @@ def test_main_all_versions(
     assert result.stdout == snapshot
     assert not result.stderr
 
-    assert project.method_calls == snapshot
+    assert render_mocks.project.method_calls == snapshot
     assert subprocess_with_output.call_count
     assert subprocess_with_output.call_args_list == snapshot
 
 
 def test_main_filenames_all_versions(
-    project: mock.Mock,
+    render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
     tmp_path: Path,
@@ -279,6 +314,38 @@ def test_main_filenames_all_versions(
     assert result.stdout == snapshot
     assert not result.stderr
 
-    assert project.method_calls == snapshot
+    assert render_mocks.project.method_calls == snapshot
     assert subprocess_with_output.call_count
     assert subprocess_with_output.call_args_list == snapshot
+
+
+def test_main_mocked_calls(
+    render_mocks: RenderMocks,
+    snapshot: SnapshotAssertion,
+    subprocess_with_output: mock.Mock,
+    tmp_path: Path,
+) -> None:
+    """Test main to verify mocked calls.
+
+    This is useful to test features that _only_ exercise mocked calls, for
+    example toggling a global Reaper preference. It would be noisy to snapshot
+    all mocked calls in every test case. So keep this test case snapshot
+    assertion separate.
+    """
+    some_paths = [
+        tmp_path / "path" / "to" / "some project",
+    ]
+    for path in some_paths:
+        path.mkdir(parents=True)
+
+    result = CliRunner(mix_stderr=False).invoke(
+        render,
+        [
+            *[str(path.resolve()) for path in some_paths],
+        ],
+    )
+
+    assert not result.exception
+    assert not result.stderr
+
+    assert render_mocks.mock_calls == snapshot
