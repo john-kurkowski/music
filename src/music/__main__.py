@@ -95,9 +95,6 @@ def render(
 
     Overwrites existing versions. Prints statistics for each output file as it
     is rendered.
-
-    Note the Reaper preference "Set media items offline when application is not
-    active" should be unchecked, or media items will be silent in the render.
     """
     projects = (
         [find_project(path) for path in project_dirs]

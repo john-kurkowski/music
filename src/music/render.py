@@ -232,14 +232,18 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
     Names the output file according to the given version. Writes to a temporary
     file first, then overwrites any existing file of the same song version.
 
-    Avoids FX tail leaking issues by tweaking certain, global Reaper
-    preferences. Resets them after render completion.
+    Avoids background rendering and FX tail leaking issues by tweaking certain,
+    global Reaper preferences. Resets them after render completion.
     """
     out_name = version.name_for_project(project)
 
     # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
     rand_id = random.randrange(10**5, 10**6)
     in_name = f"{out_name} {rand_id}.tmp"
+
+    # Avoid media items silent when Reaper renders in the background
+    prev_offlineinact = reapy.reascript_api.SNM_GetIntConfigVar("offlineinact", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
+    reapy.reascript_api.SNM_SetIntConfigVar("offlineinact", 0)  # type: ignore[attr-defined]
 
     # Avoid FX tails at the beginning of the render
     prev_runafterstop = reapy.reascript_api.SNM_GetIntConfigVar("runafterstop", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
@@ -255,6 +259,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
     finally:
         project.set_info_string("RENDER_PATTERN", "$project")
 
+        reapy.reascript_api.SNM_SetIntConfigVar("offlineinact", prev_offlineinact)  # type: ignore[attr-defined]
         reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", prev_runafterstop)  # type: ignore[attr-defined]
         reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", prev_runallonstop)  # type: ignore[attr-defined]
 
