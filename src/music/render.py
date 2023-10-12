@@ -232,10 +232,8 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
     Names the output file according to the given version. Writes to a temporary
     file first, then overwrites any existing file of the same song version.
 
-    Avoids FX tails leaking from the current cursor into the beginning of the
-    song (common for VSTi e.g. reverbs) by turning off certain, global Reaper
-    preferences. Resets the preference after render completion (FX tails are
-    useful outside of rendering).
+    Avoids FX tail leaking issues by tweaking certain, global Reaper
+    preferences. Resets them after render completion.
     """
     out_name = version.name_for_project(project)
 
@@ -243,9 +241,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
     rand_id = random.randrange(10**5, 10**6)
     in_name = f"{out_name} {rand_id}.tmp"
 
-    # Avoid FX tails at the beginning of the render. This requires SWS
-    # Extension, which is dynamically added to the Reaper Python API, and not
-    # provided by reapy.
+    # Avoid FX tails at the beginning of the render
     prev_runafterstop = reapy.reascript_api.SNM_GetIntConfigVar("runafterstop", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
     prev_runallonstop = reapy.reascript_api.SNM_GetIntConfigVar("runallonstop", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
     reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", 0)  # type: ignore[attr-defined]
