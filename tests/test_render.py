@@ -61,7 +61,9 @@ def project(
         mock.patch(
             "music.render.RenderResult.duration_delta", new_callable=mock.PropertyMock
         ) as mock_duration_delta,
-        mock.patch("reapy.reascript_api.SNM_GetIntConfigVar", create=True),
+        mock.patch(
+            "reapy.reascript_api.SNM_GetIntConfigVar", create=True
+        ) as mock_get_int_config_var,
         mock.patch("reapy.reascript_api.SNM_SetIntConfigVar", create=True),
     ):
         project = mock_open_project.return_value = mock_project_class.return_value
@@ -96,6 +98,8 @@ def project(
         )
 
         mock_duration_delta.return_value = datetime.timedelta(seconds=10)
+
+        mock_get_int_config_var.return_value = 0
 
         yield project
 
@@ -162,6 +166,18 @@ def test_main_reaper_not_running(project: mock.Mock) -> None:
     assert result.exit_code == 1
     assert not result.output
     assert "Reaper running" in str(result.exception)
+
+
+@mock.patch("reapy.reascript_api.SNM_GetIntConfigVar", create=True)
+def test_main_reaper_not_configured(
+    mock_get_int_config_var: mock.Mock,
+    project: mock.Mock,
+) -> None:
+    """Test command handling when Reaper is not configured correctly for render."""
+    mock_get_int_config_var.return_value = 1
+    result = CliRunner().invoke(render)
+    assert result.exit_code == 2
+    assert "media items offline" in result.output
 
 
 def test_main_noop(project: mock.Mock, snapshot: SnapshotAssertion) -> None:

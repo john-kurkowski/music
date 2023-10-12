@@ -3,12 +3,22 @@
 
 """CLI for this package."""
 
+import warnings
 from pathlib import Path
 
 import click
 
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", message="Can't reach distant API")
+    import reapy
+
 from .codegen import main as _codegen
-from .render import VOCAL_LOUDNESS_WORTH, SongVersion, summary_stats_for_file
+from .render import (
+    SWS_ERROR_SENTINEL,
+    VOCAL_LOUDNESS_WORTH,
+    SongVersion,
+    summary_stats_for_file,
+)
 from .render import main as _render
 from .util import find_project
 
@@ -95,15 +105,19 @@ def render(
 
     Overwrites existing versions. Prints statistics for each output file as it
     is rendered.
-
-    Note the Reaper preference "Set media items offline when application is not
-    active" should be unchecked, or media items will be silent in the render.
     """
     projects = (
         [find_project(path) for path in project_dirs]
         if project_dirs
         else [find_project()]
     )
+
+    offlineinact = reapy.reascript_api.SNM_GetIntConfigVar("offlineinact", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
+    if offlineinact != 0:
+        raise click.UsageError(
+            'Reaper preference "Set media items offline when application is not active"'
+            " must be unchecked, or media items will be silent in the render."
+        )
 
     versions = {
         version
