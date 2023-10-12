@@ -154,6 +154,16 @@ def test_render_result_render_speedup(
     assert subprocess.call_args_list == snapshot
 
 
+@mock.patch("reapy.Project")
+def test_main_reaper_not_running(project: mock.Mock) -> None:
+    """Test command handling when Reaper is not running."""
+    project.side_effect = AttributeError("module doesn't have reascript_api, yo")
+    result = CliRunner().invoke(render)
+    assert result.exit_code == 1
+    assert not result.output
+    assert "Reaper running" in str(result.exception)
+
+
 def test_main_noop(project: mock.Mock, snapshot: SnapshotAssertion) -> None:
     """Test a project with nothing to do.
 
