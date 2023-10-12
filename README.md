@@ -13,6 +13,7 @@ applicable mainly to me. However, the code may be a useful example for using
    ```zsh
    PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install <VERSION>
    ```
+1. [SWS Extension](https://www.sws-extension.org/)
 
 ## Install
 

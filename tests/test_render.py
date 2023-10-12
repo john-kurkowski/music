@@ -61,6 +61,8 @@ def project(
         mock.patch(
             "music.render.RenderResult.duration_delta", new_callable=mock.PropertyMock
         ) as mock_duration_delta,
+        mock.patch("reapy.reascript_api.SNM_GetIntConfigVar", create=True),
+        mock.patch("reapy.reascript_api.SNM_SetIntConfigVar", create=True),
     ):
         project = mock_open_project.return_value = mock_project_class.return_value
 

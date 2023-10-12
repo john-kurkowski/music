@@ -40,6 +40,9 @@ VOCAL_LOUDNESS_WORTH = 2.0
 # File: Render project, using the most recent render settings, auto-close render dialog
 RENDER_CMD_ID = 42230
 
+# Common error code found in SWS functions source
+SWS_ERROR_SENTINEL = -666
+
 # Test-only property. Set to a large number to avoid text wrapping in the console.
 _CONSOLE_WIDTH: int | None = None
 
@@ -226,24 +229,38 @@ def _cmd_for_stats(fil: pathlib.Path) -> list[str | pathlib.Path]:
 def render_version(project: reapy.core.Project, version: SongVersion) -> RenderResult:
     """Trigger Reaper to render the current project audio. Returns the output file.
 
-    Names the output file according to the given version.
+    Names the output file according to the given version. Writes to a temporary
+    file first, then overwrites any existing file of the same song version.
+
+    Avoids FX tails leaking from the current cursor into the beginning of the
+    song (common for VSTi e.g. reverbs) by turning off certain, global Reaper
+    preferences. Resets the preference after render completion (FX tails are
+    useful outside of rendering).
     """
     out_name = version.name_for_project(project)
 
     # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
     rand_id = random.randrange(10**5, 10**6)
     in_name = f"{out_name} {rand_id}.tmp"
-    prev_cursor_position = project.cursor_position
+
+    # Avoid FX tails at the beginning of the render. This requires SWS
+    # Extension, which is dynamically added to the Reaper Python API, and not
+    # provided by reapy.
+    prev_runafterstop = reapy.reascript_api.SNM_GetIntConfigVar("runafterstop", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
+    prev_runallonstop = reapy.reascript_api.SNM_GetIntConfigVar("runallonstop", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
+    reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", 0)  # type: ignore[attr-defined]
+    reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", 0)  # type: ignore[attr-defined]
 
     project.set_info_string("RENDER_PATTERN", in_name)
-    project.cursor_position = 0.0
     time_start = timer()
     try:
         project.perform_action(RENDER_CMD_ID)
         time_end = timer()
     finally:
-        project.cursor_position = prev_cursor_position
         project.set_info_string("RENDER_PATTERN", "$project")
+
+        reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", prev_runafterstop)  # type: ignore[attr-defined]
+        reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", prev_runallonstop)  # type: ignore[attr-defined]
 
     out_dir = pathlib.Path(project.path)
     out_fil = out_dir / f"{out_name}.wav"
