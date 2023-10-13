@@ -1,7 +1,6 @@
 """Render vocal and instrumental versions of the current Reaper project."""
 
 import contextlib
-import dataclasses
 import datetime
 import enum
 import math
@@ -48,14 +47,17 @@ SWS_ERROR_SENTINEL = -666
 _CONSOLE_WIDTH: int | None = None
 
 
-@dataclasses.dataclass
-class AudioFile:
-    """An audio file on disk.
+class RenderResult:
+    """Summary statistics of an audio render.
 
     Rounds times to the nearest second. Microseconds are irrelevant for human DAW operators.
     """
 
-    fil: pathlib.Path
+    def __init__(  # noqa: D107
+        self, fil: pathlib.Path, render_delta: datetime.timedelta
+    ):
+        self.fil = fil
+        self.render_delta = datetime.timedelta(seconds=round(render_delta.seconds))
 
     @cached_property
     def duration_delta(self) -> datetime.timedelta:
@@ -70,24 +72,11 @@ class AudioFile:
         delta_str = re.search(r"duration=(\S+)", proc_output).group(1)  # type: ignore[union-attr]
         return datetime.timedelta(seconds=round(float(delta_str)))
 
-
-class RenderResult:
-    """Summary statistics of an audio render.
-
-    Rounds times to the nearest second. Microseconds are irrelevant for human DAW operators.
-    """
-
-    def __init__(self, fil: AudioFile, render_delta: datetime.timedelta):  # noqa: D107
-        self.fil = fil
-        self.render_delta = datetime.timedelta(seconds=round(render_delta.seconds))
-
     @property
     def render_speedup(self) -> float:
         """How much faster the render was than the audio file's duration."""
         return (
-            (self.fil.duration_delta / self.render_delta)
-            if self.render_delta
-            else math.inf
+            (self.duration_delta / self.render_delta) if self.render_delta else math.inf
         )
 
 
@@ -194,12 +183,12 @@ def _print_stats_for_render(
         after_stats = summary_stats_for_file(out_fil, verbose)
 
     console.print(f"[b default]{name}[/b default]")
-    console.print(f"[default dim italic]{out.fil.fil}[/default dim italic]")
+    console.print(f"[default dim italic]{out.fil}[/default dim italic]")
 
     table = rich.table.Table(
         box=rich.box.MINIMAL,
         caption=(
-            f"Rendered [b]{out.fil.duration_delta}[/b] in [b]{out.render_delta}[/b], a"
+            f"Rendered [b]{out.duration_delta}[/b] in [b]{out.render_delta}[/b], a"
             f" [b]{out.render_speedup:.1f}x[/b] speedup"
         ),
     )
@@ -275,9 +264,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
     out_fil = out_dir / f"{out_name}.wav"
     shutil.move(out_dir / f"{in_name}.wav", out_fil)
 
-    return RenderResult(
-        AudioFile(out_fil), datetime.timedelta(seconds=time_end - time_start)
-    )
+    return RenderResult(out_fil, datetime.timedelta(seconds=time_end - time_start))
 
 
 def trim_silence(fil: pathlib.Path) -> None:
@@ -348,7 +335,7 @@ def _render_a_cappella(
     ):
         out = render_version(project, SongVersion.ACAPPELLA)
 
-    trim_silence(out.fil.fil)
+    trim_silence(out.fil)
     return out
 
 
