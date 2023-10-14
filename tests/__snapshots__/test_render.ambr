@@ -9,8 +9,8 @@
     duration │        │ 1.0    
     size     │        │ 42.0   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   Stub Song Title (Instrumental)
   TMP_PATH_HERE/Stub Song Title (Instrumental).wav
@@ -20,8 +20,8 @@
     duration │        │ 250.1  
     size     │        │ 1024   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   Stub Song Title (A Cappella)
   TMP_PATH_HERE/Stub Song Title (A Cappella).wav
@@ -31,8 +31,8 @@
     duration │        │ 1.0    
     size     │        │ 42.0   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   '''
 # ---
@@ -219,8 +219,8 @@
     duration │        │ 1.0    
     size     │        │ 42.0   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   Stub Song Title (Instrumental)
   TMP_PATH_HERE/Stub Song Title (Instrumental).wav
@@ -230,8 +230,8 @@
     duration │        │ 250.1  
     size     │        │ 1024   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   Stub Song Title (A Cappella)
   TMP_PATH_HERE/Stub Song Title (A Cappella).wav
@@ -241,8 +241,8 @@
     duration │        │ 1.0    
     size     │        │ 42.0   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   '''
 # ---
@@ -429,8 +429,8 @@
     duration │        │ 1.0    
     size     │        │ 42.0   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   Stub Song Title (Instrumental)
   TMP_PATH_HERE/Stub Song Title (Instrumental).wav
@@ -440,8 +440,8 @@
     duration │        │ 250.1  
     size     │        │ 1024   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   Stub Song Title (A Cappella)
   TMP_PATH_HERE/Stub Song Title (A Cappella).wav
@@ -451,8 +451,8 @@
     duration │        │ 1.0    
     size     │        │ 42.0   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   Stub Song Title
   TMP_PATH_HERE/Stub Song Title.wav
              ╷        ╷        
@@ -461,8 +461,8 @@
     duration │ 250.1  │ 1.0    
     size     │ 1024   │ 42.0   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   Stub Song Title (Instrumental)
   TMP_PATH_HERE/Stub Song Title (Instrumental).wav
@@ -472,8 +472,8 @@
     duration │ 250.1  │ 1.0    
     size     │ 1024   │ 42.0   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   Stub Song Title (A Cappella)
   TMP_PATH_HERE/Stub Song Title (A Cappella).wav
@@ -483,8 +483,8 @@
     duration │ 250.1  │ 1.0    
     size     │ 1024   │ 42.0   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   '''
 # ---
@@ -899,8 +899,8 @@
     duration │        │ 1.0    
     size     │        │ 42.0   
              ╵        ╵        
-  Rendered 0:00:10 in 0:00:00, 
-         a infx speedup        
+   Rendered in 0:00:00, a infx 
+             speedup           
   
   '''
 # ---
@@ -969,27 +969,6 @@
 # name: test_main_mocked_calls
   dict({
     'duration_delta': _CallList([
-      _Call(
-        '',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
     ]),
     'get_int_config_var': _CallList([
       _Call(

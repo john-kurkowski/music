@@ -188,7 +188,7 @@ def _print_stats_for_render(
     table = rich.table.Table(
         box=rich.box.MINIMAL,
         caption=(
-            f"Rendered [b]{out.duration_delta}[/b] in [b]{out.render_delta}[/b], a"
+            f"Rendered in [b]{out.render_delta}[/b], a"
             f" [b]{out.render_speedup:.1f}x[/b] speedup"
         ),
     )
