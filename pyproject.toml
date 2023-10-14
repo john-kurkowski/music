@@ -32,9 +32,6 @@ testing = [
 music = "music.__main__:cli"
 
 [tool.mypy]
-exclude = [
-    "__codegen__",
-]
 strict = true
 
 [tool.ruff]
