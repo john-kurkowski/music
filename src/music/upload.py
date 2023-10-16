@@ -46,7 +46,7 @@ def main(oauth_token: str, files: list[Path]) -> None:
         for track in tracks_resp.json()["collection"]
         if track["title"] in files_by_stem
     }
-    missing_tracks = set(files_by_stem).difference(tracks_by_title.keys())
+    missing_tracks = sorted(set(files_by_stem).difference(tracks_by_title.keys()))
     if missing_tracks:
         raise KeyError(f"Tracks to upload not found in SoundCloud: {missing_tracks}")
 

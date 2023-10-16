@@ -1,0 +1,276 @@
+# serializer version: 1
+# name: test_main_success
+  '''
+  ⠋ Uploading "some project.wav" 0:00:00
+  https://soundcloud.com/1
+  ⠋ Uploading "another project.wav" 0:00:00
+  https://soundcloud.com/2
+  
+  '''
+# ---
+# name: test_main_success.1
+  dict({
+    'get': _CallList([
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/users/41506/tracks',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+          'params': dict({
+            'limit': 999,
+          }),
+          'timeout': 10,
+        }),
+      ),
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+        }),
+      ),
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+        }),
+      ),
+    ]),
+    'post': _CallList([
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/uploads/track-upload-policy',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+          'json': dict({
+            'filename': 'some project.wav',
+            'filesize': 29,
+          }),
+        }),
+      ),
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+        }),
+      ),
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/uploads/track-upload-policy',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+          'json': dict({
+            'filename': 'another project.wav',
+            'filesize': 32,
+          }),
+        }),
+      ),
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+        }),
+      ),
+    ]),
+    'put': _CallList([
+      _Call(
+        '',
+        tuple(
+          'https://some-url',
+        ),
+        dict({
+          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/some project.wav'>",
+          'headers': dict({
+            'some-uploader-id': 'some-uploader-value',
+          }),
+          'timeout': 600,
+        }),
+      ),
+      _Call(
+        '().raise_for_status',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/tracks/soundcloud:tracks:1',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+          'json': dict({
+            'track': dict({
+              'replacing_original_filename': 'some project.wav',
+              'replacing_uid': 'stub-uid',
+              'title': 'some project',
+            }),
+          }),
+        }),
+      ),
+      _Call(
+        '().raise_for_status',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        '',
+        tuple(
+          'https://some-url',
+        ),
+        dict({
+          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/another project.wav'>",
+          'headers': dict({
+            'some-uploader-id': 'some-uploader-value',
+          }),
+          'timeout': 600,
+        }),
+      ),
+      _Call(
+        '().raise_for_status',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/tracks/soundcloud:tracks:2',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+          'json': dict({
+            'track': dict({
+              'replacing_original_filename': 'another project.wav',
+              'replacing_uid': 'stub-uid',
+              'title': 'another project',
+            }),
+          }),
+        }),
+      ),
+      _Call(
+        '().raise_for_status',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
+    ]),
+  })
+# ---
+# name: test_main_tracks_not_found
+  KeyError("Tracks to upload not found in SoundCloud: ['another project', 'some project']")
+# ---
+# name: test_main_tracks_not_found.1
+  dict({
+    'get': _CallList([
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/users/41506/tracks',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+          'params': dict({
+            'limit': 999,
+          }),
+          'timeout': 10,
+        }),
+      ),
+      _Call(
+        '().raise_for_status',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        '().json',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        '().json().__getitem__',
+        tuple(
+          'collection',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        '().json().__getitem__().__iter__',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
+    ]),
+    'post': _CallList([
+    ]),
+    'put': _CallList([
+    ]),
+  })
+# ---
