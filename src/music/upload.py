@@ -18,13 +18,10 @@ def upload(oauth_token: str, files: list[Path]) -> None:
     2. Upload the audio file there.
     3. Request transcoding of the uploaded audio file.
     4. Poll for transcoding to finish.
-    5. Confirm the transcoded file is what we want as the new file.
-
-    The browser-based SoundCloud uploader sends all the metadata in the update
-    dialog, even if only the audio file is changing. To avoid upstream parsing
-    errors, we also send the same set of metadata, pulling what we can from
-    the original track object, e.g. `title`, and hardcoding the absent rest,
-    e.g. `snippet_presets`.
+    5. Confirm the transcoded file is what we want as the new file. Send the
+       minimal metadata of the original track (although the browser version
+       sends all possible fields in the update dialog, even if they're not
+       dirty).
     """
     headers = {
         "Accept": "application/json",
@@ -59,17 +56,7 @@ def upload(oauth_token: str, files: list[Path]) -> None:
         track = tracks_by_title[stem]
         track_id = track["id"]
         track_metadata_to_update_keys = [
-            "commentable",
-            "description",
-            "downloadable",
-            "genre",
-            "license",
-            "permalink",
-            "publisher_metadata",
-            "sharing",
-            "tag_list",
             "title",
-            "track_format",
         ]
         track_metadata_to_update = {k: track[k] for k in track_metadata_to_update_keys}
 
@@ -118,21 +105,8 @@ def upload(oauth_token: str, files: list[Path]) -> None:
                 json={
                     "track": {
                         **track_metadata_to_update,
-                        "api_streamable": True,
-                        "embeddable": True,
-                        "feedable": False,
-                        "isrc_generate": False,
-                        "geo_blockings": [],
                         "replacing_original_filename": fil.name,
                         "replacing_uid": put_upload_uid,
-                        "restrictions": [],
-                        "rightsholders": [],
-                        "reveal_comments": True,
-                        "reveal_stats": True,
-                        "scheduled_public_date": None,
-                        "scheduled_timezone": None,
-                        "snippet_presets": {"start_seconds": 19, "end_seconds": 39},
-                        "tracklist": {"segments": []},
                     },
                 },
             )
