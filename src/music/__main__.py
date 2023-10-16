@@ -83,6 +83,20 @@ def codegen(example_audio_file: Path) -> None:
     type=SongVersion,
 )
 @click.option(
+    "--oauth_token",
+    envvar="SOUNDCLOUD_OAUTH_TOKEN",
+    help=(
+        "SoundCloud OAuth token. Read from the environment variable"
+        " SOUNDCLOUD_OAUTH_TOKEN."
+    ),
+)
+@click.option(
+    "--upload",
+    default=False,
+    help="Whether to additionally upload the rendered output to SoundCloud.",
+    is_flag=True,
+)
+@click.option(
     "--vocal-loudness-worth",
     "-vlw",
     default=VOCAL_LOUDNESS_WORTH,
@@ -98,6 +112,8 @@ def render(
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_acappella: SongVersion | None,
+    oauth_token: str,
+    upload: bool,
     vocal_loudness_worth: float,
 ) -> None:
     """Render vocal, instrumental, etc. versions of the given PROJECT_DIRS Reaper projects.
@@ -133,6 +149,12 @@ def render(
 
     if not any(renders):
         raise click.UsageError("nothing to render")
+
+    if upload:
+        _upload(
+            oauth_token,
+            [version.fil for render in renders for version in render.values()],
+        )
 
 
 @cli.command()
