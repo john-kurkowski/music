@@ -5,6 +5,7 @@ from pathlib import Path
 
 import requests
 import rich.console
+import rich.progress
 
 
 def upload(oauth_token: str, files: list[Path]) -> None:
@@ -51,7 +52,6 @@ def upload(oauth_token: str, files: list[Path]) -> None:
         raise KeyError(f"Tracks to upload not found in SoundCloud: {missing_tracks}")
 
     console = rich.console.Console()
-
     for stem, fil in files_by_stem.items():
         track = tracks_by_title[stem]
         track_id = track["id"]
@@ -62,8 +62,15 @@ def upload(oauth_token: str, files: list[Path]) -> None:
 
         with (
             open(fil, "rb") as fobj,
-            console.status(f'[bold green]Uploading "{fil.name}"'),
+            rich.progress.Progress(
+                rich.progress.SpinnerColumn(),
+                rich.progress.TextColumn("{task.description}"),
+                rich.progress.TimeElapsedColumn(),
+                console=console,
+            ) as progress,
         ):
+            progress.add_task(f'[bold green]Uploading "{fil.name}"', total=None)
+
             prepare_upload_resp = requests.post(
                 "https://api-v2.soundcloud.com/uploads/track-upload-policy",
                 headers=headers,
@@ -111,3 +118,5 @@ def upload(oauth_token: str, files: list[Path]) -> None:
                 },
             )
             confirm_upload_resp.raise_for_status()
+
+        console.print(track["permalink_url"])
