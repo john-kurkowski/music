@@ -126,12 +126,12 @@ def render(
         if version
     } or set(SongVersion)
 
-    did_somethings = [
+    renders = [
         _render(project, versions, vocal_loudness_worth, verbose=0)
         for project in projects
     ]
 
-    if not any(did_somethings):
+    if not any(renders):
         raise click.UsageError("nothing to render")
 
 
