@@ -17,7 +17,7 @@ _TRACK_METADATA_TO_UPDATE_KEYS = [
 ]
 
 
-def upload(oauth_token: str, files: list[Path]) -> None:
+def main(oauth_token: str, files: list[Path]) -> None:
     """Upload the given audio files to SoundCloud.
 
     Matches the files to SoundCloud tracks by exact filename. then uploads them

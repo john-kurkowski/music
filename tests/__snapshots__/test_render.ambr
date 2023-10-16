@@ -1242,6 +1242,21 @@
         }),
       ),
     ]),
+    'upload': _CallList([
+      _Call(
+        '',
+        tuple(
+          'stub-fake-token',
+          list([
+            'TMP_PATH_HERE/Stub Song Title.wav',
+            'TMP_PATH_HERE/Stub Song Title (Instrumental).wav',
+            'TMP_PATH_HERE/Stub Song Title (A Cappella).wav',
+          ]),
+        ),
+        dict({
+        }),
+      ),
+    ]),
   })
 # ---
 # name: test_main_noop

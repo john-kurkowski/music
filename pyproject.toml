@@ -25,6 +25,7 @@ testing = [
     "pre-commit",
     "pytest",
     "pytest-cov",
+    "pytest-socket",
     "ruff",
     "syrupy",
     "types-requests",
@@ -64,4 +65,5 @@ addopts = [
   'src',
   '--cov-report',
   'html',
+  '--disable-socket',
 ]

@@ -43,6 +43,7 @@ class RenderMocks:
     open_project: mock.Mock
     project: mock.Mock
     set_int_config_var: mock.Mock
+    upload: mock.Mock
 
     @property
     def mock_calls(self) -> dict[str, Any]:
@@ -57,7 +58,7 @@ class RenderMocks:
 
 @pytest.fixture
 def render_mocks(
-    parse_summary_stats: mock.Mock, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, parse_summary_stats: mock.Mock, tmp_path: Path
 ) -> Iterator[RenderMocks]:
     """Mock reapy's Project class and global settings functions.
 
@@ -70,6 +71,8 @@ def render_mocks(
           action) and rendering, writes a fake file with the expected filename.
     * Sets up the expected FX that would be in a project.
     """
+    monkeypatch.setenv("SOUNDCLOUD_OAUTH_TOKEN", "stub-fake-token")
+
     threshold = mock.Mock()
     threshold.name = "Threshold"
     threshold.normalized = -42.0
@@ -87,6 +90,7 @@ def render_mocks(
         mock.patch(
             "reapy.reascript_api.SNM_SetIntConfigVar", create=True
         ) as mock_set_int_config_var,
+        mock.patch("music.upload.main") as mock_upload,
     ):
         project = mock_open_project.return_value = mock_project_class.return_value
 
@@ -134,6 +138,7 @@ def render_mocks(
             open_project=mock_open_project,
             project=project,
             set_int_config_var=mock_set_int_config_var,
+            upload=mock_upload,
         )
 
 
@@ -341,6 +346,7 @@ def test_main_mocked_calls(
     result = CliRunner(mix_stderr=False).invoke(
         render,
         [
+            "--upload",
             *[str(path.resolve()) for path in some_paths],
         ],
     )

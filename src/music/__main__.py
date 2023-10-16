@@ -12,6 +12,9 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
     import reapy
 
+import music.render
+import music.upload
+
 from .codegen import main as _codegen
 from .render import (
     SWS_ERROR_SENTINEL,
@@ -19,8 +22,6 @@ from .render import (
     SongVersion,
     summary_stats_for_file,
 )
-from .render import main as _render
-from .upload import upload as _upload
 from .util import find_project
 
 
@@ -143,7 +144,7 @@ def render(
     } or set(SongVersion)
 
     renders = [
-        _render(project, versions, vocal_loudness_worth, verbose=0)
+        music.render.main(project, versions, vocal_loudness_worth, verbose=0)
         for project in projects
     ]
 
@@ -151,7 +152,7 @@ def render(
         raise click.UsageError("nothing to render")
 
     if upload:
-        _upload(
+        music.upload.main(
             oauth_token,
             [version.fil for render in renders for version in render.values()],
         )
@@ -200,4 +201,4 @@ def stat(files: list[Path], verbose: int) -> None:
 )
 def upload(files: list[Path], oauth_token: str) -> None:
     """Upload rendered output to SoundCloud."""
-    _upload(oauth_token, files)
+    music.upload.main(oauth_token, files)
