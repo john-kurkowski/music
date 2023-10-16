@@ -7,22 +7,21 @@ import requests
 import rich.console
 import rich.progress
 
+USER_ID = 41506
+
+# Seemingly the minimal metadata of the original track to be sent in an update
+# (although the browser version sends all possible fields in the update dialog,
+# even if they're not dirty).
+_TRACK_METADATA_TO_UPDATE_KEYS = [
+    "title",
+]
+
 
 def upload(oauth_token: str, files: list[Path]) -> None:
     """Upload the given audio files to SoundCloud.
 
-    Matches the files to SoundCloud tracks by exact filename, then performs
-    the following sequence of API requests for the given audio file to
-    actually become the new version of the existing SoundCloud track.
-
-    1. Request an AWS S3 upload URL.
-    2. Upload the audio file there.
-    3. Request transcoding of the uploaded audio file.
-    4. Poll for transcoding to finish.
-    5. Confirm the transcoded file is what we want as the new file. Send the
-       minimal metadata of the original track (although the browser version
-       sends all possible fields in the update dialog, even if they're not
-       dirty).
+    Matches the files to SoundCloud tracks by exact filename. then uploads them
+    to SoundCloud sequentially.
     """
     headers = {
         "Accept": "application/json",
@@ -34,7 +33,7 @@ def upload(oauth_token: str, files: list[Path]) -> None:
     }
 
     tracks_resp = requests.get(
-        "https://api-v2.soundcloud.com/users/41506/tracks",
+        f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
         headers=headers,
         params={"limit": 999},
         timeout=10,
@@ -54,69 +53,89 @@ def upload(oauth_token: str, files: list[Path]) -> None:
     console = rich.console.Console()
     for stem, fil in files_by_stem.items():
         track = tracks_by_title[stem]
-        track_id = track["id"]
-        track_metadata_to_update_keys = [
-            "title",
-        ]
-        track_metadata_to_update = {k: track[k] for k in track_metadata_to_update_keys}
 
-        with (
-            open(fil, "rb") as fobj,
-            rich.progress.Progress(
-                rich.progress.SpinnerColumn(),
-                rich.progress.TextColumn("{task.description}"),
-                rich.progress.TimeElapsedColumn(),
-                console=console,
-            ) as progress,
-        ):
-            progress.add_task(f'[bold green]Uploading "{fil.name}"', total=None)
+        _upload_one_file_to_track(
+            console,
+            headers,
+            fil,
+            track["id"],
+            {k: track[k] for k in _TRACK_METADATA_TO_UPDATE_KEYS},
+        )
 
-            prepare_upload_resp = requests.post(
-                "https://api-v2.soundcloud.com/uploads/track-upload-policy",
-                headers=headers,
-                json={"filename": fil.name, "filesize": fil.stat().st_size},
-            )
-            prepare_upload_resp.raise_for_status()
-            prepare_upload = prepare_upload_resp.json()
-            put_upload_headers = prepare_upload["headers"]
-            put_upload_url = prepare_upload["url"]
-            put_upload_uid = prepare_upload["uid"]
+        console.print(track["permalink_url"])
 
-            upload_resp = requests.put(
-                put_upload_url,
-                data=fobj,
-                headers=put_upload_headers,
-                timeout=60 * 10,
-            )
-            upload_resp.raise_for_status()
 
-            transcoding_resp = requests.post(
+def _upload_one_file_to_track(
+    console: rich.console.Console,
+    headers: dict[str, str],
+    fil: Path,
+    track_id: int,
+    track_metadata_to_update: dict[str, str],
+) -> None:
+    """Perform the API requests for the given audio file to become the new version of the existing SoundCloud track.
+
+    1. Request an AWS S3 upload URL.
+    2. Upload the audio file there.
+    3. Request transcoding of the uploaded audio file.
+    4. Poll for transcoding to finish.
+    5. Confirm the transcoded file is what we want as the new file. Send the
+       minimal metadata of the original track.
+    """
+    with (
+        open(fil, "rb") as fobj,
+        rich.progress.Progress(
+            rich.progress.SpinnerColumn(),
+            rich.progress.TextColumn("{task.description}"),
+            rich.progress.TimeElapsedColumn(),
+            console=console,
+        ) as progress,
+    ):
+        progress.add_task(f'[bold green]Uploading "{fil.name}"', total=None)
+
+        prepare_upload_resp = requests.post(
+            "https://api-v2.soundcloud.com/uploads/track-upload-policy",
+            headers=headers,
+            json={"filename": fil.name, "filesize": fil.stat().st_size},
+        )
+        prepare_upload_resp.raise_for_status()
+        prepare_upload = prepare_upload_resp.json()
+        put_upload_headers = prepare_upload["headers"]
+        put_upload_url = prepare_upload["url"]
+        put_upload_uid = prepare_upload["uid"]
+
+        upload_resp = requests.put(
+            put_upload_url,
+            data=fobj,
+            headers=put_upload_headers,
+            timeout=60 * 10,
+        )
+        upload_resp.raise_for_status()
+
+        transcoding_resp = requests.post(
+            f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
+            headers=headers,
+        )
+        transcoding_resp.raise_for_status()
+        while True:
+            transcoding_resp = requests.get(
                 f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
                 headers=headers,
             )
             transcoding_resp.raise_for_status()
-            while True:
-                transcoding_resp = requests.get(
-                    f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
-                    headers=headers,
-                )
-                transcoding_resp.raise_for_status()
-                transcoding = transcoding_resp.json()
-                if transcoding["status"] == "finished":
-                    break
-                time.sleep(3)
+            transcoding = transcoding_resp.json()
+            if transcoding["status"] == "finished":
+                break
+            time.sleep(3)
 
-            confirm_upload_resp = requests.put(
-                f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track_id}",
-                headers=headers,
-                json={
-                    "track": {
-                        **track_metadata_to_update,
-                        "replacing_original_filename": fil.name,
-                        "replacing_uid": put_upload_uid,
-                    },
+        confirm_upload_resp = requests.put(
+            f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track_id}",
+            headers=headers,
+            json={
+                "track": {
+                    **track_metadata_to_update,
+                    "replacing_original_filename": fil.name,
+                    "replacing_uid": put_upload_uid,
                 },
-            )
-            confirm_upload_resp.raise_for_status()
-
-        console.print(track["permalink_url"])
+            },
+        )
+        confirm_upload_resp.raise_for_status()
