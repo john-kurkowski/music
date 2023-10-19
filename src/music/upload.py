@@ -17,6 +17,22 @@ _TRACK_METADATA_TO_UPDATE_KEYS = [
 ]
 
 
+def login(client_id: str, client_secret: str) -> str:
+    """Log into SoundCloud and return the OAuth token."""
+    auth_resp = requests.post(
+        "https://api.soundcloud.com/oauth2/token",
+        params={
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "grant_type": "client_credentials",
+        },
+        timeout=10,
+    )
+    auth_resp.raise_for_status()
+    auth = auth_resp.json()
+    return str(auth["access_token"])
+
+
 def main(oauth_token: str, files: list[Path]) -> None:
     """Upload the given audio files to SoundCloud.
 

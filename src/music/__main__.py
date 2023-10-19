@@ -84,6 +84,21 @@ def codegen(example_audio_file: Path) -> None:
     type=SongVersion,
 )
 @click.option(
+    "--client_id",
+    envvar="SOUNDCLOUD_CLIENT_ID",
+    help=(
+        "SoundCloud client ID. Read from the environment variable SOUNDCLOUD_CLIENT_ID."
+    ),
+)
+@click.option(
+    "--client_secret",
+    envvar="SOUNDCLOUD_CLIENT_SECRET",
+    help=(
+        "SoundCloud client secret. Read from the environment variable"
+        " SOUNDCLOUD_CLIENT_SECRET."
+    ),
+)
+@click.option(
     "--oauth_token",
     envvar="SOUNDCLOUD_OAUTH_TOKEN",
     help=(
@@ -110,6 +125,8 @@ def codegen(example_audio_file: Path) -> None:
 )
 def render(
     project_dirs: list[Path],
+    client_id: str,
+    client_secret: str,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_acappella: SongVersion | None,
@@ -152,9 +169,11 @@ def render(
         raise click.UsageError("nothing to render")
 
     if upload:
-        music.upload.main(
-            oauth_token,
+        music.__main__.upload(
             [version.fil for render in renders for version in render.values()],
+            client_id,
+            client_secret,
+            oauth_token,
         )
 
 
@@ -192,6 +211,21 @@ def stat(files: list[Path], verbose: int) -> None:
     type=click.Path(exists=True, path_type=Path),
 )
 @click.option(
+    "--client_id",
+    envvar="SOUNDCLOUD_CLIENT_ID",
+    help=(
+        "SoundCloud client ID. Read from the environment variable SOUNDCLOUD_CLIENT_ID."
+    ),
+)
+@click.option(
+    "--client_secret",
+    envvar="SOUNDCLOUD_CLIENT_SECRET",
+    help=(
+        "SoundCloud client secret. Read from the environment variable"
+        " SOUNDCLOUD_CLIENT_SECRET."
+    ),
+)
+@click.option(
     "--oauth_token",
     envvar="SOUNDCLOUD_OAUTH_TOKEN",
     help=(
@@ -199,6 +233,16 @@ def stat(files: list[Path], verbose: int) -> None:
         " SOUNDCLOUD_OAUTH_TOKEN."
     ),
 )
-def upload(files: list[Path], oauth_token: str) -> None:
+def upload(
+    files: list[Path], client_id: str, client_secret: str, oauth_token: str
+) -> None:
     """Upload rendered output to SoundCloud."""
-    music.upload.main(oauth_token, files)
+    if client_id and client_secret:
+        oauth_token = music.upload.login(client_id, client_secret)
+
+    if oauth_token:
+        music.upload.main(oauth_token, files)
+
+    raise click.UsageError(
+        "You must provide both SoundCloud client ID and secret, or OAuth token."
+    )
