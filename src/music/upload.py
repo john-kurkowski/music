@@ -2,6 +2,7 @@
 
 import time
 from pathlib import Path
+from typing import Any, cast
 
 import requests
 import rich.console
@@ -48,19 +49,11 @@ def main(oauth_token: str, files: list[Path]) -> None:
         ),
     }
 
-    tracks_resp = requests.get(
-        f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
-        headers=headers,
-        params={"limit": 999},
-        timeout=10,
-    )
-    tracks_resp.raise_for_status()
+    tracks = _tracks(headers)
 
     files_by_stem = {file.stem: file for file in files}
     tracks_by_title = {
-        track["title"]: track
-        for track in tracks_resp.json()["collection"]
-        if track["title"] in files_by_stem
+        track["title"]: track for track in tracks if track["title"] in files_by_stem
     }
     missing_tracks = sorted(set(files_by_stem).difference(tracks_by_title.keys()))
     if missing_tracks:
@@ -79,6 +72,35 @@ def main(oauth_token: str, files: list[Path]) -> None:
         )
 
         console.print(track["permalink_url"])
+
+
+def _tracks(headers: dict[str, str]) -> list[dict[str, Any]]:
+    urls_to_try = [
+        f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
+        "https://api.soundcloud.com/me/tracks",
+    ]
+
+    last_exception: requests.exceptions.HTTPError | None = None
+    for url in urls_to_try:
+        tracks_resp = requests.get(
+            url,
+            headers=headers,
+            params={"limit": 999},
+            timeout=10,
+        )
+        try:
+            tracks_resp.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            last_exception = e
+
+            if tracks_resp.status_code == 403:
+                continue
+            else:
+                raise
+
+        return cast(list[dict[str, Any]], tracks_resp.json()["collection"])
+
+    raise cast(requests.exceptions.HTTPError, last_exception)
 
 
 def _upload_one_file_to_track(
