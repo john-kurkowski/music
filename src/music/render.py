@@ -171,8 +171,11 @@ def _print_stats_for_render(
     version: SongVersion,
     verbose: int,
     render: Callable[[], RenderResult],
-) -> None:
-    """Collect and print before and after summary statistics for the given project version render."""
+) -> RenderResult:
+    """Collect and print before and after summary statistics for the given project version render.
+
+    Returns the rendered file, after pretty printing itsprogress and metadata.
+    """
     name = version.name_for_project(project)
     out_fil = pathlib.Path(project.path) / f"{name}.wav"
 
@@ -201,6 +204,8 @@ def _print_stats_for_render(
         table.add_row(k, *[str(di.get(k, "")) for di in (before_stats, after_stats)])
 
     console.print(table)
+
+    return out
 
 
 def summary_stats_for_file(
@@ -344,7 +349,7 @@ def main(
     versions: Collection[SongVersion],
     vocal_loudness_worth: float,
     verbose: int,
-) -> bool:
+) -> dict[SongVersion, RenderResult]:
     """Render the given versions of the given Reaper project.
 
     Returns True if anything was rendered, False otherwise. For example, if a
@@ -353,11 +358,10 @@ def main(
     """
     vocals = next((track for track in project.tracks if track.name == "Vocals"), None)
 
-    did_something = False
+    rv: dict[SongVersion, RenderResult] = {}
 
     if SongVersion.MAIN in versions:
-        did_something = True
-        _print_stats_for_render(
+        rv[SongVersion.MAIN] = _print_stats_for_render(
             project,
             SongVersion.MAIN,
             verbose,
@@ -365,10 +369,9 @@ def main(
         )
 
     if SongVersion.INSTRUMENTAL in versions and vocals:
-        if did_something:
+        if rv:
             print()
-        did_something = True
-        _print_stats_for_render(
+        rv[SongVersion.INSTRUMENTAL] = _print_stats_for_render(
             project,
             SongVersion.INSTRUMENTAL,
             verbose,
@@ -381,18 +384,17 @@ def main(
         )
 
     if SongVersion.ACAPPELLA in versions and vocals:
-        if did_something:
+        if rv:
             print()
-        did_something = True
-        _print_stats_for_render(
+        rv[SongVersion.ACAPPELLA] = _print_stats_for_render(
             project,
             SongVersion.ACAPPELLA,
             verbose,
             lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
         )
 
-    if did_something:
+    if rv:
         # Render causes a project to have unsaved changes, no matter what. Save the user a step.
         project.save()
 
-    return did_something
+    return rv

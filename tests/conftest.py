@@ -1,5 +1,6 @@
 """pytest conventional configuration file."""
 
+import io
 import re
 from pathlib import Path
 from typing import Any
@@ -24,7 +25,7 @@ def snapshot(
     tmp_id_re = re.compile(r"(?P<tmp_id>\s*\d+)(?P<ext>\.tmp)")
 
     def without_tmp_path(data: Any, path: Any) -> Any:
-        if isinstance(data, Path):
+        if isinstance(data, Path) or isinstance(data, io.IOBase):
             return str(data).replace(tmp_path_str, "TMP_PATH_HERE")
         elif isinstance(data, str):
             without_tmp_id = tmp_id_re.sub(r"\g<ext>", data)

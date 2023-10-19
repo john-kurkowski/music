@@ -12,6 +12,9 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
     import reapy
 
+import music.render
+import music.upload
+
 from .codegen import main as _codegen
 from .render import (
     SWS_ERROR_SENTINEL,
@@ -19,7 +22,6 @@ from .render import (
     SongVersion,
     summary_stats_for_file,
 )
-from .render import main as _render
 from .util import find_project
 
 
@@ -82,6 +84,20 @@ def codegen(example_audio_file: Path) -> None:
     type=SongVersion,
 )
 @click.option(
+    "--oauth_token",
+    envvar="SOUNDCLOUD_OAUTH_TOKEN",
+    help=(
+        "SoundCloud OAuth token. Read from the environment variable"
+        " SOUNDCLOUD_OAUTH_TOKEN."
+    ),
+)
+@click.option(
+    "--upload",
+    default=False,
+    help="Whether to additionally upload the rendered output to SoundCloud.",
+    is_flag=True,
+)
+@click.option(
     "--vocal-loudness-worth",
     "-vlw",
     default=VOCAL_LOUDNESS_WORTH,
@@ -97,6 +113,8 @@ def render(
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_acappella: SongVersion | None,
+    oauth_token: str,
+    upload: bool,
     vocal_loudness_worth: float,
 ) -> None:
     """Render vocal, instrumental, etc. versions of the given PROJECT_DIRS Reaper projects.
@@ -125,13 +143,19 @@ def render(
         if version
     } or set(SongVersion)
 
-    did_somethings = [
-        _render(project, versions, vocal_loudness_worth, verbose=0)
+    renders = [
+        music.render.main(project, versions, vocal_loudness_worth, verbose=0)
         for project in projects
     ]
 
-    if not any(did_somethings):
+    if not any(renders):
         raise click.UsageError("nothing to render")
+
+    if upload:
+        music.upload.main(
+            oauth_token,
+            [version.fil for render in renders for version in render.values()],
+        )
 
 
 @cli.command()
@@ -158,3 +182,23 @@ def stat(files: list[Path], verbose: int) -> None:
             print(fil)
         for k, v in summary_stats_for_file(fil, verbose).items():
             print(f"{k:<16}: {v:<32}")
+
+
+@cli.command()
+@click.argument(
+    "files",
+    nargs=-1,
+    required=True,
+    type=click.Path(exists=True, path_type=Path),
+)
+@click.option(
+    "--oauth_token",
+    envvar="SOUNDCLOUD_OAUTH_TOKEN",
+    help=(
+        "SoundCloud OAuth token. Read from the environment variable"
+        " SOUNDCLOUD_OAUTH_TOKEN."
+    ),
+)
+def upload(files: list[Path], oauth_token: str) -> None:
+    """Upload rendered output to SoundCloud."""
+    music.upload.main(oauth_token, files)
