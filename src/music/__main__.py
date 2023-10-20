@@ -12,6 +12,7 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
     import reapy
 
+import music.auth
 import music.render
 import music.upload
 
@@ -238,7 +239,7 @@ def upload(
 ) -> None:
     """Upload rendered output to SoundCloud."""
     if client_id and client_secret:
-        oauth_token = music.upload.login(client_id, client_secret)
+        oauth_token = music.auth.login(client_id, client_secret)
 
     if oauth_token:
         music.upload.main(oauth_token, files)
