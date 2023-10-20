@@ -242,6 +242,7 @@ def upload(
 
     if oauth_token:
         music.upload.main(oauth_token, files)
+        return
 
     raise click.UsageError(
         "You must provide both SoundCloud client ID and secret, or OAuth token."
