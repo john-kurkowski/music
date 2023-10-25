@@ -59,32 +59,26 @@ def main(oauth_token: str, files: list[Path]) -> None:
 
 
 def _tracks(headers: dict[str, str]) -> list[dict[str, Any]]:
-    urls_to_try = [
+    tracks_resp = requests.get(
         f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
-        "https://api.soundcloud.com/me/tracks",
-    ]
-
-    last_exception: requests.exceptions.HTTPError | None = None
-    for url in urls_to_try:
+        headers=headers,
+        params={"limit": 999},
+        timeout=10,
+    )
+    if tracks_resp.status_code == 403:
         tracks_resp = requests.get(
-            url,
+            "https://api.soundcloud.com/me/tracks",
             headers=headers,
             params={"limit": 999},
             timeout=10,
         )
-        try:
-            tracks_resp.raise_for_status()
-        except requests.exceptions.HTTPError as e:
-            last_exception = e
+        tracks_resp.raise_for_status()
+        tracks = tracks_resp.json()
+    else:
+        tracks_resp.raise_for_status()
+        tracks = tracks_resp.json()["collection"]
 
-            if tracks_resp.status_code == 403:
-                continue
-            else:
-                raise
-
-        return cast(list[dict[str, Any]], tracks_resp.json()["collection"])
-
-    raise cast(requests.exceptions.HTTPError, last_exception)
+    return cast(list[dict[str, Any]], tracks)
 
 
 def _upload_one_file_to_track(
