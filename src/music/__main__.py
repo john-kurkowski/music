@@ -202,3 +202,7 @@ def stat(files: list[Path], verbose: int) -> None:
 def upload(files: list[Path], oauth_token: str) -> None:
     """Upload rendered output to SoundCloud."""
     music.upload.main(oauth_token, files)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    cli()
