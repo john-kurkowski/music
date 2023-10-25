@@ -13,7 +13,7 @@ import requests
 def login(client_id: str, client_secret: str) -> str:
     """Log the user into SoundCloud."""
     port = 8080
-    redirect_uri = f"http://localhost:{port}"
+    redirect_uri = f"http://localhost:{port}/"
 
     webbrowser.open(
         f"https://api.soundcloud.com/connect?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code"
@@ -51,6 +51,7 @@ def login(client_id: str, client_secret: str) -> str:
             "client_secret": client_secret,
             "code": code,
             "grant_type": "authorization_code",
+            "redirect_uri": redirect_uri,
         },
         timeout=10,
     )
