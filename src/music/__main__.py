@@ -13,6 +13,7 @@ with warnings.catch_warnings():
     import reapy
 
 import music.render
+import music.tag
 import music.upload
 
 from .codegen import main as _codegen
@@ -182,6 +183,17 @@ def stat(files: list[Path], verbose: int) -> None:
             print(fil)
         for k, v in summary_stats_for_file(fil, verbose).items():
             print(f"{k:<16}: {v:<32}")
+
+
+@cli.command()
+@click.argument(
+    "file",
+    required=True,
+    type=click.Path(exists=True, path_type=Path),
+)
+def tag(file: Path) -> None:
+    """Encode .wav FILE to .mp3 and tag with artist, album, and track number."""
+    music.tag.main(file)
 
 
 @cli.command()
