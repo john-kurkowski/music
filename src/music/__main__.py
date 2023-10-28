@@ -144,18 +144,21 @@ def render(
         if version
     } or set(SongVersion)
 
-    renders = [
-        music.render.main(project, versions, vocal_loudness_worth, verbose=0)
-        for project in projects
-    ]
+    renders = []
 
-    if not any(renders):
+    for project in projects:
+        for _, render in music.render.main(
+            project, versions, vocal_loudness_worth, verbose=0
+        ):
+            renders.append(render)
+
+    if not renders:
         raise click.UsageError("nothing to render")
 
     if upload:
         music.upload.main(
             oauth_token,
-            [version.fil for render in renders for version in render.values()],
+            [render.fil for render in renders],
         )
 
 
