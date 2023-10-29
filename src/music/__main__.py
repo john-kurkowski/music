@@ -200,7 +200,6 @@ def tag(file: Path) -> None:
 @click.argument(
     "files",
     nargs=-1,
-    required=True,
     type=click.Path(exists=True, path_type=Path),
 )
 @click.option(
@@ -212,7 +211,19 @@ def tag(file: Path) -> None:
     ),
 )
 def upload(files: list[Path], oauth_token: str) -> None:
-    """Upload rendered output to SoundCloud."""
+    """Upload rendered output FILES to SoundCloud.
+
+    Defaults FILES to all rendered versions of the currently open project.
+    """
+    if not files:
+        project = find_project()
+        files = [
+            fil
+            for version in SongVersion
+            if (fil := Path(project.path) / f"{version.name_for_project(project)}.wav")
+            and fil.exists()
+        ]
+
     music.upload.main(oauth_token, files)
 
 
