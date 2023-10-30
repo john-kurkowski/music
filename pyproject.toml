@@ -11,10 +11,10 @@ classifiers = [
 ]
 
 dependencies = [
+    "aiohttp",
     "click",
     "openai",
     "python-reapy",
-    "httpx",
     "rich",
 ]
 

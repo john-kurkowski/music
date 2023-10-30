@@ -10,8 +10,8 @@ from functools import wraps
 from pathlib import Path
 from typing import Any
 
+import aiohttp
 import click
-import httpx
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -163,7 +163,7 @@ async def render(
     renders = []
     coroutines = []
 
-    async with httpx.AsyncClient() as client:
+    async with aiohttp.ClientSession() as client:
         for project in projects:
             for _, render in music.render.main(
                 project, versions, vocal_loudness_worth, verbose=0
@@ -236,7 +236,7 @@ def tag(file: Path) -> None:
 )
 async def upload(files: list[Path], oauth_token: str) -> None:
     """Upload rendered output to SoundCloud."""
-    async with httpx.AsyncClient() as client:
+    async with aiohttp.ClientSession() as client:
         await music.upload.main(client, oauth_token, files)
 
 

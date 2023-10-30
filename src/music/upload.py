@@ -3,7 +3,7 @@
 import time
 from pathlib import Path
 
-import httpx
+import aiohttp
 import rich.console
 import rich.progress
 
@@ -17,7 +17,9 @@ _TRACK_METADATA_TO_UPDATE_KEYS = [
 ]
 
 
-async def main(client: httpx.AsyncClient, oauth_token: str, files: list[Path]) -> None:
+async def main(
+    client: aiohttp.ClientSession, oauth_token: str, files: list[Path]
+) -> None:
     """Upload the given audio files to SoundCloud.
 
     Matches the files to SoundCloud tracks by exact filename. then uploads them
@@ -43,7 +45,7 @@ async def main(client: httpx.AsyncClient, oauth_token: str, files: list[Path]) -
     files_by_stem = {file.stem: file for file in files}
     tracks_by_title = {
         track["title"]: track
-        for track in tracks_resp.json()["collection"]
+        for track in (await tracks_resp.json())["collection"]
         if track["title"] in files_by_stem
     }
     missing_tracks = sorted(set(files_by_stem).difference(tracks_by_title.keys()))
@@ -68,7 +70,7 @@ async def main(client: httpx.AsyncClient, oauth_token: str, files: list[Path]) -
 
 async def _upload_one_file_to_track(
     console: rich.console.Console,
-    client: httpx.AsyncClient,
+    client: aiohttp.ClientSession,
     headers: dict[str, str],
     fil: Path,
     track_id: int,
@@ -100,14 +102,14 @@ async def _upload_one_file_to_track(
             json={"filename": fil.name, "filesize": fil.stat().st_size},
         )
         prepare_upload_resp.raise_for_status()
-        prepare_upload = prepare_upload_resp.json()
+        prepare_upload = await prepare_upload_resp.json()
         put_upload_headers = prepare_upload["headers"]
         put_upload_url = prepare_upload["url"]
         put_upload_uid = prepare_upload["uid"]
 
         upload_resp = await client.put(
             put_upload_url,
-            content=fobj,
+            data=fobj,
             headers=put_upload_headers,
             timeout=60 * 10,
         )
@@ -124,7 +126,7 @@ async def _upload_one_file_to_track(
                 headers=headers,
             )
             transcoding_resp.raise_for_status()
-            transcoding = transcoding_resp.json()
+            transcoding = await transcoding_resp.json()
             if transcoding["status"] == "finished":
                 break
             time.sleep(3)
