@@ -3,10 +3,15 @@
 
 """CLI for this package."""
 
+import asyncio
 import warnings
+from collections.abc import Callable
+from functools import wraps
 from pathlib import Path
+from typing import Any
 
 import click
+import httpx
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -24,6 +29,16 @@ from .render import (
     summary_stats_for_file,
 )
 from .util import find_project
+
+
+def coro(f: Callable[..., Any]) -> Callable[..., Any]:
+    """Decorate Click commands as coroutines."""
+
+    @wraps(f)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return asyncio.run(f(*args, **kwargs))
+
+    return wrapper
 
 
 @click.group()
@@ -52,6 +67,7 @@ def codegen(example_audio_file: Path) -> None:
     nargs=-1,
     type=click.Path(exists=True, path_type=Path),
 )
+@coro
 @click.option(
     "--include-main",
     default=None,
@@ -109,7 +125,7 @@ def codegen(example_audio_file: Path) -> None:
     ),
     type=float,
 )
-def render(
+async def render(
     project_dirs: list[Path],
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
@@ -145,21 +161,24 @@ def render(
     } or set(SongVersion)
 
     renders = []
+    coroutines = []
 
-    for project in projects:
-        for _, render in music.render.main(
-            project, versions, vocal_loudness_worth, verbose=0
-        ):
-            renders.append(render)
+    async with httpx.AsyncClient() as client:
+        for project in projects:
+            for _, render in music.render.main(
+                project, versions, vocal_loudness_worth, verbose=0
+            ):
+                renders.append(render)
+
+                if upload:
+                    coroutines.append(
+                        music.upload.main(client, oauth_token, [render.fil])
+                    )
+
+        await asyncio.gather(*coroutines)
 
     if not renders:
         raise click.UsageError("nothing to render")
-
-    if upload:
-        music.upload.main(
-            oauth_token,
-            [render.fil for render in renders],
-        )
 
 
 @cli.command()
@@ -200,6 +219,7 @@ def tag(file: Path) -> None:
 
 
 @cli.command()
+@coro
 @click.argument(
     "files",
     nargs=-1,
@@ -214,9 +234,10 @@ def tag(file: Path) -> None:
         " SOUNDCLOUD_OAUTH_TOKEN."
     ),
 )
-def upload(files: list[Path], oauth_token: str) -> None:
+async def upload(files: list[Path], oauth_token: str) -> None:
     """Upload rendered output to SoundCloud."""
-    music.upload.main(oauth_token, files)
+    async with httpx.AsyncClient() as client:
+        await music.upload.main(client, oauth_token, files)
 
 
 if __name__ == "__main__":  # pragma: no cover

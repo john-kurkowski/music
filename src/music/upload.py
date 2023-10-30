@@ -3,7 +3,7 @@
 import time
 from pathlib import Path
 
-import requests
+import httpx
 import rich.console
 import rich.progress
 
@@ -17,7 +17,7 @@ _TRACK_METADATA_TO_UPDATE_KEYS = [
 ]
 
 
-def main(oauth_token: str, files: list[Path]) -> None:
+async def main(client: httpx.AsyncClient, oauth_token: str, files: list[Path]) -> None:
     """Upload the given audio files to SoundCloud.
 
     Matches the files to SoundCloud tracks by exact filename. then uploads them
@@ -32,7 +32,7 @@ def main(oauth_token: str, files: list[Path]) -> None:
         ),
     }
 
-    tracks_resp = requests.get(
+    tracks_resp = await client.get(
         f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
         headers=headers,
         params={"limit": 999},
@@ -54,8 +54,9 @@ def main(oauth_token: str, files: list[Path]) -> None:
     for stem, fil in files_by_stem.items():
         track = tracks_by_title[stem]
 
-        _upload_one_file_to_track(
+        await _upload_one_file_to_track(
             console,
+            client,
             headers,
             fil,
             track["id"],
@@ -65,8 +66,9 @@ def main(oauth_token: str, files: list[Path]) -> None:
         console.print(track["permalink_url"])
 
 
-def _upload_one_file_to_track(
+async def _upload_one_file_to_track(
     console: rich.console.Console,
+    client: httpx.AsyncClient,
     headers: dict[str, str],
     fil: Path,
     track_id: int,
@@ -92,7 +94,7 @@ def _upload_one_file_to_track(
     ):
         progress.add_task(f'[bold green]Uploading "{fil.name}"', total=None)
 
-        prepare_upload_resp = requests.post(
+        prepare_upload_resp = await client.post(
             "https://api-v2.soundcloud.com/uploads/track-upload-policy",
             headers=headers,
             json={"filename": fil.name, "filesize": fil.stat().st_size},
@@ -103,21 +105,21 @@ def _upload_one_file_to_track(
         put_upload_url = prepare_upload["url"]
         put_upload_uid = prepare_upload["uid"]
 
-        upload_resp = requests.put(
+        upload_resp = await client.put(
             put_upload_url,
-            data=fobj,
+            content=fobj,
             headers=put_upload_headers,
             timeout=60 * 10,
         )
         upload_resp.raise_for_status()
 
-        transcoding_resp = requests.post(
+        transcoding_resp = await client.post(
             f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
             headers=headers,
         )
         transcoding_resp.raise_for_status()
         while True:
-            transcoding_resp = requests.get(
+            transcoding_resp = await client.get(
                 f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
                 headers=headers,
             )
@@ -127,7 +129,7 @@ def _upload_one_file_to_track(
                 break
             time.sleep(3)
 
-        confirm_upload_resp = requests.put(
+        confirm_upload_resp = await client.put(
             f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track_id}",
             headers=headers,
             json={

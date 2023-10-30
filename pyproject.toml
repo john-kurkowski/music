@@ -14,7 +14,7 @@ dependencies = [
     "click",
     "openai",
     "python-reapy",
-    "requests",
+    "httpx",
     "rich",
 ]
 
@@ -28,7 +28,6 @@ testing = [
     "pytest-socket",
     "ruff",
     "syrupy",
-    "types-requests",
 ]
 
 [project.scripts]
