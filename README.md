@@ -1,6 +1,6 @@
 # music
 
-Miscellaneous tasks for publishing my music.
+Tasks for publishing my music.
 
 The code is idiosyncratic with my music project conventions and therefore
 applicable mainly to me. However, the code may be a useful example for using

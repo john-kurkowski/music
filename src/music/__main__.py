@@ -3,6 +3,7 @@
 
 """CLI for this package."""
 
+import shutil
 import warnings
 from pathlib import Path
 
@@ -28,7 +29,7 @@ from .util import find_project
 
 @click.group()
 def cli() -> None:
-    """Miscellaneous tasks for publishing my music."""
+    """Tasks for publishing my music."""
 
 
 @cli.command()
@@ -48,9 +49,32 @@ def codegen(example_audio_file: Path) -> None:
 
 @cli.command()
 @click.argument(
+    "dst_dir",
+    type=click.Path(dir_okay=True, file_okay=False, path_type=Path),
+)
+@click.argument(
+    "files",
+    nargs=-1,
+    required=True,
+    type=click.Path(dir_okay=False, exists=True, file_okay=True, path_type=Path),
+)
+def export(dst_dir: Path, files: list[Path]) -> None:
+    """Export the given FILES to the given DST_DIR directory, in album order."""
+    dst_dir.mkdir(exist_ok=True)
+
+    for i, src in enumerate(files):
+        dst = dst_dir / f"{i+1:02d} - {src.with_suffix('.wav').name}"
+        if dst.exists() and src.stat().st_mtime < dst.stat().st_mtime:
+            continue
+
+        shutil.copy2(src, dst)
+
+
+@cli.command()
+@click.argument(
     "project_dirs",
     nargs=-1,
-    type=click.Path(exists=True, path_type=Path),
+    type=click.Path(dir_okay=True, exists=True, file_okay=False, path_type=Path),
 )
 @click.option(
     "--include-main",

@@ -1,1 +1,1 @@
-"""Miscellaneous tasks for publishing my music."""
+"""Tasks for publishing my music."""
