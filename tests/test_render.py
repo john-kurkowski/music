@@ -79,8 +79,10 @@ def render_mocks(
     threshold.functions = {"SetParamNormalized": mock.Mock()}
 
     with (
-        mock.patch("reapy.open_project") as mock_open_project,
-        mock.patch("reapy.Project") as mock_project_class,
+        mock.patch(
+            "reapy.reascript_api.Main_openProject", create=True
+        ) as mock_open_project,
+        mock.patch("music.util.ExtendedProject") as mock_project_class,
         mock.patch(
             "music.render.RenderResult.duration_delta", new_callable=mock.PropertyMock
         ) as mock_duration_delta,
@@ -92,7 +94,7 @@ def render_mocks(
         ) as mock_set_int_config_var,
         mock.patch("music.upload.main") as mock_upload,
     ):
-        project = mock_open_project.return_value = mock_project_class.return_value
+        project = mock_project_class.return_value
 
         render_patterns = []
 
@@ -196,7 +198,7 @@ def test_render_result_render_speedup(
     assert subprocess.call_args_list == snapshot
 
 
-@mock.patch("reapy.Project")
+@mock.patch("music.util.ExtendedProject")
 def test_main_reaper_not_running(project: mock.Mock) -> None:
     """Test command handling when Reaper is not running."""
     project.side_effect = AttributeError("module doesn't have reascript_api, yo")

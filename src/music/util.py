@@ -12,15 +12,29 @@ with warnings.catch_warnings():
 T = TypeVar("T")
 
 
+class ExtendedProject(reapy.core.Project):
+    """Extend reapy.core.Project with additional properties."""
+
+    @property
+    def path(self) -> str:
+        """Override. Get the path containing the project.
+
+        Works around a bug in reapy 0.10.0's implementation of `Project.path`,
+        which actually gets the _recording_ path of the project.
+        """
+        filename = str(reapy.RPR.EnumProjects(-1, None, 999)[2])  # type: ignore[attr-defined]
+        return str(Path(filename).parent)
+
+
 def assert_exhaustiveness(no_return: NoReturn) -> NoReturn:  # pragma: no cover
     """Provide an assertion at type-check time that this function is never called."""
     raise AssertionError(f"Invalid value: {no_return!r}")
 
 
-def find_project(project_dir: Path | None = None) -> reapy.core.Project:
+def find_project(project_dir: Path | None = None) -> ExtendedProject:
     """Find the target Reaper project, or current project if unspecified."""
     try:
-        project = reapy.Project()
+        project = ExtendedProject()
     except AttributeError as aterr:
         if "module" in str(aterr) and "reascript_api" in str(aterr):
             raise Exception(
@@ -36,7 +50,8 @@ def find_project(project_dir: Path | None = None) -> reapy.core.Project:
         if project_dir.suffix == ".rpp"
         else project_dir / f"{project_dir.name}.rpp"
     )
-    return reapy.open_project(str(project_file))
+    reapy.RPR.Main_openProject(str(project_file))  # type: ignore[attr-defined]
+    return ExtendedProject()
 
 
 def recurse_property(prop: str, obj: T | None) -> Iterator[T]:
@@ -47,7 +62,10 @@ def recurse_property(prop: str, obj: T | None) -> Iterator[T]:
 
 
 def set_param_value(param: reapy.core.FXParam, value: float) -> None:
-    """Set a parameter's value. Work around bug with reapy 0.10's setter."""
+    """Set a parameter's value.
+
+    Works around bug with reapy 0.10's setter.
+    """
     parent_fx = param.parent_list.parent_fx
     parent = parent_fx.parent
     param.functions["SetParamNormalized"](  # type: ignore[operator]
