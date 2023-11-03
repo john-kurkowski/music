@@ -1035,16 +1035,6 @@
         }),
       ),
     ]),
-    'open_project': _CallList([
-      _Call(
-        '',
-        tuple(
-          'TMP_PATH_HERE/path/to/some project/some project.rpp',
-        ),
-        dict({
-        }),
-      ),
-    ]),
     'project': _CallList([
       _Call(
         'set_info_string',

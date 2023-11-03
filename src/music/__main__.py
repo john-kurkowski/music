@@ -16,6 +16,7 @@ with warnings.catch_warnings():
 import music.render
 import music.tag
 import music.upload
+import music.util
 
 from .codegen import main as _codegen
 from .render import (
@@ -24,7 +25,6 @@ from .render import (
     SongVersion,
     summary_stats_for_file,
 )
-from .util import find_project
 
 
 @click.group()
@@ -150,9 +150,9 @@ def render(
     is rendered.
     """
     projects = (
-        [find_project(path) for path in project_dirs]
+        [music.util.ExtendedProject(path) for path in project_dirs]
         if project_dirs
-        else [find_project()]
+        else [music.util.ExtendedProject()]
     )
 
     offlineinact = reapy.reascript_api.SNM_GetIntConfigVar("offlineinact", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
@@ -192,7 +192,7 @@ def stat(files: list[Path], verbose: int) -> None:
     Defaults FILES to all rendered versions of the currently open project.
     """
     if not files:
-        project = find_project()
+        project = music.util.ExtendedProject()
         files = [
             fil
             for version in SongVersion
@@ -240,7 +240,7 @@ def upload(files: list[Path], oauth_token: str) -> None:
     Defaults FILES to all rendered versions of the currently open project.
     """
     if not files:
-        project = find_project()
+        project = music.util.ExtendedProject()
         files = [
             fil
             for version in SongVersion

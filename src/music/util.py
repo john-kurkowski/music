@@ -15,6 +15,34 @@ T = TypeVar("T")
 class ExtendedProject(reapy.core.Project):
     """Extend reapy.core.Project with additional properties."""
 
+    def __init__(self, _: Path | None = None) -> None:
+        """Wrap common error in a more helpful message.
+
+        Mirror the arg list to __new__, although this method does not use args.
+        """
+        try:
+            super().__init__()
+        except AttributeError as aterr:
+            if "module" in str(aterr) and "reascript_api" in str(aterr):
+                raise Exception(
+                    "Error while loading Reaper project. Is Reaper running?"
+                ) from aterr
+            raise  # pragma: no cover
+
+    def __new__(cls, project_dir: Path | None = None) -> "ExtendedProject":
+        """Find the target Reaper project, or current project if unspecified."""
+        project = super().__new__(cls)
+        if project_dir is None or str(project_dir.resolve()) == project.path:
+            return project
+
+        project_file = (
+            project_dir
+            if project_dir.suffix == ".rpp"
+            else project_dir / f"{project_dir.name}.rpp"
+        )
+        reapy.RPR.Main_openProject(str(project_file))  # type: ignore[attr-defined]
+        return super().__new__(cls)
+
     @property
     def path(self) -> str:
         """Override. Get the path containing the project.
@@ -29,29 +57,6 @@ class ExtendedProject(reapy.core.Project):
 def assert_exhaustiveness(no_return: NoReturn) -> NoReturn:  # pragma: no cover
     """Provide an assertion at type-check time that this function is never called."""
     raise AssertionError(f"Invalid value: {no_return!r}")
-
-
-def find_project(project_dir: Path | None = None) -> ExtendedProject:
-    """Find the target Reaper project, or current project if unspecified."""
-    try:
-        project = ExtendedProject()
-    except AttributeError as aterr:
-        if "module" in str(aterr) and "reascript_api" in str(aterr):
-            raise Exception(
-                "Error while loading Reaper project. Is Reaper running?"
-            ) from aterr
-        raise
-
-    if project_dir is None or str(project_dir.resolve()) == project.path:
-        return project
-
-    project_file = (
-        project_dir
-        if project_dir.suffix == ".rpp"
-        else project_dir / f"{project_dir.name}.rpp"
-    )
-    reapy.RPR.Main_openProject(str(project_file))  # type: ignore[attr-defined]
-    return ExtendedProject()
 
 
 def recurse_property(prop: str, obj: T | None) -> Iterator[T]:
