@@ -23,7 +23,7 @@ def main(example_audio_file: Path) -> None:
     proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
     proc_output = proc.stderr
 
-    messages = [
+    messages: list[openai.types.chat.ChatCompletionMessageParam] = [
         {
             "role": "system",
             "content": (
@@ -45,9 +45,14 @@ def main(example_audio_file: Path) -> None:
             ),
         },
     ]
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages, temperature=0)  # type: ignore[no-untyped-call]
-    lines = response.choices[0].message["content"].splitlines()
+    response = openai.chat.completions.create(
+        model="gpt-3.5-turbo", messages=messages, temperature=0
+    )
+    message = response.choices[0].message
+    if message.content is None:
+        raise Exception(f"No content in message from GPT: {message}")
 
+    lines = message.content.splitlines()
     if lines[0].startswith("```"):
         lines = lines[1:]
     if lines[-1].startswith("```"):
