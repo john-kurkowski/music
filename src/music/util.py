@@ -15,11 +15,8 @@ T = TypeVar("T")
 class ExtendedProject(reapy.core.Project):
     """Extend reapy.core.Project with additional properties."""
 
-    def __init__(self, _: Path | None = None) -> None:
-        """Wrap common error in a more helpful message.
-
-        Mirror the arg list to __new__, although this method does not use args.
-        """
+    def __init__(self) -> None:
+        """Wrap common error in a more helpful message."""
         try:
             super().__init__()
         except AttributeError as aterr:
@@ -29,9 +26,10 @@ class ExtendedProject(reapy.core.Project):
                 ) from aterr
             raise  # pragma: no cover
 
-    def __new__(cls, project_dir: Path | None = None) -> "ExtendedProject":
-        """Find the target Reaper project, or current project if unspecified."""
-        project = super().__new__(cls)
+    @classmethod
+    def get_or_open(cls, project_dir: Path) -> "ExtendedProject":
+        """Open the target Reaper project if it is not already open."""
+        project = cls()
         if project_dir is None or str(project_dir.resolve()) == project.path:
             return project
 
@@ -41,7 +39,7 @@ class ExtendedProject(reapy.core.Project):
             else project_dir / f"{project_dir.name}.rpp"
         )
         reapy.RPR.Main_openProject(str(project_file))  # type: ignore[attr-defined]
-        return super().__new__(cls)
+        return cls()
 
     @property
     def path(self) -> str:

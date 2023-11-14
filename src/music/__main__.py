@@ -150,7 +150,7 @@ def render(
     is rendered.
     """
     projects = (
-        (music.util.ExtendedProject(path) for path in project_dirs)
+        (music.util.ExtendedProject.get_or_open(path) for path in project_dirs)
         if project_dirs
         else [music.util.ExtendedProject()]
     )

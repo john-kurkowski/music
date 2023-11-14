@@ -11,11 +11,11 @@ from syrupy.assertion import SnapshotAssertion
 @mock.patch("reapy.core.Project.__init__")
 def test_project_reaper_not_running(core_project: mock.Mock) -> None:
     """Test handling when Reaper is not running."""
+    core_project.side_effect = AttributeError("module doesn't have reascript_api, yo")
     with pytest.raises(Exception, match="Reaper running"):
-        core_project.side_effect = AttributeError(
-            "module doesn't have reascript_api, yo"
-        )
         music.util.ExtendedProject()
+    with pytest.raises(Exception, match="Reaper running"):
+        music.util.ExtendedProject.get_or_open(Path("some path"))
 
 
 @mock.patch("reapy.core.Project.__init__")
@@ -45,5 +45,5 @@ def test_project_open(
 ) -> None:
     """Test invoking Reaper to open a project."""
     some_path = tmp_path / "path" / "to" / "some project"
-    music.util.ExtendedProject(some_path)
+    music.util.ExtendedProject.get_or_open(some_path)
     assert open_project.mock_calls == snapshot
