@@ -192,11 +192,11 @@ def stat(files: list[Path], verbose: int) -> None:
     Defaults FILES to all rendered versions of the currently open project.
     """
     if not files:
-        project = music.util.ExtendedProject()
+        project_dir = Path(music.util.ExtendedProject().path)
         files = [
             fil
             for version in SongVersion
-            if (fil := Path(project.path) / f"{version.name_for_project(project)}.wav")
+            if (fil := project_dir / f"{version.name_for_project_dir(project_dir)}.wav")
             and fil.exists()
         ]
 
@@ -241,10 +241,11 @@ def upload(files: list[Path], oauth_token: str) -> None:
     """
     if not files:
         project = music.util.ExtendedProject()
+        project_dir = Path(project.path)
         files = [
             fil
             for version in SongVersion
-            if (fil := Path(project.path) / f"{version.name_for_project(project)}.wav")
+            if (fil := project_dir / f"{version.name_for_project_dir(project_dir)}.wav")
             and fil.exists()
         ]
 

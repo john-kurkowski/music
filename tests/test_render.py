@@ -102,10 +102,11 @@ def render_mocks(
 
         def render_fake_file(cmd_id: int) -> None:
             if cmd_id == RENDER_CMD_ID:
-                (project.path / f"{render_patterns[-1]}.wav").touch()
+                (Path(project.path) / f"{render_patterns[-1]}.wav").touch()
 
-        project.name = "Stub Song Title"
-        project.path = tmp_path
+        path = tmp_path / "Stub Song Title"
+        path.mkdir()
+        project.path = str(path)
 
         project.master_track.fxs = [
             Track("ReaEQ"),

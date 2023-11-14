@@ -87,9 +87,9 @@ class SongVersion(enum.Enum):
     INSTRUMENTAL = enum.auto()
     ACAPPELLA = enum.auto()
 
-    def name_for_project(self, project: reapy.core.Project) -> str:
+    def name_for_project_dir(self, project_dir: pathlib.Path) -> str:
         """Name of the project for the given song version."""
-        project_name = pathlib.Path(project.name).stem
+        project_name = project_dir.stem
         if self is SongVersion.MAIN:
             return project_name
         elif self is SongVersion.INSTRUMENTAL:
@@ -176,7 +176,7 @@ def _print_stats_for_render(
 
     Returns the rendered file, after pretty printing itsprogress and metadata.
     """
-    name = version.name_for_project(project)
+    name = version.name_for_project_dir(pathlib.Path(project.path))
     out_fil = pathlib.Path(project.path) / f"{name}.wav"
 
     console = rich.console.Console(width=_CONSOLE_WIDTH)
@@ -242,7 +242,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
     Avoids FX tail leaking issues by tweaking certain, global Reaper
     preferences. Resets them after render completion.
     """
-    out_name = version.name_for_project(project)
+    out_name = version.name_for_project_dir(pathlib.Path(project.path))
 
     # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
     rand_id = random.randrange(10**5, 10**6)
