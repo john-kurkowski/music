@@ -13,7 +13,6 @@ import warnings
 from collections.abc import Callable, Collection, Iterator
 from functools import cached_property
 from timeit import default_timer as timer
-from typing import cast
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -377,7 +376,7 @@ def main(
             verbose,
             lambda: _render_instrumental(
                 project,
-                cast(reapy.Track, vocals),
+                vocals,
                 vocal_loudness_worth,
                 verbose,
             ),
