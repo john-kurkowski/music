@@ -88,7 +88,7 @@ class SongVersion(enum.Enum):
 
     def name_for_project_dir(self, project_dir: pathlib.Path) -> str:
         """Name of the project for the given song version."""
-        project_name = project_dir.stem
+        project_name = project_dir.name
         if self is SongVersion.MAIN:
             return project_name
         elif self is SongVersion.INSTRUMENTAL:

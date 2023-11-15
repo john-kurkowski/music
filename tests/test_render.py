@@ -104,7 +104,7 @@ def render_mocks(
             if cmd_id == RENDER_CMD_ID:
                 (Path(project.path) / f"{render_patterns[-1]}.wav").touch()
 
-        path = tmp_path / "Stub Song Title"
+        path = tmp_path / "Stub Song Title (feat. Stub Artist)"
         path.mkdir()
         project.path = str(path)
 
