@@ -81,7 +81,7 @@ def export(dst_dir: Path, files: list[Path]) -> None:
     default=None,
     flag_value=SongVersion.MAIN,
     help=(
-        "Whether to render the main version. Defaults to rendering all versions,"
+        "Whether to include the main version. Defaults to including all versions,"
         ' unless one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -91,8 +91,8 @@ def export(dst_dir: Path, files: list[Path]) -> None:
     default=None,
     flag_value=SongVersion.INSTRUMENTAL,
     help=(
-        "Whether to render the instrumental version. Rendering this version is skipped"
-        " if no vocals exist. Defaults to rendering all versions,"
+        "Whether to include the instrumental version. This version is skipped"
+        " if no vocals exist. Defaults to including all versions,"
         ' unless one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -102,8 +102,8 @@ def export(dst_dir: Path, files: list[Path]) -> None:
     default=None,
     flag_value=SongVersion.ACAPPELLA,
     help=(
-        "Whether to render the a cappella version. Rendering this version is skipped if"
-        " no vocals exist. Defaults to rendering all versions, unless"
+        "Whether to include the a cappella version. This version is skipped if"
+        " no vocals exist. Defaults to including all versions, unless"
         ' one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -222,9 +222,41 @@ def tag(file: Path) -> None:
 
 @cli.command()
 @click.argument(
-    "files",
+    "project_dirs",
     nargs=-1,
-    type=click.Path(exists=True, path_type=Path),
+    type=click.Path(dir_okay=True, exists=True, file_okay=False, path_type=Path),
+)
+@click.option(
+    "--include-main",
+    default=None,
+    flag_value=SongVersion.MAIN,
+    help=(
+        "Whether to include the main version. Defaults to including all versions,"
+        ' unless one of the "--include-*" flags is set.'
+    ),
+    type=SongVersion,
+)
+@click.option(
+    "--include-instrumental",
+    default=None,
+    flag_value=SongVersion.INSTRUMENTAL,
+    help=(
+        "Whether to include the instrumental version."
+        " Defaults to including all versions,"
+        ' unless one of the "--include-*" flags is set.'
+    ),
+    type=SongVersion,
+)
+@click.option(
+    "--include-acappella",
+    default=None,
+    flag_value=SongVersion.ACAPPELLA,
+    help=(
+        "Whether to include the a cappella version."
+        " Defaults to including all versions, unless"
+        ' one of the "--include-*" flags is set.'
+    ),
+    type=SongVersion,
 )
 @click.option(
     "--oauth_token",
@@ -234,20 +266,36 @@ def tag(file: Path) -> None:
         " SOUNDCLOUD_OAUTH_TOKEN."
     ),
 )
-def upload(files: list[Path], oauth_token: str) -> None:
-    """Upload rendered output FILES to SoundCloud.
+def upload(
+    project_dirs: list[Path],
+    include_main: SongVersion | None,
+    include_instrumental: SongVersion | None,
+    include_acappella: SongVersion | None,
+    oauth_token: str,
+) -> None:
+    """Upload rendered output of the PROJECT_DIRS Reaper projects to SoundCloud.
 
-    Defaults FILES to all rendered versions of the currently open project.
+    Defaults to uploading all rendered versions of the currently open project.
     """
+    if not project_dirs:
+        project_dirs = [Path(music.util.ExtendedProject().path)]
+
+    versions = {
+        version
+        for version in (include_main, include_instrumental, include_acappella)
+        if version
+    } or set(SongVersion)
+
+    files = [
+        fil
+        for project_dir in project_dirs
+        for version in versions
+        if (fil := project_dir / f"{version.name_for_project_dir(project_dir)}.wav")
+        and fil.exists()
+    ]
+
     if not files:
-        project = music.util.ExtendedProject()
-        project_dir = Path(project.path)
-        files = [
-            fil
-            for version in SongVersion
-            if (fil := project_dir / f"{version.name_for_project_dir(project_dir)}.wav")
-            and fil.exists()
-        ]
+        raise click.UsageError("nothing to upload")
 
     music.upload.main(oauth_token, files)
 

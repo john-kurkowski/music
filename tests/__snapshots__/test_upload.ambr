@@ -124,7 +124,7 @@
           'https://some-url',
         ),
         dict({
-          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/some project.wav'>",
+          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/some project/some project.wav'>",
           'headers': dict({
             'some-uploader-id': 'some-uploader-value',
           }),
@@ -171,7 +171,7 @@
           'https://some-url',
         ),
         dict({
-          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/another project.wav'>",
+          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/another project/another project.wav'>",
           'headers': dict({
             'some-uploader-id': 'some-uploader-value',
           }),

@@ -48,11 +48,11 @@ def requests_mocks() -> Iterator[RequestsMocks]:
 def some_paths(tmp_path: Path) -> list[Path]:
     """Create some files to upload."""
     some_paths = [
-        tmp_path / "path" / "to" / "some project.wav",
-        tmp_path / "path" / "to" / "another project.wav",
+        tmp_path / "path" / "to" / "some project" / "some project.wav",
+        tmp_path / "path" / "to" / "another project" / "another project.wav",
     ]
     for path in some_paths:
-        path.parent.mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents=True)
         path.write_text(f".wav content for {path.stem}")
 
     return some_paths
@@ -66,11 +66,12 @@ def envvars(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_main_no_network_calls(some_paths: list[Path]) -> None:
     """Test that main network calls are blocked."""
-    out = CliRunner(mix_stderr=False).invoke(
-        upload, [str(path.resolve()) for path in some_paths]
-    )
-
-    assert isinstance(out.exception, pytest_socket.SocketBlockedError)
+    with pytest.raises(pytest_socket.SocketBlockedError):
+        CliRunner(mix_stderr=False).invoke(
+            upload,
+            [str(path.parent.resolve()) for path in some_paths],
+            catch_exceptions=False,
+        )
 
 
 def test_main_tracks_not_found(
@@ -79,7 +80,7 @@ def test_main_tracks_not_found(
     """Test main when tracks are not found/matched in the upstream database."""
     result = CliRunner(mix_stderr=False).invoke(
         upload,
-        [str(path.resolve()) for path in some_paths],
+        [str(path.parent.resolve()) for path in some_paths],
     )
 
     assert result.exception == snapshot
@@ -150,7 +151,7 @@ def test_main_success(
     requests_mocks.post.side_effect = mock_post
     result = CliRunner(mix_stderr=False).invoke(
         upload,
-        [str(path.resolve()) for path in some_paths],
+        [str(path.parent.resolve()) for path in some_paths],
         catch_exceptions=False,
     )
 
