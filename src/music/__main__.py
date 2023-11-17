@@ -155,7 +155,9 @@ def render(
         else [music.util.ExtendedProject()]
     )
 
-    offlineinact = reapy.reascript_api.SNM_GetIntConfigVar("offlineinact", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
+    offlineinact = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
+        "offlineinact", SWS_ERROR_SENTINEL
+    )
     if offlineinact != 0:
         raise click.UsageError(
             'Reaper preference "Set media items offline when application is not active"'

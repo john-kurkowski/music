@@ -1,9 +1,4 @@
 repos:
--   repo: https://github.com/psf/black
-    rev: 23.3.0  # key required by pre-commit, but ignored in practice, because we use the "system" version of the tool, set in pyproject.toml
-    hooks:
-    -   id: black
-        language: system
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.2.0  # key required by pre-commit, but ignored in practice, because we use the "system" version of the tool, set in pyproject.toml
     hooks:
@@ -12,10 +7,12 @@ repos:
         entry: mypy src tests
         language: system
         pass_filenames: false
--   repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.261  # key required by pre-commit, but ignored in practice, because we use the "system" version of the tool, set in pyproject.toml
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.4  # key required by pre-commit, but ignored in practice, because we use the "system" version of the tool, set in pyproject.toml
     hooks:
     -   id: ruff
+        language: system
+    -   id: ruff-format
         language: system
 -   repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.9.0

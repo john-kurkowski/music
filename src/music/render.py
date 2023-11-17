@@ -248,8 +248,12 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
     in_name = f"{out_name} {rand_id}.tmp"
 
     # Avoid FX tails at the beginning of the render
-    prev_runafterstop = reapy.reascript_api.SNM_GetIntConfigVar("runafterstop", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
-    prev_runallonstop = reapy.reascript_api.SNM_GetIntConfigVar("runallonstop", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
+    prev_runafterstop = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
+        "runafterstop", SWS_ERROR_SENTINEL
+    )
+    prev_runallonstop = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
+        "runallonstop", SWS_ERROR_SENTINEL
+    )
     reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", 0)  # type: ignore[attr-defined]
     reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", 0)  # type: ignore[attr-defined]
 
