@@ -168,7 +168,7 @@ def render(
         version
         for version in (include_main, include_instrumental, include_acappella)
         if version
-    } or set(SongVersion)
+    } or list(SongVersion)
 
     renders = [
         music.render.main(project, versions, vocal_loudness_worth, verbose=0)
@@ -286,7 +286,7 @@ def upload(
         version
         for version in (include_main, include_instrumental, include_acappella)
         if version
-    } or set(SongVersion)
+    } or list(SongVersion)
 
     files = [
         fil
