@@ -1,6 +1,7 @@
 """Upload tests."""
 
 import dataclasses
+import datetime
 import re
 from collections.abc import Iterator
 from pathlib import Path
@@ -90,13 +91,39 @@ def test_main_tracks_not_found(
     assert requests_mocks.mock_calls == snapshot
 
 
-def test_main_success(
-    requests_mocks: RequestsMocks, snapshot: SnapshotAssertion, some_paths: list[Path]
+@mock.patch.object(Path, "stat", autospec=True)
+def test_main_tracks_newer(
+    stat: mock.Mock,
+    requests_mocks: RequestsMocks,
+    snapshot: SnapshotAssertion,
+    some_paths: list[Path],
 ) -> None:
-    """Test main with multiple files succeeds.
+    """Test main when tracks are newer in the upstream database, and skipped.
 
-    Stubs enough of responses for the sequence of API requests to complete.
+    Stubs enough of the local filesystem and upstream responses for timestamps
+    to be checked.
     """
+    old_timestamp = "2020-10-01T00:00:00Z"
+    new_timestamp = "2021-10-01T00:00:00Z"
+
+    def mock_stat(self: Path, *args: Any, **kwargs: Any) -> mock.Mock:
+        """Mock `Path.stat()` to return a timestamp for some paths.
+
+        The patched method is often called internally by `Path`. This test case
+        does not have a reference to the unpatched `Path.stat()` method. The
+        patch must take care to accurately simulate whether a path exists or
+        not, matching `Path`'s internal expectations. Otherwise unwanted paths
+        make it into command under test.
+        """
+        is_under_test = self in some_paths or any(
+            other.is_relative_to(self) for other in some_paths
+        )
+        if is_under_test:
+            return mock.Mock(
+                st_mtime=datetime.datetime.fromisoformat(old_timestamp).timestamp()
+            )
+
+        raise ValueError(f'Mock Path "{self}" does not exist')
 
     def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
         if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
@@ -106,11 +133,63 @@ def test_main_success(
                         "collection": [
                             {
                                 "id": 1,
+                                "last_modified": new_timestamp,
                                 "title": "some project",
                                 "permalink_url": "https://soundcloud.com/1",
                             },
                             {
                                 "id": 2,
+                                "last_modified": new_timestamp,
+                                "title": "another project",
+                                "permalink_url": "https://soundcloud.com/2",
+                            },
+                        ]
+                    }
+                )
+            )
+
+        return mock.Mock()
+
+    stat.side_effect = mock_stat
+    requests_mocks.get.side_effect = mock_get
+
+    result = CliRunner(mix_stderr=False).invoke(
+        upload,
+        [str(path.parent.resolve()) for path in some_paths],
+        catch_exceptions=False,
+    )
+
+    assert not result.exception
+    assert result.stdout == snapshot
+    assert not result.stderr
+
+    assert requests_mocks.mock_calls == snapshot
+
+
+def test_main_success(
+    requests_mocks: RequestsMocks, snapshot: SnapshotAssertion, some_paths: list[Path]
+) -> None:
+    """Test main with multiple files succeeds.
+
+    Stubs enough of responses for the sequence of API requests to complete.
+    """
+    new_timestamp = "2021-10-01T00:00:00Z"
+
+    def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
+        if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
+            return mock.Mock(
+                json=mock.Mock(
+                    return_value={
+                        "collection": [
+                            {
+                                "id": 1,
+                                "last_modified": new_timestamp,
+                                "title": "some project",
+                                "permalink_url": "https://soundcloud.com/1",
+                            },
+                            {
+                                "id": 2,
+                                "last_modified": new_timestamp,
                                 "title": "another project",
                                 "permalink_url": "https://soundcloud.com/2",
                             },
@@ -149,6 +228,7 @@ def test_main_success(
 
     requests_mocks.get.side_effect = mock_get
     requests_mocks.post.side_effect = mock_post
+
     result = CliRunner(mix_stderr=False).invoke(
         upload,
         [str(path.parent.resolve()) for path in some_paths],
