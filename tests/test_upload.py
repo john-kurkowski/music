@@ -91,9 +91,7 @@ def test_main_tracks_not_found(
     assert requests_mocks.mock_calls == snapshot
 
 
-@mock.patch.object(Path, "stat", autospec=True)
 def test_main_tracks_newer(
-    stat: mock.Mock,
     requests_mocks: RequestsMocks,
     snapshot: SnapshotAssertion,
     some_paths: list[Path],
@@ -106,24 +104,19 @@ def test_main_tracks_newer(
     old_timestamp = "2020-10-01T00:00:00Z"
     new_timestamp = "2021-10-01T00:00:00Z"
 
-    def mock_stat(self: Path, *args: Any, **kwargs: Any) -> mock.Mock:
-        """Mock `Path.stat()` to return a timestamp for some paths.
+    original_stat = Path.stat
 
-        The patched method is often called internally by `Path`. This test case
-        does not have a reference to the unpatched `Path.stat()` method. The
-        patch must take care to accurately simulate whether a path exists or
-        not, matching `Path`'s internal expectations. Otherwise unwanted paths
-        make it into command under test.
+    def mock_stat(self: Path, *args: Any, **kwargs: Any) -> Any:
+        """Mock `Path.stat()` to return a timestamp for some paths under test.
+
+        Other paths use `Path.stat()`'s default implementation.
         """
-        is_under_test = self in some_paths or any(
-            other.is_relative_to(self) for other in some_paths
-        )
-        if is_under_test:
+        if self in some_paths:
             return mock.Mock(
                 st_mtime=datetime.datetime.fromisoformat(old_timestamp).timestamp()
             )
 
-        raise ValueError(f'Mock Path "{self}" does not exist')
+        return original_stat(self, *args, **kwargs)
 
     def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
         if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
@@ -150,14 +143,13 @@ def test_main_tracks_newer(
 
         return mock.Mock()
 
-    stat.side_effect = mock_stat
     requests_mocks.get.side_effect = mock_get
-
-    result = CliRunner(mix_stderr=False).invoke(
-        upload,
-        [str(path.parent.resolve()) for path in some_paths],
-        catch_exceptions=False,
-    )
+    with mock.patch.object(Path, "stat", autospec=True, side_effect=mock_stat):
+        result = CliRunner(mix_stderr=False).invoke(
+            upload,
+            [str(path.parent.resolve()) for path in some_paths],
+            catch_exceptions=False,
+        )
 
     assert not result.exception
     assert result.stdout == snapshot
