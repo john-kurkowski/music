@@ -11,7 +11,7 @@ from unittest import mock
 
 import pytest
 from click.testing import CliRunner
-from music.__main__ import render
+from music.commands.render import main as render
 from music.render import RENDER_CMD_ID, RenderResult
 from syrupy.assertion import SnapshotAssertion
 
