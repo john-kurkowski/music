@@ -27,7 +27,7 @@ from .render import (
 )
 
 
-@click.group()
+@click.group(name="music")
 def cli() -> None:
     """Tasks for publishing my music."""
 
