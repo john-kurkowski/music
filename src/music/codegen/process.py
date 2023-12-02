@@ -1,4 +1,4 @@
-"""Generate code for this package."""
+"""Codegen processing functions."""
 
 import os
 import subprocess
@@ -6,7 +6,7 @@ from pathlib import Path
 
 import openai
 
-from .render import _cmd_for_stats
+from music.render.process import _cmd_for_stats
 
 
 def main(example_audio_file: Path) -> None:

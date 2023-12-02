@@ -11,7 +11,7 @@ from unittest import mock
 import pytest
 import pytest_socket  # type: ignore[import-untyped]
 from click.testing import CliRunner
-from music.commands.upload import main as upload
+from music.upload.command import main as upload
 from syrupy.assertion import SnapshotAssertion
 
 

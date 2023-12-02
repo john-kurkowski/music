@@ -1,4 +1,4 @@
-"""Render vocal and instrumental versions of the current Reaper project."""
+"""Render processing classes and functions."""
 
 import contextlib
 import datetime
@@ -23,8 +23,8 @@ import rich.console
 import rich.live
 import rich.table
 
-from .__codegen__ import stats
-from .util import (
+from music.__codegen__ import stats
+from music.util import (
     assert_exhaustiveness,
     recurse_property,
     set_param_value,

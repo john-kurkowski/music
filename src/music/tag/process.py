@@ -1,4 +1,4 @@
-"""Encode rendered output."""
+"""Encode & tag processing functions."""
 
 import subprocess
 from pathlib import Path

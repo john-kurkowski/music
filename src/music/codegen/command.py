@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 
-from music.codegen import main as _codegen
+from .process import main as _codegen
 
 
 @click.command("codegen")

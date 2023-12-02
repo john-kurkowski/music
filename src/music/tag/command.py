@@ -1,10 +1,10 @@
-"""Tag command."""
+"""Encode & tag command."""
 
 from pathlib import Path
 
 import click
 
-import music.tag
+from .process import main as _tag
 
 
 @click.command("tag")
@@ -15,4 +15,4 @@ import music.tag
 )
 def main(file: Path) -> None:
     """Encode .wav FILE to .mp3 and tag with artist, album, and track number."""
-    music.tag.main(file)
+    _tag(file)

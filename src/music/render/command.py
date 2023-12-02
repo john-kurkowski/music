@@ -10,9 +10,10 @@ with warnings.catch_warnings():
     import reapy
 
 
-import music.upload
+import music.upload.process
 import music.util
-from music.render import (
+
+from .process import (
     SWS_ERROR_SENTINEL,
     VOCAL_LOUDNESS_WORTH,
     SongVersion,
@@ -120,7 +121,7 @@ def main(
     } or list(SongVersion)
 
     renders = [
-        music.render.main(project, versions, vocal_loudness_worth, verbose=0)
+        music.render.process.main(project, versions, vocal_loudness_worth, verbose=0)
         for project in projects
     ]
 
@@ -128,7 +129,7 @@ def main(
         raise click.UsageError("nothing to render")
 
     if upload:
-        music.upload.main(
+        music.upload.process.main(
             oauth_token,
             [version.fil for render in renders for version in render.values()],
         )

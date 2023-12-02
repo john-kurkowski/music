@@ -11,8 +11,8 @@ from unittest import mock
 
 import pytest
 from click.testing import CliRunner
-from music.commands.render import main as render
-from music.render import RENDER_CMD_ID, RenderResult
+from music.render.command import main as render
+from music.render.process import RENDER_CMD_ID, RenderResult
 from syrupy.assertion import SnapshotAssertion
 
 
@@ -80,7 +80,8 @@ def render_mocks(
     with (
         mock.patch("music.util.ExtendedProject") as mock_project_class,
         mock.patch(
-            "music.render.RenderResult.duration_delta", new_callable=mock.PropertyMock
+            "music.render.process.RenderResult.duration_delta",
+            new_callable=mock.PropertyMock,
         ) as mock_duration_delta,
         mock.patch(
             "reapy.reascript_api.SNM_GetIntConfigVar", create=True
@@ -88,7 +89,7 @@ def render_mocks(
         mock.patch(
             "reapy.reascript_api.SNM_SetIntConfigVar", create=True
         ) as mock_set_int_config_var,
-        mock.patch("music.upload.main") as mock_upload,
+        mock.patch("music.upload.process.main") as mock_upload,
     ):
         project = (
             mock_project_class.get_or_open.return_value
@@ -339,6 +340,7 @@ def test_main_mocked_calls(
             "--upload",
             *[str(path.resolve()) for path in some_paths],
         ],
+        catch_exceptions=False,
     )
 
     assert not result.exception

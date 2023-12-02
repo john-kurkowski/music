@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest import mock
 
 from click.testing import CliRunner
-from music.commands.tag import main as tag
+from music.tag.command import main as tag
 from syrupy.assertion import SnapshotAssertion
 
 

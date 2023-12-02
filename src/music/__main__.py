@@ -14,12 +14,9 @@ def cli() -> None:
     """Tasks for publishing my music."""
 
 
-for command_file in (Path(__file__).parent / "commands").glob("*.py"):
-    command_name = command_file.stem
-    is_a_command = command_name not in ("__init__",)
-    if not is_a_command:
-        continue
-    command_module = importlib.import_module(f"music.commands.{command_name}")
+for command_file in Path(__file__).parent.glob("*/command.py"):
+    command_package = command_file.parent.name
+    command_module = importlib.import_module(f"music.{command_package}.command")
     cli.add_command(command_module.main)
 
 

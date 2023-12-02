@@ -4,8 +4,10 @@ from pathlib import Path
 
 import click
 
-import music.upload
-from music.render import SongVersion
+import music.util
+from music.render.process import SongVersion
+
+from .process import main as _upload
 
 
 @click.command("upload")
@@ -85,4 +87,4 @@ def main(
     if not files:
         raise click.UsageError("nothing to upload")
 
-    music.upload.main(oauth_token, files)
+    _upload(oauth_token, files)

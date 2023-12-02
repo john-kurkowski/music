@@ -1,4 +1,4 @@
-"""Upload to SoundCloud."""
+"""Upload processing functions."""
 
 import datetime
 import time

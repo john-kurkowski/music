@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 
 import music.util
-from music.render import SongVersion, summary_stats_for_file
+from music.render.process import SongVersion, summary_stats_for_file
 
 
 @click.command("stat")
