@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_help
+  '''
+  Usage: music [OPTIONS] COMMAND [ARGS]...
+  
+    Tasks for publishing my music.
+  
+  Options:
+    --help  Show this message and exit.
+  
+  Commands:
+    codegen  Generate code for this package.
+    export   Export the given FILES to the given DST_DIR directory, in album...
+    render   Render vocal, instrumental, etc.
+    stat     Print statistics, like LUFS-I and LRA, for the given audio files...
+    tag      Encode .wav FILE to .mp3 and tag with artist, album, and track...
+    upload   Upload rendered output of the PROJECT_DIRS Reaper projects to...
+  
+  '''
+# ---

@@ -40,6 +40,22 @@ For example:
 music render
 ```
 
+Which renders the current project in Reaper, with output like the following.
+
+```zsh
+Absolute Zero
+/Users/john/Documents/REAPER Media/Absolute Zero/Absolute Zero.wav
+             ╷             ╷
+             │ Before      │ After
+╶────────────┼─────────────┼─────────────╴
+  duration   │ 00:03:39.15 │ 00:03:39.15
+  lra        │ 3.7         │ 3.4
+  lufs_i     │ -13.0       │ -13.1
+  max_volume │ -1.0        │ -1.0
+             ╵             ╵
+   Rendered in 0:01:02, a 3.5x speedup
+```
+
 ## Contribute
 
 Install for local development:

@@ -1,0 +1,13 @@
+# serializer version: 1
+# name: test_project_open
+  _CallList([
+    _Call(
+      '',
+      tuple(
+        'TMP_PATH_HERE/path/to/some project/some project.rpp',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---

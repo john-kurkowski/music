@@ -1,5 +1,6 @@
-"""Upload to SoundCloud."""
+"""Upload processing functions."""
 
+import datetime
 import time
 from pathlib import Path
 
@@ -53,9 +54,18 @@ async def main(
         raise KeyError(f"Tracks to upload not found in SoundCloud: {missing_tracks}")
 
     console = rich.console.Console()
+
+    tracks_by_file = {}
     for stem, fil in files_by_stem.items():
         track = tracks_by_title[stem]
 
+        if not _is_track_older_than_file(track, fil):
+            console.print(f'[yellow]Skipping already uploaded "{fil.name}"')
+            continue
+
+        tracks_by_file[fil] = track
+
+    for fil, track in tracks_by_file.items():
         await _upload_one_file_to_track(
             console,
             client,
@@ -66,6 +76,16 @@ async def main(
         )
 
         console.print(track["permalink_url"])
+
+
+def _is_track_older_than_file(track: dict[str, str], fil: Path) -> bool:
+    """Return whether the given SoundCloud track is older than the given file."""
+    upload_dt = datetime.datetime.fromisoformat(track["last_modified"])
+
+    system_tzinfo = datetime.datetime.now().astimezone().tzinfo
+    file_dt = datetime.datetime.fromtimestamp(fil.stat().st_mtime, system_tzinfo)
+
+    return upload_dt < file_dt
 
 
 async def _upload_one_file_to_track(

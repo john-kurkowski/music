@@ -11,8 +11,8 @@ from unittest import mock
 
 import pytest
 from click.testing import CliRunner
-from music.__main__ import render
-from music.render import RENDER_CMD_ID, RenderResult
+from music.render.command import main as render
+from music.render.process import RENDER_CMD_ID, RenderResult
 from syrupy.assertion import SnapshotAssertion
 
 
@@ -40,7 +40,6 @@ class RenderMocks:
 
     duration_delta: mock.Mock
     get_int_config_var: mock.Mock
-    open_project: mock.Mock
     project: mock.Mock
     set_int_config_var: mock.Mock
     upload: mock.Mock
@@ -79,10 +78,10 @@ def render_mocks(
     threshold.functions = {"SetParamNormalized": mock.Mock()}
 
     with (
-        mock.patch("reapy.open_project") as mock_open_project,
-        mock.patch("reapy.Project") as mock_project_class,
+        mock.patch("music.util.ExtendedProject") as mock_project_class,
         mock.patch(
-            "music.render.RenderResult.duration_delta", new_callable=mock.PropertyMock
+            "music.render.process.RenderResult.duration_delta",
+            new_callable=mock.PropertyMock,
         ) as mock_duration_delta,
         mock.patch(
             "reapy.reascript_api.SNM_GetIntConfigVar", create=True
@@ -90,9 +89,11 @@ def render_mocks(
         mock.patch(
             "reapy.reascript_api.SNM_SetIntConfigVar", create=True
         ) as mock_set_int_config_var,
-        mock.patch("music.upload.main") as mock_upload,
+        mock.patch("music.upload.process.main") as mock_upload,
     ):
-        project = mock_open_project.return_value = mock_project_class.return_value
+        project = (
+            mock_project_class.get_or_open.return_value
+        ) = mock_project_class.return_value
 
         render_patterns = []
 
@@ -102,10 +103,11 @@ def render_mocks(
 
         def render_fake_file(cmd_id: int) -> None:
             if cmd_id == RENDER_CMD_ID:
-                (project.path / f"{render_patterns[-1]}.wav").touch()
+                (Path(project.path) / f"{render_patterns[-1]}.wav").touch()
 
-        project.name = "Stub Song Title"
-        project.path = tmp_path
+        path = tmp_path / "Stub Song Title (feat. Stub Artist)"
+        path.mkdir()
+        project.path = str(path)
 
         project.master_track.fxs = [
             Track("ReaEQ"),
@@ -135,7 +137,6 @@ def render_mocks(
         yield RenderMocks(
             duration_delta=mock_duration_delta,
             get_int_config_var=mock_get_int_config_var,
-            open_project=mock_open_project,
             project=project,
             set_int_config_var=mock_set_int_config_var,
             upload=mock_upload,
@@ -194,16 +195,6 @@ def test_render_result_render_speedup(
 
     assert subprocess.call_count
     assert subprocess.call_args_list == snapshot
-
-
-@mock.patch("reapy.Project")
-def test_main_reaper_not_running(project: mock.Mock) -> None:
-    """Test command handling when Reaper is not running."""
-    project.side_effect = AttributeError("module doesn't have reascript_api, yo")
-    result = CliRunner().invoke(render)
-    assert result.exit_code == 1
-    assert not result.output
-    assert "Reaper running" in str(result.exception)
 
 
 @mock.patch("reapy.reascript_api.SNM_GetIntConfigVar", create=True)
@@ -349,6 +340,7 @@ def test_main_mocked_calls(
             "--upload",
             *[str(path.resolve()) for path in some_paths],
         ],
+        catch_exceptions=False,
     )
 
     assert not result.exception

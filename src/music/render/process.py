@@ -1,4 +1,4 @@
-"""Render vocal and instrumental versions of the current Reaper project."""
+"""Render processing classes and functions."""
 
 import contextlib
 import datetime
@@ -13,7 +13,6 @@ import warnings
 from collections.abc import Callable, Collection, Iterator
 from functools import cached_property
 from timeit import default_timer as timer
-from typing import cast
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -24,8 +23,8 @@ import rich.console
 import rich.live
 import rich.table
 
-from .__codegen__ import stats
-from .util import (
+from music.__codegen__ import stats
+from music.util import (
     assert_exhaustiveness,
     recurse_property,
     set_param_value,
@@ -87,9 +86,9 @@ class SongVersion(enum.Enum):
     INSTRUMENTAL = enum.auto()
     ACAPPELLA = enum.auto()
 
-    def name_for_project(self, project: reapy.core.Project) -> str:
+    def name_for_project_dir(self, project_dir: pathlib.Path) -> str:
         """Name of the project for the given song version."""
-        project_name = pathlib.Path(project.name).stem
+        project_name = project_dir.name
         if self is SongVersion.MAIN:
             return project_name
         elif self is SongVersion.INSTRUMENTAL:
@@ -176,7 +175,7 @@ def _print_stats_for_render(
 
     Returns the rendered file, after pretty printing itsprogress and metadata.
     """
-    name = version.name_for_project(project)
+    name = version.name_for_project_dir(pathlib.Path(project.path))
     out_fil = pathlib.Path(project.path) / f"{name}.wav"
 
     console = rich.console.Console(width=_CONSOLE_WIDTH)
@@ -242,15 +241,19 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
     Avoids FX tail leaking issues by tweaking certain, global Reaper
     preferences. Resets them after render completion.
     """
-    out_name = version.name_for_project(project)
+    out_name = version.name_for_project_dir(pathlib.Path(project.path))
 
     # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
     rand_id = random.randrange(10**5, 10**6)
     in_name = f"{out_name} {rand_id}.tmp"
 
     # Avoid FX tails at the beginning of the render
-    prev_runafterstop = reapy.reascript_api.SNM_GetIntConfigVar("runafterstop", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
-    prev_runallonstop = reapy.reascript_api.SNM_GetIntConfigVar("runallonstop", SWS_ERROR_SENTINEL)  # type: ignore[attr-defined]
+    prev_runafterstop = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
+        "runafterstop", SWS_ERROR_SENTINEL
+    )
+    prev_runallonstop = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
+        "runallonstop", SWS_ERROR_SENTINEL
+    )
     reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", 0)  # type: ignore[attr-defined]
     reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", 0)  # type: ignore[attr-defined]
 
@@ -384,7 +387,7 @@ def main(
                 verbose,
                 lambda: _render_instrumental(
                     project,
-                    cast(reapy.Track, vocals),
+                    vocals,
                     vocal_loudness_worth,
                     verbose,
                 ),

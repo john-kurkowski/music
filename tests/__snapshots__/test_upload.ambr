@@ -124,7 +124,7 @@
           'https://some-url',
         ),
         dict({
-          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/some project.wav'>",
+          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/some project/some project.wav'>",
           'headers': dict({
             'some-uploader-id': 'some-uploader-value',
           }),
@@ -171,7 +171,7 @@
           'https://some-url',
         ),
         dict({
-          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/another project.wav'>",
+          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/another project/another project.wav'>",
           'headers': dict({
             'some-uploader-id': 'some-uploader-value',
           }),
@@ -212,6 +212,40 @@
         dict({
         }),
       ),
+    ]),
+  })
+# ---
+# name: test_main_tracks_newer
+  '''
+  Skipping already uploaded "some project.wav"
+  Skipping already uploaded "another project.wav"
+  
+  '''
+# ---
+# name: test_main_tracks_newer.1
+  dict({
+    'get': _CallList([
+      _Call(
+        '',
+        tuple(
+          'https://api-v2.soundcloud.com/users/41506/tracks',
+        ),
+        dict({
+          'headers': dict({
+            'Accept': 'application/json',
+            'Authorization': 'OAuth stub-fake-token',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+          }),
+          'params': dict({
+            'limit': 999,
+          }),
+          'timeout': 10,
+        }),
+      ),
+    ]),
+    'post': _CallList([
+    ]),
+    'put': _CallList([
     ]),
   })
 # ---
