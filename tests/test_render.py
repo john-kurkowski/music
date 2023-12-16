@@ -204,7 +204,7 @@ def test_main_reaper_not_configured(
 ) -> None:
     """Test command handling when Reaper is not configured correctly for render."""
     mock_get_int_config_var.return_value = 1
-    result = CliRunner().invoke(render)
+    result = CliRunner().invoke(render, catch_exceptions=False)
     assert result.exit_code == 2
     assert "media items offline" in result.output
 
@@ -219,7 +219,9 @@ def test_main_noop(render_mocks: RenderMocks, snapshot: SnapshotAssertion) -> No
     ]
 
     result = CliRunner(mix_stderr=False).invoke(
-        render, ["--include-instrumental", "--include-acappella"]
+        render,
+        ["--include-instrumental", "--include-acappella"],
+        catch_exceptions=False,
     )
 
     assert result.exit_code == 2
@@ -235,7 +237,9 @@ def test_main_main_version(
     subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with main version."""
-    result = CliRunner(mix_stderr=False).invoke(render, ["--include-main"])
+    result = CliRunner(mix_stderr=False).invoke(
+        render, ["--include-main"], catch_exceptions=False
+    )
 
     assert not result.exception
     assert result.stdout == snapshot
@@ -252,7 +256,7 @@ def test_main_default_versions(
     subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with default versions."""
-    result = CliRunner(mix_stderr=False).invoke(render, [])
+    result = CliRunner(mix_stderr=False).invoke(render, [], catch_exceptions=False)
 
     assert not result.exception
     assert result.stdout == snapshot
@@ -270,7 +274,9 @@ def test_main_all_versions(
 ) -> None:
     """Test main with all versions."""
     result = CliRunner(mix_stderr=False).invoke(
-        render, ["--include-main", "--include-instrumental", "--include-acappella"]
+        render,
+        ["--include-main", "--include-instrumental", "--include-acappella"],
+        catch_exceptions=False,
     )
 
     assert not result.exception
@@ -304,6 +310,7 @@ def test_main_filenames_all_versions(
             "--include-acappella",
             *[str(path.resolve()) for path in some_paths],
         ],
+        catch_exceptions=False,
     )
 
     assert not result.exception

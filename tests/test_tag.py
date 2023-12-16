@@ -19,7 +19,9 @@ def test_main(
     some_path.parent.mkdir(parents=True, exist_ok=True)
     some_path.touch()
 
-    result = CliRunner(mix_stderr=False).invoke(tag, [str(some_path)])
+    result = CliRunner(mix_stderr=False).invoke(
+        tag, [str(some_path)], catch_exceptions=False
+    )
 
     assert not result.stderr
     assert not result.exception
