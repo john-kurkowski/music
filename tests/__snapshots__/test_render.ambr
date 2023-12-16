@@ -48,9 +48,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -74,9 +73,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -100,9 +98,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -258,9 +255,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -284,9 +280,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -310,9 +305,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -500,9 +494,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -526,9 +519,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -552,9 +544,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -585,9 +576,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -611,9 +601,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -637,9 +626,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -916,9 +904,8 @@
       }),
     ),
     _Call(
-      'perform_action',
+      'render',
       tuple(
-        42230,
       ),
       dict({
       }),
@@ -1046,9 +1033,8 @@
         }),
       ),
       _Call(
-        'perform_action',
+        'render',
         tuple(
-          42230,
         ),
         dict({
         }),
@@ -1072,9 +1058,8 @@
         }),
       ),
       _Call(
-        'perform_action',
+        'render',
         tuple(
-          42230,
         ),
         dict({
         }),
@@ -1098,9 +1083,8 @@
         }),
       ),
       _Call(
-        'perform_action',
+        'render',
         tuple(
-          42230,
         ),
         dict({
         }),

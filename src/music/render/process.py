@@ -10,7 +10,7 @@ import re
 import shutil
 import subprocess
 import warnings
-from collections.abc import Callable, Collection, Iterator
+from collections.abc import AsyncIterator, Awaitable, Callable, Collection, Iterator
 from functools import cached_property
 from timeit import default_timer as timer
 
@@ -25,6 +25,7 @@ import rich.table
 
 from music.__codegen__ import stats
 from music.util import (
+    ExtendedProject,
     assert_exhaustiveness,
     recurse_property,
     set_param_value,
@@ -35,9 +36,6 @@ LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
 
 # The typical loudness of vocals, in dBs, relative to the instrumental
 VOCAL_LOUDNESS_WORTH = 2.0
-
-# File: Render project, using the most recent render settings, auto-close render dialog
-RENDER_CMD_ID = 42230
 
 # Common error code found in SWS functions source
 SWS_ERROR_SENTINEL = -666
@@ -165,11 +163,11 @@ def _mute(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
         track.unmute()
 
 
-def _print_stats_for_render(
+async def _print_stats_for_render(
     project: reapy.core.Project,
     version: SongVersion,
     verbose: int,
-    render: Callable[[], RenderResult],
+    render: Callable[[], Awaitable[RenderResult]],
 ) -> RenderResult:
     """Collect and print before and after summary statistics for the given project version render.
 
@@ -181,7 +179,7 @@ def _print_stats_for_render(
     console = rich.console.Console(width=_CONSOLE_WIDTH)
     with console.status(f'[bold green]Rendering "{name}"'):
         before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
-        out = render()
+        out = await render()
         after_stats = summary_stats_for_file(out_fil, verbose)
 
     console.print(f"[b default]{name}[/b default]")
@@ -232,7 +230,9 @@ def _cmd_for_stats(fil: pathlib.Path) -> list[str | pathlib.Path]:
     ]
 
 
-def render_version(project: reapy.core.Project, version: SongVersion) -> RenderResult:
+async def render_version(
+    project: ExtendedProject, version: SongVersion
+) -> RenderResult:
     """Trigger Reaper to render the current project audio. Returns the output file.
 
     Names the output file according to the given version. Writes to a temporary
@@ -260,7 +260,7 @@ def render_version(project: reapy.core.Project, version: SongVersion) -> RenderR
     project.set_info_string("RENDER_PATTERN", in_name)
     time_start = timer()
     try:
-        project.perform_action(RENDER_CMD_ID)
+        await project.render()
         time_end = timer()
     finally:
         project.set_info_string("RENDER_PATTERN", "$project")
@@ -308,17 +308,17 @@ def trim_silence(fil: pathlib.Path) -> None:
     shutil.move(tmp_fil, fil)
 
 
-def _render_main(
-    project: reapy.core.Project, vocals: reapy.core.Track | None, verbose: int
+async def _render_main(
+    project: ExtendedProject, vocals: reapy.core.Track | None, verbose: int
 ) -> RenderResult:
     if vocals:
         vocals.unsolo()
         vocals.unmute()
-    return render_version(project, SongVersion.MAIN)
+    return await render_version(project, SongVersion.MAIN)
 
 
-def _render_instrumental(
-    project: reapy.core.Project,
+async def _render_instrumental(
+    project: ExtendedProject,
     vocals: reapy.core.Track,
     vocal_loudness_worth: float,
     verbose: int,
@@ -327,11 +327,11 @@ def _render_instrumental(
         _adjust_master_limiter_threshold(project, vocal_loudness_worth),
         _mute((vocals,)),
     ):
-        return render_version(project, SongVersion.INSTRUMENTAL)
+        return await render_version(project, SongVersion.INSTRUMENTAL)
 
 
-def _render_a_cappella(
-    project: reapy.core.Project,
+async def _render_a_cappella(
+    project: ExtendedProject,
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
@@ -341,18 +341,18 @@ def _render_a_cappella(
         _adjust_master_limiter_threshold(project, vocal_loudness_worth),
         _mute(tracks_to_mute),
     ):
-        out = render_version(project, SongVersion.ACAPPELLA)
+        out = await render_version(project, SongVersion.ACAPPELLA)
 
     trim_silence(out.fil)
     return out
 
 
-def main(
-    project: reapy.core.Project,
+async def main(
+    project: ExtendedProject,
     versions: Collection[SongVersion],
     vocal_loudness_worth: float,
     verbose: int,
-) -> Iterator[tuple[SongVersion, RenderResult]]:
+) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
     """Render the given versions of the given Reaper project.
 
     Returns render results if anything was rendered. Skips versions that have
@@ -367,7 +367,7 @@ def main(
         did_something = True
         yield (
             SongVersion.MAIN,
-            _print_stats_for_render(
+            await _print_stats_for_render(
                 project,
                 SongVersion.MAIN,
                 verbose,
@@ -381,7 +381,7 @@ def main(
         did_something = True
         yield (
             SongVersion.INSTRUMENTAL,
-            _print_stats_for_render(
+            await _print_stats_for_render(
                 project,
                 SongVersion.INSTRUMENTAL,
                 verbose,
@@ -400,7 +400,7 @@ def main(
         did_something = True
         yield (
             SongVersion.ACAPPELLA,
-            _print_stats_for_render(
+            await _print_stats_for_render(
                 project,
                 SongVersion.ACAPPELLA,
                 verbose,

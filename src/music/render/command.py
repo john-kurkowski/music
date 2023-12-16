@@ -128,7 +128,7 @@ async def main(
 
     async with aiohttp.ClientSession() as client:
         for project in projects:
-            for _, render in music.render.process.main(
+            async for _, render in music.render.process.main(
                 project, versions, vocal_loudness_worth, verbose=0
             ):
                 renders.append(render)

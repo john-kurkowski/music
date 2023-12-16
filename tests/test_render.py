@@ -12,7 +12,7 @@ from unittest import mock
 import pytest
 from click.testing import CliRunner
 from music.render.command import main as render
-from music.render.process import RENDER_CMD_ID, RenderResult
+from music.render.process import RenderResult
 from syrupy.assertion import SnapshotAssertion
 
 
@@ -101,9 +101,8 @@ def render_mocks(
             if key == "RENDER_PATTERN":
                 render_patterns.append(value)
 
-        def render_fake_file(cmd_id: int) -> None:
-            if cmd_id == RENDER_CMD_ID:
-                (Path(project.path) / f"{render_patterns[-1]}.wav").touch()
+        async def render_fake_file() -> None:
+            (Path(project.path) / f"{render_patterns[-1]}.wav").touch()
 
         path = tmp_path / "Stub Song Title (feat. Stub Artist)"
         path.mkdir()
@@ -117,7 +116,7 @@ def render_mocks(
 
         project.tracks = [Track(name="Vocals"), Track(name="Drums")]
         project.set_info_string.side_effect = collect_render_patterns
-        project.perform_action.side_effect = render_fake_file
+        project.render.side_effect = render_fake_file
         parse_summary_stats.side_effect = itertools.cycle(
             [
                 {"duration": 1.0, "size": 42.0},

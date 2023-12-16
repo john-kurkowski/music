@@ -13,6 +13,9 @@ with warnings.catch_warnings():
 
 T = TypeVar("T")
 
+# File: Render project, using the most recent render settings, auto-close render dialog
+RENDER_CMD_ID = 42230
+
 
 class ExtendedProject(reapy.core.Project):
     """Extend reapy.core.Project with additional properties."""
@@ -42,6 +45,14 @@ class ExtendedProject(reapy.core.Project):
         )
         reapy.RPR.Main_openProject(str(project_file))  # type: ignore[attr-defined]
         return cls()
+
+    async def render(self) -> None:
+        """Trigger Reaper to render the currently open project.
+
+        This method is actually synchronous as it uses Reaper's Python API,
+        which is synchronous. Maybe one day an async version will be available.
+        """
+        self.perform_action(RENDER_CMD_ID)
 
     @property
     def path(self) -> str:
