@@ -38,9 +38,9 @@ class RequestsMocks:
 def requests_mocks() -> Iterator[RequestsMocks]:
     """Fake the network calls made during upload."""
     with (
-        mock.patch("requests.get") as get,
-        mock.patch("requests.post") as post,
-        mock.patch("requests.put") as put,
+        mock.patch("aiohttp.ClientSession.get", new_callable=mock.AsyncMock) as get,
+        mock.patch("aiohttp.ClientSession.post", new_callable=mock.AsyncMock) as post,
+        mock.patch("aiohttp.ClientSession.put", new_callable=mock.AsyncMock) as put,
     ):
         yield RequestsMocks(get=get, post=post, put=put)
 
@@ -67,7 +67,7 @@ def envvars(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_main_no_network_calls(some_paths: list[Path]) -> None:
     """Test that main network calls are blocked."""
-    with pytest.raises(pytest_socket.SocketBlockedError):
+    with pytest.raises(pytest_socket.SocketConnectBlockedError):
         CliRunner(mix_stderr=False).invoke(
             upload,
             [str(path.parent.resolve()) for path in some_paths],
@@ -121,7 +121,7 @@ def test_main_tracks_newer(
     def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
         if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
             return mock.Mock(
-                json=mock.Mock(
+                json=mock.AsyncMock(
                     return_value={
                         "collection": [
                             {
@@ -170,7 +170,7 @@ def test_main_success(
     def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
         if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
             return mock.Mock(
-                json=mock.Mock(
+                json=mock.AsyncMock(
                     return_value={
                         "collection": [
                             {
@@ -193,7 +193,7 @@ def test_main_success(
             r"^https://api-v2.soundcloud.com/uploads/.*/track-transcoding", url
         ):
             return mock.Mock(
-                json=mock.Mock(
+                json=mock.AsyncMock(
                     return_value={
                         "status": "finished",
                     }
@@ -207,7 +207,7 @@ def test_main_success(
             r"^https://api-v2.soundcloud.com/uploads/track-upload-policy", url
         ):
             return mock.Mock(
-                json=mock.Mock(
+                json=mock.AsyncMock(
                     return_value={
                         "headers": {"some-uploader-id": "some-uploader-value"},
                         "url": "https://some-url",

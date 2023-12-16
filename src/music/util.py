@@ -1,9 +1,11 @@
 """Misc. utilities."""
 
+import asyncio
 import warnings
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from functools import wraps
 from pathlib import Path
-from typing import NoReturn, TypeVar
+from typing import Any, NoReturn, TypeVar
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -55,6 +57,19 @@ class ExtendedProject(reapy.core.Project):
 def assert_exhaustiveness(no_return: NoReturn) -> NoReturn:  # pragma: no cover
     """Provide an assertion at type-check time that this function is never called."""
     raise AssertionError(f"Invalid value: {no_return!r}")
+
+
+def coro(f: Callable[..., Any]) -> Callable[..., Any]:
+    """Decorate Click commands as coroutines.
+
+    H/T https://github.com/pallets/click/issues/85
+    """
+
+    @wraps(f)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return asyncio.run(f(*args, **kwargs))
+
+    return wrapper
 
 
 def recurse_property(prop: str, obj: T | None) -> Iterator[T]:

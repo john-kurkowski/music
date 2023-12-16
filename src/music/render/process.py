@@ -352,52 +352,62 @@ def main(
     versions: Collection[SongVersion],
     vocal_loudness_worth: float,
     verbose: int,
-) -> dict[SongVersion, RenderResult]:
+) -> Iterator[tuple[SongVersion, RenderResult]]:
     """Render the given versions of the given Reaper project.
 
-    Returns True if anything was rendered, False otherwise. For example, if a
-    project does not have vocals, rendering an a capella or instrumental
-    version are skipped.
+    Returns render results if anything was rendered. Skips versions that have
+    no output. For example, if a project does not have vocals, rendering an a
+    capella or instrumental version are skipped.
     """
+    did_something = False
+
     vocals = next((track for track in project.tracks if track.name == "Vocals"), None)
 
-    rv: dict[SongVersion, RenderResult] = {}
-
     if SongVersion.MAIN in versions:
-        rv[SongVersion.MAIN] = _print_stats_for_render(
-            project,
+        did_something = True
+        yield (
             SongVersion.MAIN,
-            verbose,
-            lambda: _render_main(project, vocals, verbose),
+            _print_stats_for_render(
+                project,
+                SongVersion.MAIN,
+                verbose,
+                lambda: _render_main(project, vocals, verbose),
+            ),
         )
 
     if SongVersion.INSTRUMENTAL in versions and vocals:
-        if rv:
+        if did_something:
             print()
-        rv[SongVersion.INSTRUMENTAL] = _print_stats_for_render(
-            project,
+        did_something = True
+        yield (
             SongVersion.INSTRUMENTAL,
-            verbose,
-            lambda: _render_instrumental(
+            _print_stats_for_render(
                 project,
-                vocals,
-                vocal_loudness_worth,
+                SongVersion.INSTRUMENTAL,
                 verbose,
+                lambda: _render_instrumental(
+                    project,
+                    vocals,
+                    vocal_loudness_worth,
+                    verbose,
+                ),
             ),
         )
 
     if SongVersion.ACAPPELLA in versions and vocals:
-        if rv:
+        if did_something:
             print()
-        rv[SongVersion.ACAPPELLA] = _print_stats_for_render(
-            project,
+        did_something = True
+        yield (
             SongVersion.ACAPPELLA,
-            verbose,
-            lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
+            _print_stats_for_render(
+                project,
+                SongVersion.ACAPPELLA,
+                verbose,
+                lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
+            ),
         )
 
-    if rv:
+    if did_something:
         # Render causes a project to have unsaved changes, no matter what. Save the user a step.
         project.save()
-
-    return rv

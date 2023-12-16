@@ -1,8 +1,10 @@
 """Render command."""
 
+import asyncio
 import warnings
 from pathlib import Path
 
+import aiohttp
 import click
 
 with warnings.catch_warnings():
@@ -21,6 +23,7 @@ from .process import (
 
 
 @click.command("render")
+@music.util.coro
 @click.argument(
     "project_dirs",
     nargs=-1,
@@ -83,7 +86,7 @@ from .process import (
     ),
     type=float,
 )
-def main(
+async def main(
     project_dirs: list[Path],
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
@@ -120,16 +123,22 @@ def main(
         if version
     } or list(SongVersion)
 
-    renders = [
-        music.render.process.main(project, versions, vocal_loudness_worth, verbose=0)
-        for project in projects
-    ]
+    renders = []
+    uploads = []
 
-    if not any(renders):
+    async with aiohttp.ClientSession() as client:
+        for project in projects:
+            for _, render in music.render.process.main(
+                project, versions, vocal_loudness_worth, verbose=0
+            ):
+                renders.append(render)
+
+                if upload:
+                    uploads.append(
+                        music.upload.process.main(client, oauth_token, [render.fil])
+                    )
+
+        await asyncio.gather(*uploads)
+
+    if not renders:
         raise click.UsageError("nothing to render")
-
-    if upload:
-        music.upload.process.main(
-            oauth_token,
-            [version.fil for render in renders for version in render.values()],
-        )

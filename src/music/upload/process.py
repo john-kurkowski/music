@@ -4,7 +4,7 @@ import datetime
 import time
 from pathlib import Path
 
-import requests
+import aiohttp
 import rich.console
 import rich.progress
 
@@ -18,7 +18,9 @@ _TRACK_METADATA_TO_UPDATE_KEYS = [
 ]
 
 
-def main(oauth_token: str, files: list[Path]) -> None:
+async def main(
+    client: aiohttp.ClientSession, oauth_token: str, files: list[Path]
+) -> None:
     """Upload the given audio files to SoundCloud.
 
     Matches the files to SoundCloud tracks by exact filename. then uploads them
@@ -33,7 +35,7 @@ def main(oauth_token: str, files: list[Path]) -> None:
         ),
     }
 
-    tracks_resp = requests.get(
+    tracks_resp = await client.get(
         f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
         headers=headers,
         params={"limit": 999},
@@ -44,7 +46,7 @@ def main(oauth_token: str, files: list[Path]) -> None:
     files_by_stem = {file.stem: file for file in files}
     tracks_by_title = {
         track["title"]: track
-        for track in tracks_resp.json()["collection"]
+        for track in (await tracks_resp.json())["collection"]
         if track["title"] in files_by_stem
     }
     missing_tracks = sorted(set(files_by_stem).difference(tracks_by_title.keys()))
@@ -64,8 +66,9 @@ def main(oauth_token: str, files: list[Path]) -> None:
         tracks_by_file[fil] = track
 
     for fil, track in tracks_by_file.items():
-        _upload_one_file_to_track(
+        await _upload_one_file_to_track(
             console,
+            client,
             headers,
             fil,
             track["id"],
@@ -85,8 +88,9 @@ def _is_track_older_than_file(track: dict[str, str], fil: Path) -> bool:
     return upload_dt < file_dt
 
 
-def _upload_one_file_to_track(
+async def _upload_one_file_to_track(
     console: rich.console.Console,
+    client: aiohttp.ClientSession,
     headers: dict[str, str],
     fil: Path,
     track_id: int,
@@ -112,18 +116,18 @@ def _upload_one_file_to_track(
     ):
         progress.add_task(f'[bold green]Uploading "{fil.name}"', total=None)
 
-        prepare_upload_resp = requests.post(
+        prepare_upload_resp = await client.post(
             "https://api-v2.soundcloud.com/uploads/track-upload-policy",
             headers=headers,
             json={"filename": fil.name, "filesize": fil.stat().st_size},
         )
         prepare_upload_resp.raise_for_status()
-        prepare_upload = prepare_upload_resp.json()
+        prepare_upload = await prepare_upload_resp.json()
         put_upload_headers = prepare_upload["headers"]
         put_upload_url = prepare_upload["url"]
         put_upload_uid = prepare_upload["uid"]
 
-        upload_resp = requests.put(
+        upload_resp = await client.put(
             put_upload_url,
             data=fobj,
             headers=put_upload_headers,
@@ -131,23 +135,23 @@ def _upload_one_file_to_track(
         )
         upload_resp.raise_for_status()
 
-        transcoding_resp = requests.post(
+        transcoding_resp = await client.post(
             f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
             headers=headers,
         )
         transcoding_resp.raise_for_status()
         while True:
-            transcoding_resp = requests.get(
+            transcoding_resp = await client.get(
                 f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
                 headers=headers,
             )
             transcoding_resp.raise_for_status()
-            transcoding = transcoding_resp.json()
+            transcoding = await transcoding_resp.json()
             if transcoding["status"] == "finished":
                 break
             time.sleep(3)
 
-        confirm_upload_resp = requests.put(
+        confirm_upload_resp = await client.put(
             f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track_id}",
             headers=headers,
             json={

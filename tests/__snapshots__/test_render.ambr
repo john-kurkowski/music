@@ -1236,10 +1236,33 @@
       _Call(
         '',
         tuple(
+          'CLIENT_SESSION_HERE',
           'stub-fake-token',
           list([
             'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
+          ]),
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        '',
+        tuple(
+          'CLIENT_SESSION_HERE',
+          'stub-fake-token',
+          list([
             'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+          ]),
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        '',
+        tuple(
+          'CLIENT_SESSION_HERE',
+          'stub-fake-token',
+          list([
             'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav',
           ]),
         ),

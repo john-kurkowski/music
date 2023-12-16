@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import aiohttp
 import click
 
 import music.util
@@ -11,6 +12,7 @@ from .process import main as _upload
 
 
 @click.command("upload")
+@music.util.coro
 @click.argument(
     "project_dirs",
     nargs=-1,
@@ -56,7 +58,7 @@ from .process import main as _upload
         " SOUNDCLOUD_OAUTH_TOKEN."
     ),
 )
-def main(
+async def main(
     project_dirs: list[Path],
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
@@ -87,4 +89,5 @@ def main(
     if not files:
         raise click.UsageError("nothing to upload")
 
-    _upload(oauth_token, files)
+    async with aiohttp.ClientSession() as client:
+        await _upload(client, oauth_token, files)

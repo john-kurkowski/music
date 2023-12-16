@@ -11,10 +11,10 @@ classifiers = [
 ]
 
 dependencies = [
+    "aiohttp",
     "click",
     "openai",
     "python-reapy",
-    "requests",
     "rich",
 ]
 
@@ -27,7 +27,6 @@ testing = [
     "pytest-socket",
     "ruff",
     "syrupy",
-    "types-requests",
 ]
 
 [project.scripts]
