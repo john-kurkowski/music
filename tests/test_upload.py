@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 from unittest import mock
 
+import aiohttp
 import pytest
 import pytest_socket  # type: ignore[import-untyped]
 from click.testing import CliRunner
@@ -37,10 +38,14 @@ class RequestsMocks:
 @pytest.fixture
 def requests_mocks() -> Iterator[RequestsMocks]:
     """Fake the network calls made during upload."""
+
+    def request_mock() -> mock.Mock:
+        return mock.AsyncMock(return_value=mock.Mock(spec=aiohttp.ClientResponse))
+
     with (
-        mock.patch("aiohttp.ClientSession.get", new_callable=mock.AsyncMock) as get,
-        mock.patch("aiohttp.ClientSession.post", new_callable=mock.AsyncMock) as post,
-        mock.patch("aiohttp.ClientSession.put", new_callable=mock.AsyncMock) as put,
+        mock.patch("aiohttp.ClientSession.get", new_callable=request_mock) as get,
+        mock.patch("aiohttp.ClientSession.post", new_callable=request_mock) as post,
+        mock.patch("aiohttp.ClientSession.put", new_callable=request_mock) as put,
     ):
         yield RequestsMocks(get=get, post=post, put=put)
 

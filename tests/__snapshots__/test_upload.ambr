@@ -132,13 +132,6 @@
         }),
       ),
       _Call(
-        '().raise_for_status',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
         '',
         tuple(
           'https://api-v2.soundcloud.com/tracks/soundcloud:tracks:1',
@@ -159,13 +152,6 @@
         }),
       ),
       _Call(
-        '().raise_for_status',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
         '',
         tuple(
           'https://some-url',
@@ -176,13 +162,6 @@
             'some-uploader-id': 'some-uploader-value',
           }),
           'timeout': 600,
-        }),
-      ),
-      _Call(
-        '().raise_for_status',
-        tuple(
-        ),
-        dict({
         }),
       ),
       _Call(
@@ -203,13 +182,6 @@
               'title': 'another project',
             }),
           }),
-        }),
-      ),
-      _Call(
-        '().raise_for_status',
-        tuple(
-        ),
-        dict({
         }),
       ),
     ]),
@@ -270,35 +242,6 @@
             'limit': 999,
           }),
           'timeout': 10,
-        }),
-      ),
-      _Call(
-        '().raise_for_status',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '().json',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '().json().__getitem__',
-        tuple(
-          'collection',
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '().json().__getitem__().__iter__',
-        tuple(
-        ),
-        dict({
         }),
       ),
     ]),
