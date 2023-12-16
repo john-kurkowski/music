@@ -124,7 +124,7 @@ async def main(
     } or list(SongVersion)
 
     renders = []
-    coroutines = []
+    uploads = []
 
     async with aiohttp.ClientSession() as client:
         for project in projects:
@@ -134,11 +134,11 @@ async def main(
                 renders.append(render)
 
                 if upload:
-                    coroutines.append(
+                    uploads.append(
                         music.upload.process.main(client, oauth_token, [render.fil])
                     )
 
-        await asyncio.gather(*coroutines)
+        await asyncio.gather(*uploads)
 
     if not renders:
         raise click.UsageError("nothing to render")

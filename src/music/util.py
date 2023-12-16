@@ -60,7 +60,10 @@ def assert_exhaustiveness(no_return: NoReturn) -> NoReturn:  # pragma: no cover
 
 
 def coro(f: Callable[..., Any]) -> Callable[..., Any]:
-    """Decorate Click commands as coroutines."""
+    """Decorate Click commands as coroutines.
+
+    H/T https://github.com/pallets/click/issues/85
+    """
 
     @wraps(f)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
