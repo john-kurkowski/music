@@ -124,9 +124,8 @@ async def main(
     } or list(SongVersion)
 
     renders = []
-    uploads = []
 
-    async with aiohttp.ClientSession() as client:
+    async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
         for project in projects:
             async for _, render in music.render.process.main(
                 project, versions, vocal_loudness_worth, verbose=0
@@ -134,11 +133,9 @@ async def main(
                 renders.append(render)
 
                 if upload:
-                    uploads.append(
+                    uploads.create_task(
                         music.upload.process.main(client, oauth_token, [render.fil])
                     )
-
-        await asyncio.gather(*uploads)
 
     if not renders:
         raise click.UsageError("nothing to render")
