@@ -7,6 +7,8 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, NoReturn, TypeVar
 
+import aiohttp
+
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
     import reapy
@@ -49,10 +51,17 @@ class ExtendedProject(reapy.core.Project):
     async def render(self) -> None:
         """Trigger Reaper to render the currently open project.
 
-        This method is actually synchronous as it uses Reaper's Python API,
-        which is synchronous. Maybe one day an async version will be available.
+        Unlike sending a command via Reaper's Python API
+        (`project.perform_action(action_id)`), this method uses Reaper's HTTP
+        API, to work async.
         """
-        self.perform_action(RENDER_CMD_ID)
+        port = reapy.config.WEB_INTERFACE_PORT
+
+        async with aiohttp.ClientSession() as client:
+            resp = await client.get(
+                f"http://localhost:{port}/_/{RENDER_CMD_ID}",
+            )
+            resp.raise_for_status()
 
     @property
     def path(self) -> str:
