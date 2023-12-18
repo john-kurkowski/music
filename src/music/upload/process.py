@@ -1,7 +1,7 @@
 """Upload processing functions."""
 
+import asyncio
 import datetime
-import time
 from pathlib import Path
 
 import aiohttp
@@ -149,7 +149,7 @@ async def _upload_one_file_to_track(
             transcoding = await transcoding_resp.json()
             if transcoding["status"] == "finished":
                 break
-            time.sleep(3)
+            await asyncio.sleep(3)
 
         confirm_upload_resp = await client.put(
             f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track_id}",
