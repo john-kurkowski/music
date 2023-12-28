@@ -11,3 +11,21 @@
     ),
   ])
 # ---
+# name: test_project_render
+  dict({
+    'get': _CallList([
+      _Call(
+        '',
+        tuple(
+          'http://localhost:2307/_/42230',
+        ),
+        dict({
+        }),
+      ),
+    ]),
+    'post': _CallList([
+    ]),
+    'put': _CallList([
+    ]),
+  })
+# ---

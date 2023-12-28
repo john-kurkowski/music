@@ -7,6 +7,8 @@ import music.util
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from .conftest import RequestsMocks
+
 
 @mock.patch("reapy.core.Project.__init__")
 def test_project_reaper_not_running(core_project: mock.Mock) -> None:
@@ -47,3 +49,13 @@ def test_project_open(
     some_path = tmp_path / "path" / "to" / "some project"
     music.util.ExtendedProject.get_or_open(some_path)
     assert open_project.mock_calls == snapshot
+
+
+@pytest.mark.asyncio
+@mock.patch("reapy.core.Project.__init__")
+async def test_project_render(
+    open_project: mock.Mock, requests_mocks: RequestsMocks, snapshot: SnapshotAssertion
+) -> None:
+    """Test invoking Reaper to render a project."""
+    await music.util.ExtendedProject().render()
+    assert requests_mocks.mock_calls == snapshot
