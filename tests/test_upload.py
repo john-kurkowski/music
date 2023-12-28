@@ -1,53 +1,18 @@
 """Upload tests."""
 
-import dataclasses
 import datetime
 import re
-from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 from unittest import mock
 
-import aiohttp
 import pytest
 import pytest_socket  # type: ignore[import-untyped]
 from click.testing import CliRunner
 from music.upload.command import main as upload
 from syrupy.assertion import SnapshotAssertion
 
-
-@dataclasses.dataclass(kw_only=True)
-class RequestsMocks:
-    """Collection of all mocked python-requests functions to upload a song."""
-
-    get: mock.Mock
-    post: mock.Mock
-    put: mock.Mock
-
-    @property
-    def mock_calls(self) -> dict[str, Any]:
-        """A dictionary of calls, methods, magic methods, and return value mocks made for each attribute of this class.
-
-        See also unittest.mock.Mock.mock_calls.
-        """
-        return {
-            k.name: getattr(self, k.name).mock_calls for k in dataclasses.fields(self)
-        }
-
-
-@pytest.fixture
-def requests_mocks() -> Iterator[RequestsMocks]:
-    """Fake the network calls made during upload."""
-
-    def request_mock() -> mock.Mock:
-        return mock.AsyncMock(return_value=mock.Mock(spec=aiohttp.ClientResponse))
-
-    with (
-        mock.patch("aiohttp.ClientSession.get", new_callable=request_mock) as get,
-        mock.patch("aiohttp.ClientSession.post", new_callable=request_mock) as post,
-        mock.patch("aiohttp.ClientSession.put", new_callable=request_mock) as put,
-    ):
-        yield RequestsMocks(get=get, post=post, put=put)
+from .conftest import RequestsMocks
 
 
 @pytest.fixture
