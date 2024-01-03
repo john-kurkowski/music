@@ -11,6 +11,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "aiofiles",
     "aiohttp",
     "click",
     "openai",
@@ -28,6 +29,7 @@ testing = [
     "pytest-socket",
     "ruff",
     "syrupy",
+    "types-aiofiles",
 ]
 
 [project.scripts]

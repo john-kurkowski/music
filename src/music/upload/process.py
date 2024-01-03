@@ -2,8 +2,11 @@
 
 import asyncio
 import datetime
+from collections.abc import AsyncGenerator, Callable
 from pathlib import Path
+from typing import Any
 
+import aiofiles
 import aiohttp
 import rich.console
 import rich.progress
@@ -106,15 +109,17 @@ async def _upload_one_file_to_track(
        minimal metadata of the original track.
     """
     with (
-        open(fil, "rb") as fobj,
         rich.progress.Progress(
             rich.progress.SpinnerColumn(),
             rich.progress.TextColumn("{task.description}"),
             rich.progress.TimeElapsedColumn(),
+            rich.progress.BarColumn(),
+            rich.progress.DownloadColumn(),
             console=console,
         ) as progress,
     ):
-        progress.add_task(f'[bold green]Uploading "{fil.name}"', total=None)
+        total = fil.stat().st_size
+        task = progress.add_task(f'[bold green]Uploading "{fil.name}"', total=total)
 
         prepare_upload_resp = await client.post(
             "https://api-v2.soundcloud.com/uploads/track-upload-policy",
@@ -129,11 +134,21 @@ async def _upload_one_file_to_track(
 
         upload_resp = await client.put(
             put_upload_url,
-            data=fobj,
+            data=_file_reader(lambda steps: progress.update(task, advance=steps), fil),
             headers=put_upload_headers,
             timeout=60 * 10,
         )
         upload_resp.raise_for_status()
+
+    with (
+        rich.progress.Progress(
+            rich.progress.SpinnerColumn(),
+            rich.progress.TextColumn("{task.description}"),
+            rich.progress.TimeElapsedColumn(),
+            console=console,
+        ) as progress,
+    ):
+        task = progress.add_task(f'[bold green]Transcoding "{fil.name}"', total=1)
 
         transcoding_resp = await client.post(
             f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
@@ -163,3 +178,18 @@ async def _upload_one_file_to_track(
             },
         )
         confirm_upload_resp.raise_for_status()
+
+        progress.update(task, advance=1)
+
+
+async def _file_reader(
+    progress: Callable[[int], Any], fil: Path
+) -> AsyncGenerator[bytes, None]:
+    """Yield chunks of the given file (to a file reading operation, like an async HTTP upload), updating the given progress bar by a number of steps (bytes)."""
+    async with aiofiles.open(fil, "rb") as fobj:
+        chunk_size = 64 * 1024
+        chunk = await fobj.read(chunk_size)
+        while chunk:
+            progress(len(chunk))
+            yield chunk
+            chunk = await fobj.read(chunk_size)

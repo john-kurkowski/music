@@ -3,7 +3,7 @@
 import dataclasses
 import io
 import re
-from collections.abc import Iterator
+from collections.abc import AsyncIterable, Iterator
 from pathlib import Path
 from typing import Any
 from unittest import mock
@@ -66,6 +66,8 @@ def snapshot(
     def matcher(data: Any, path: Any) -> Any:
         if isinstance(data, aiohttp.ClientSession):
             return "CLIENT_SESSION_HERE"
+        elif isinstance(data, AsyncIterable):
+            return "ASYNC_ITERABLE_HERE"
         elif isinstance(data, Path) or isinstance(data, io.IOBase):
             return str(data).replace(tmp_path_str, "TMP_PATH_HERE")
         elif isinstance(data, str):

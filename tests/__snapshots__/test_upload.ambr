@@ -1,9 +1,11 @@
 # serializer version: 1
 # name: test_main_success
   '''
-  ⠋ Uploading "some project.wav" 0:00:00
+  ⠋ Uploading "some project.wav" 0:00:00                                0/29 bytes
+    Transcoding "some project.wav" 0:00:00
   https://soundcloud.com/1
-  ⠋ Uploading "another project.wav" 0:00:00
+  ⠋ Uploading "another project.wav" 0:00:00                             0/32 bytes
+    Transcoding "another project.wav" 0:00:00
   https://soundcloud.com/2
   
   '''
@@ -124,7 +126,7 @@
           'https://some-url',
         ),
         dict({
-          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/some project/some project.wav'>",
+          'data': 'ASYNC_ITERABLE_HERE',
           'headers': dict({
             'some-uploader-id': 'some-uploader-value',
           }),
@@ -157,7 +159,7 @@
           'https://some-url',
         ),
         dict({
-          'data': "<_io.BufferedReader name='TMP_PATH_HERE/path/to/another project/another project.wav'>",
+          'data': 'ASYNC_ITERABLE_HERE',
           'headers': dict({
             'some-uploader-id': 'some-uploader-value',
           }),
