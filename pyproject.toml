@@ -23,6 +23,7 @@ testing = [
     "mypy",
     "pre-commit",
     "pytest",
+    "pytest-asyncio",
     "pytest-cov",
     "pytest-socket",
     "ruff",
