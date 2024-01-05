@@ -8,6 +8,9 @@ from typing import Any
 
 import aiohttp
 import click
+import rich.console
+import rich.live
+import rich.progress
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -135,19 +138,32 @@ async def main(
         async with concurrency:
             return await coro
 
-    async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
-        for project in projects:
-            async for _, render in music.render.process.main(
-                project, versions, vocal_loudness_worth, verbose=0
-            ):
-                renders.append(render)
+    render_process = music.render.process.Process()
+    upload_process = music.upload.process.Process()
+    progress_group = rich.console.Group(
+        render_process.progress, upload_process.progress
+    )
+    with rich.live.Live(progress_group):
+        async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
+            for project in projects:
+                async for _, render in render_process.process(
+                    project,
+                    versions,
+                    vocal_loudness_worth,
+                    verbose=0,
+                ):
+                    renders.append(render)
 
-                if upload:
-                    uploads.create_task(
-                        concurrent_coro(
-                            music.upload.process.main(client, oauth_token, [render.fil])
+                    if upload:
+                        uploads.create_task(
+                            concurrent_coro(
+                                upload_process.process(
+                                    client,
+                                    oauth_token,
+                                    [render.fil],
+                                )
+                            )
                         )
-                    )
 
     if not renders:
         raise click.UsageError("nothing to render")

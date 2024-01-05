@@ -4,11 +4,12 @@ from pathlib import Path
 
 import aiohttp
 import click
+import rich.live
 
 import music.util
 from music.render.process import SongVersion
 
-from .process import main as _upload
+from .process import Process as UploadProcess
 
 
 @click.command("upload")
@@ -89,5 +90,7 @@ async def main(
     if not files:
         raise click.UsageError("nothing to upload")
 
-    async with aiohttp.ClientSession() as client:
-        await _upload(client, oauth_token, files)
+    process = UploadProcess()
+    with rich.live.Live(process.progress):
+        async with aiohttp.ClientSession() as client:
+            await process.process(client, oauth_token, files)

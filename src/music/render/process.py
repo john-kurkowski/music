@@ -20,7 +20,7 @@ with warnings.catch_warnings():
 
 import rich.box
 import rich.console
-import rich.live
+import rich.progress
 import rich.table
 
 from music.__codegen__ import stats
@@ -168,6 +168,7 @@ async def _print_stats_for_render(
     version: SongVersion,
     verbose: int,
     render: Callable[[], Awaitable[RenderResult]],
+    progress: rich.progress.Progress,
 ) -> RenderResult:
     """Collect and print before and after summary statistics for the given project version render.
 
@@ -176,12 +177,13 @@ async def _print_stats_for_render(
     name = version.name_for_project_dir(pathlib.Path(project.path))
     out_fil = pathlib.Path(project.path) / f"{name}.wav"
 
-    console = rich.console.Console(width=_CONSOLE_WIDTH)
-    with console.status(f'[bold green]Rendering "{name}"'):
-        before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
-        out = await render()
-        after_stats = summary_stats_for_file(out_fil, verbose)
+    task = progress.add_task(f'Rendering "{name}"', total=1)
+    before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
+    out = await render()
+    after_stats = summary_stats_for_file(out_fil, verbose)
+    progress.update(task, advance=1)
 
+    console = rich.console.Console(width=_CONSOLE_WIDTH)
     console.print(f"[b default]{name}[/b default]")
     console.print(f"[default dim italic]{out.fil}[/default dim italic]")
 
@@ -347,67 +349,85 @@ async def _render_a_cappella(
     return out
 
 
-async def main(
-    project: ExtendedProject,
-    versions: Collection[SongVersion],
-    vocal_loudness_worth: float,
-    verbose: int,
-) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
-    """Render the given versions of the given Reaper project.
+class Process:
+    """Encapsulate the state of rendering a Reaper project."""
 
-    Returns render results if anything was rendered. Skips versions that have
-    no output. For example, if a project does not have vocals, rendering an a
-    capella or instrumental version are skipped.
-    """
-    did_something = False
+    async def process(
+        self,
+        project: ExtendedProject,
+        versions: Collection[SongVersion],
+        vocal_loudness_worth: float,
+        verbose: int,
+    ) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
+        """Render the given versions of the given Reaper project.
 
-    vocals = next((track for track in project.tracks if track.name == "Vocals"), None)
+        Returns render results if anything was rendered. Skips versions that have
+        no output. For example, if a project does not have vocals, rendering an a
+        capella or instrumental version are skipped.
+        """
+        did_something = False
 
-    if SongVersion.MAIN in versions:
-        did_something = True
-        yield (
-            SongVersion.MAIN,
-            await _print_stats_for_render(
-                project,
+        vocals = next(
+            (track for track in project.tracks if track.name == "Vocals"), None
+        )
+
+        if SongVersion.MAIN in versions:
+            did_something = True
+            yield (
                 SongVersion.MAIN,
-                verbose,
-                lambda: _render_main(project, vocals, verbose),
-            ),
-        )
-
-    if SongVersion.INSTRUMENTAL in versions and vocals:
-        if did_something:
-            print()
-        did_something = True
-        yield (
-            SongVersion.INSTRUMENTAL,
-            await _print_stats_for_render(
-                project,
-                SongVersion.INSTRUMENTAL,
-                verbose,
-                lambda: _render_instrumental(
+                await _print_stats_for_render(
                     project,
-                    vocals,
-                    vocal_loudness_worth,
+                    SongVersion.MAIN,
                     verbose,
+                    lambda: _render_main(project, vocals, verbose),
+                    self.progress,
                 ),
-            ),
-        )
+            )
 
-    if SongVersion.ACAPPELLA in versions and vocals:
-        if did_something:
-            print()
-        did_something = True
-        yield (
-            SongVersion.ACAPPELLA,
-            await _print_stats_for_render(
-                project,
+        if SongVersion.INSTRUMENTAL in versions and vocals:
+            if did_something:
+                print()
+            did_something = True
+            yield (
+                SongVersion.INSTRUMENTAL,
+                await _print_stats_for_render(
+                    project,
+                    SongVersion.INSTRUMENTAL,
+                    verbose,
+                    lambda: _render_instrumental(
+                        project,
+                        vocals,
+                        vocal_loudness_worth,
+                        verbose,
+                    ),
+                    self.progress,
+                ),
+            )
+
+        if SongVersion.ACAPPELLA in versions and vocals:
+            if did_something:
+                print()
+            did_something = True
+            yield (
                 SongVersion.ACAPPELLA,
-                verbose,
-                lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
-            ),
-        )
+                await _print_stats_for_render(
+                    project,
+                    SongVersion.ACAPPELLA,
+                    verbose,
+                    lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
+                    self.progress,
+                ),
+            )
 
-    if did_something:
-        # Render causes a project to have unsaved changes, no matter what. Save the user a step.
-        project.save()
+        if did_something:
+            # Render causes a project to have unsaved changes, no matter what. Save the user a step.
+            project.save()
+
+    @cached_property
+    def progress(self) -> rich.progress.Progress:
+        """Rich progress bar."""
+        return rich.progress.Progress(
+            rich.progress.SpinnerColumn(),
+            rich.progress.TextColumn("{task.description}"),
+            rich.progress.TimeElapsedColumn(),
+        )

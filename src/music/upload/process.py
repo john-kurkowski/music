@@ -3,6 +3,7 @@
 import asyncio
 import datetime
 from collections.abc import AsyncGenerator, Callable
+from functools import cached_property
 from pathlib import Path
 from typing import Any
 
@@ -21,105 +22,120 @@ _TRACK_METADATA_TO_UPDATE_KEYS = [
 ]
 
 
-async def main(
-    client: aiohttp.ClientSession, oauth_token: str, files: list[Path]
-) -> None:
-    """Upload the given audio files to SoundCloud.
+class Process:
+    """Encapsulate the state of uploading audio files."""
 
-    Matches the files to SoundCloud tracks by exact filename. then uploads them
-    to SoundCloud sequentially.
-    """
-    headers = {
-        "Accept": "application/json",
-        "Authorization": f"OAuth {oauth_token}",
-        "User-Agent": (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,"
-            " like Gecko) Chrome/105.0.0.0 Safari/537.36"
-        ),
-    }
+    @cached_property
+    def console(self) -> rich.console.Console:
+        """Rich console."""
+        return rich.console.Console()
 
-    tracks_resp = await client.get(
-        f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
-        headers=headers,
-        params={"limit": 999},
-        timeout=10,
-    )
-    tracks_resp.raise_for_status()
+    async def process(
+        self, client: aiohttp.ClientSession, oauth_token: str, files: list[Path]
+    ) -> None:
+        """Upload the given audio files to SoundCloud.
 
-    files_by_stem = {file.stem: file for file in files}
-    tracks_by_title = {
-        track["title"]: track
-        for track in (await tracks_resp.json())["collection"]
-        if track["title"] in files_by_stem
-    }
-    missing_tracks = sorted(set(files_by_stem).difference(tracks_by_title.keys()))
-    if missing_tracks:
-        raise KeyError(f"Tracks to upload not found in SoundCloud: {missing_tracks}")
+        Matches the files to SoundCloud tracks by exact filename. then uploads them
+        to SoundCloud sequentially.
+        """
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"OAuth {oauth_token}",
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,"
+                " like Gecko) Chrome/105.0.0.0 Safari/537.36"
+            ),
+        }
 
-    console = rich.console.Console()
-
-    tracks_by_file = {}
-    for stem, fil in files_by_stem.items():
-        track = tracks_by_title[stem]
-
-        if not _is_track_older_than_file(track, fil):
-            console.print(f'[yellow]Skipping already uploaded "{fil.name}"')
-            continue
-
-        tracks_by_file[fil] = track
-
-    for fil, track in tracks_by_file.items():
-        await _upload_one_file_to_track(
-            console,
-            client,
-            headers,
-            fil,
-            track["id"],
-            {k: track[k] for k in _TRACK_METADATA_TO_UPDATE_KEYS},
+        tracks_resp = await client.get(
+            f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
+            headers=headers,
+            params={"limit": 999},
+            timeout=10,
         )
+        tracks_resp.raise_for_status()
 
-        console.print(track["permalink_url"])
+        files_by_stem = {file.stem: file for file in files}
+        tracks_by_title = {
+            track["title"]: track
+            for track in (await tracks_resp.json())["collection"]
+            if track["title"] in files_by_stem
+        }
+        missing_tracks = sorted(set(files_by_stem).difference(tracks_by_title.keys()))
+        if missing_tracks:
+            raise KeyError(
+                f"Tracks to upload not found in SoundCloud: {missing_tracks}"
+            )
 
+        tracks_by_file = {}
+        for stem, fil in files_by_stem.items():
+            track = tracks_by_title[stem]
 
-def _is_track_older_than_file(track: dict[str, str], fil: Path) -> bool:
-    """Return whether the given SoundCloud track is older than the given file."""
-    upload_dt = datetime.datetime.fromisoformat(track["last_modified"])
+            if not _is_track_older_than_file(track, fil):
+                self.console.print(f'[yellow]Skipping already uploaded "{fil.name}"')
+                continue
 
-    system_tzinfo = datetime.datetime.now().astimezone().tzinfo
-    file_dt = datetime.datetime.fromtimestamp(fil.stat().st_mtime, system_tzinfo)
+            tracks_by_file[fil] = track
 
-    return upload_dt < file_dt
+        for fil, track in tracks_by_file.items():
+            await self._upload_one_file_to_track(
+                client,
+                headers,
+                fil,
+                track["id"],
+                {k: track[k] for k in _TRACK_METADATA_TO_UPDATE_KEYS},
+            )
 
+            self.console.print(track["permalink_url"])
 
-async def _upload_one_file_to_track(
-    console: rich.console.Console,
-    client: aiohttp.ClientSession,
-    headers: dict[str, str],
-    fil: Path,
-    track_id: int,
-    track_metadata_to_update: dict[str, str],
-) -> None:
-    """Perform the API requests for the given audio file to become the new version of the existing SoundCloud track.
+    @cached_property
+    def progress(self) -> rich.console.Group:
+        """A group of Rich progress bars."""
+        return rich.console.Group(self.progress_upload, self.progress_transcode)
 
-    1. Request an AWS S3 upload URL.
-    2. Upload the audio file there.
-    3. Request transcoding of the uploaded audio file.
-    4. Poll for transcoding to finish.
-    5. Confirm the transcoded file is what we want as the new file. Send the
-       minimal metadata of the original track.
-    """
-    with (
-        rich.progress.Progress(
+    @cached_property
+    def progress_upload(self) -> rich.progress.Progress:
+        """Progress bar for uploads."""
+        return rich.progress.Progress(
             rich.progress.SpinnerColumn(),
             rich.progress.TextColumn("{task.description}"),
             rich.progress.TimeElapsedColumn(),
             rich.progress.BarColumn(),
             rich.progress.DownloadColumn(),
-            console=console,
-        ) as progress,
-    ):
+            console=self.console,
+        )
+
+    @cached_property
+    def progress_transcode(self) -> rich.progress.Progress:
+        """Progress bar for transcodes."""
+        return rich.progress.Progress(
+            rich.progress.SpinnerColumn(),
+            rich.progress.TextColumn("{task.description}"),
+            rich.progress.TimeElapsedColumn(),
+            console=self.console,
+        )
+
+    async def _upload_one_file_to_track(
+        self,
+        client: aiohttp.ClientSession,
+        headers: dict[str, str],
+        fil: Path,
+        track_id: int,
+        track_metadata_to_update: dict[str, str],
+    ) -> None:
+        """Perform the API requests for the given audio file to become the new version of the existing SoundCloud track.
+
+        1. Request an AWS S3 upload URL.
+        2. Upload the audio file there.
+        3. Request transcoding of the uploaded audio file.
+        4. Poll for transcoding to finish.
+        5. Confirm the transcoded file is what we want as the new file. Send the
+           minimal metadata of the original track.
+        """
         total = fil.stat().st_size
-        task = progress.add_task(f'[bold green]Uploading "{fil.name}"', total=total)
+        task = self.progress_upload.add_task(
+            f'[bold green]Uploading "{fil.name}"', total=total
+        )
 
         prepare_upload_resp = await client.post(
             "https://api-v2.soundcloud.com/uploads/track-upload-policy",
@@ -134,21 +150,17 @@ async def _upload_one_file_to_track(
 
         upload_resp = await client.put(
             put_upload_url,
-            data=_file_reader(lambda steps: progress.update(task, advance=steps), fil),
+            data=_file_reader(
+                lambda steps: self.progress_upload.update(task, advance=steps), fil
+            ),
             headers=put_upload_headers,
             timeout=60 * 10,
         )
         upload_resp.raise_for_status()
 
-    with (
-        rich.progress.Progress(
-            rich.progress.SpinnerColumn(),
-            rich.progress.TextColumn("{task.description}"),
-            rich.progress.TimeElapsedColumn(),
-            console=console,
-        ) as progress,
-    ):
-        task = progress.add_task(f'[bold green]Transcoding "{fil.name}"', total=1)
+        task = self.progress_transcode.add_task(
+            f'[bold green]Transcoding "{fil.name}"', total=1
+        )
 
         transcoding_resp = await client.post(
             f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
@@ -179,7 +191,7 @@ async def _upload_one_file_to_track(
         )
         confirm_upload_resp.raise_for_status()
 
-        progress.update(task, advance=1)
+        self.progress_transcode.update(task, advance=1)
 
 
 async def _file_reader(
@@ -193,3 +205,13 @@ async def _file_reader(
             progress(len(chunk))
             yield chunk
             chunk = await fobj.read(chunk_size)
+
+
+def _is_track_older_than_file(track: dict[str, str], fil: Path) -> bool:
+    """Return whether the given SoundCloud track is older than the given file."""
+    upload_dt = datetime.datetime.fromisoformat(track["last_modified"])
+
+    system_tzinfo = datetime.datetime.now().astimezone().tzinfo
+    file_dt = datetime.datetime.fromtimestamp(fil.stat().st_mtime, system_tzinfo)
+
+    return upload_dt < file_dt
