@@ -137,7 +137,7 @@ async def main(
     progress_group = rich.console.Group(
         render_process.progress, upload_process.progress
     )
-    with rich.live.Live(progress_group, console=console):
+    with rich.live.Live(progress_group, console=console, refresh_per_second=10):
         async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
             for project in projects:
                 async for _, render in render_process.process(

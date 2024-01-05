@@ -93,6 +93,6 @@ async def main(
 
     console = rich.console.Console()
     process = UploadProcess(console)
-    with rich.live.Live(process.progress, console=console):
+    with rich.live.Live(process.progress, console=console, refresh_per_second=10):
         async with aiohttp.ClientSession() as client:
             await process.process(client, oauth_token, files)
