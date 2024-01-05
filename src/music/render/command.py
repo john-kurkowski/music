@@ -26,6 +26,9 @@ from .process import (
     SongVersion,
 )
 
+# Test-only property. Set to a large number to avoid text wrapping in the console.
+_CONSOLE_WIDTH: int | None = None
+
 
 @click.command("render")
 @music.util.coro
@@ -138,12 +141,13 @@ async def main(
         async with concurrency:
             return await coro
 
-    render_process = music.render.process.Process()
-    upload_process = music.upload.process.Process()
+    console = rich.console.Console(width=_CONSOLE_WIDTH)
+    render_process = music.render.process.Process(console)
+    upload_process = music.upload.process.Process(console)
     progress_group = rich.console.Group(
         render_process.progress, upload_process.progress
     )
-    with rich.live.Live(progress_group):
+    with rich.live.Live(progress_group, console=console):
         async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
             for project in projects:
                 async for _, render in render_process.process(

@@ -25,10 +25,9 @@ _TRACK_METADATA_TO_UPDATE_KEYS = [
 class Process:
     """Encapsulate the state of uploading audio files."""
 
-    @cached_property
-    def console(self) -> rich.console.Console:
-        """Rich console."""
-        return rich.console.Console()
+    def __init__(self, console: rich.console.Console) -> None:
+        """Initialize."""
+        self.console = console
 
     async def process(
         self, client: aiohttp.ClientSession, oauth_token: str, files: list[Path]

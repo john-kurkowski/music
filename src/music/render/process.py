@@ -40,9 +40,6 @@ VOCAL_LOUDNESS_WORTH = 2.0
 # Common error code found in SWS functions source
 SWS_ERROR_SENTINEL = -666
 
-# Test-only property. Set to a large number to avoid text wrapping in the console.
-_CONSOLE_WIDTH: int | None = None
-
 
 class RenderResult:
     """Summary statistics of an audio render.
@@ -161,50 +158,6 @@ def _mute(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
     yield
     for track in tracks:
         track.unmute()
-
-
-async def _print_stats_for_render(
-    project: reapy.core.Project,
-    version: SongVersion,
-    verbose: int,
-    render: Callable[[], Awaitable[RenderResult]],
-    progress: rich.progress.Progress,
-) -> RenderResult:
-    """Collect and print before and after summary statistics for the given project version render.
-
-    Returns the rendered file, after pretty printing itsprogress and metadata.
-    """
-    name = version.name_for_project_dir(pathlib.Path(project.path))
-    out_fil = pathlib.Path(project.path) / f"{name}.wav"
-
-    task = progress.add_task(f'Rendering "{name}"', total=1)
-    before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
-    out = await render()
-    after_stats = summary_stats_for_file(out_fil, verbose)
-    progress.update(task, advance=1)
-
-    console = rich.console.Console(width=_CONSOLE_WIDTH)
-    console.print(f"[b default]{name}[/b default]")
-    console.print(f"[default dim italic]{out.fil}[/default dim italic]")
-
-    table = rich.table.Table(
-        box=rich.box.MINIMAL,
-        caption=(
-            f"Rendered in [b]{out.render_delta}[/b], a"
-            f" [b]{out.render_speedup:.1f}x[/b] speedup"
-        ),
-    )
-    table.add_column("", style="blue")
-    table.add_column("Before", header_style="bold blue")
-    table.add_column("After", header_style="bold blue")
-
-    keys = sorted({k for di in (before_stats, after_stats) for k in di})
-    for k in keys:
-        table.add_row(k, *[str(di.get(k, "")) for di in (before_stats, after_stats)])
-
-    console.print(table)
-
-    return out
 
 
 def summary_stats_for_file(
@@ -352,6 +305,10 @@ async def _render_a_cappella(
 class Process:
     """Encapsulate the state of rendering a Reaper project."""
 
+    def __init__(self, console: rich.console.Console) -> None:
+        """Initialize."""
+        self.console = console
+
     async def process(
         self,
         project: ExtendedProject,
@@ -375,12 +332,11 @@ class Process:
             did_something = True
             yield (
                 SongVersion.MAIN,
-                await _print_stats_for_render(
+                await self._print_stats_for_render(
                     project,
                     SongVersion.MAIN,
                     verbose,
                     lambda: _render_main(project, vocals, verbose),
-                    self.progress,
                 ),
             )
 
@@ -390,7 +346,7 @@ class Process:
             did_something = True
             yield (
                 SongVersion.INSTRUMENTAL,
-                await _print_stats_for_render(
+                await self._print_stats_for_render(
                     project,
                     SongVersion.INSTRUMENTAL,
                     verbose,
@@ -400,7 +356,6 @@ class Process:
                         vocal_loudness_worth,
                         verbose,
                     ),
-                    self.progress,
                 ),
             )
 
@@ -410,12 +365,11 @@ class Process:
             did_something = True
             yield (
                 SongVersion.ACAPPELLA,
-                await _print_stats_for_render(
+                await self._print_stats_for_render(
                     project,
                     SongVersion.ACAPPELLA,
                     verbose,
                     lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
-                    self.progress,
                 ),
             )
 
@@ -431,3 +385,47 @@ class Process:
             rich.progress.TextColumn("{task.description}"),
             rich.progress.TimeElapsedColumn(),
         )
+
+    async def _print_stats_for_render(
+        self,
+        project: reapy.core.Project,
+        version: SongVersion,
+        verbose: int,
+        render: Callable[[], Awaitable[RenderResult]],
+    ) -> RenderResult:
+        """Collect and print before and after summary statistics for the given project version render.
+
+        Returns the rendered file, after pretty printing itsprogress and metadata.
+        """
+        name = version.name_for_project_dir(pathlib.Path(project.path))
+        out_fil = pathlib.Path(project.path) / f"{name}.wav"
+
+        task = self.progress.add_task(f'Rendering "{name}"', total=1)
+        before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
+        out = await render()
+        after_stats = summary_stats_for_file(out_fil, verbose)
+        self.progress.update(task, advance=1)
+
+        self.console.print(f"[b default]{name}[/b default]")
+        self.console.print(f"[default dim italic]{out.fil}[/default dim italic]")
+
+        table = rich.table.Table(
+            box=rich.box.MINIMAL,
+            caption=(
+                f"Rendered in [b]{out.render_delta}[/b], a"
+                f" [b]{out.render_speedup:.1f}x[/b] speedup"
+            ),
+        )
+        table.add_column("", style="blue")
+        table.add_column("Before", header_style="bold blue")
+        table.add_column("After", header_style="bold blue")
+
+        keys = sorted({k for di in (before_stats, after_stats) for k in di})
+        for k in keys:
+            table.add_row(
+                k, *[str(di.get(k, "")) for di in (before_stats, after_stats)]
+            )
+
+        self.console.print(table)
+
+        return out
