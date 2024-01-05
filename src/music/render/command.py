@@ -2,12 +2,13 @@
 
 import asyncio
 import warnings
-from collections.abc import Awaitable
 from pathlib import Path
-from typing import Any
 
 import aiohttp
 import click
+import rich.console
+import rich.live
+import rich.progress
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -22,6 +23,9 @@ from .process import (
     VOCAL_LOUDNESS_WORTH,
     SongVersion,
 )
+
+# Test-only property. Set to a large number to avoid text wrapping in the console.
+_CONSOLE_WIDTH: int | None = None
 
 
 @click.command("render")
@@ -127,27 +131,31 @@ async def main(
 
     renders = []
 
-    # Allow only 1 upload at a time. Home internet upload bandwidth actively
-    # hurts the completion time of multiple uploads.
-    concurrency = asyncio.Semaphore(1)
+    console = rich.console.Console(width=_CONSOLE_WIDTH)
+    render_process = music.render.process.Process(console)
+    upload_process = music.upload.process.Process(console)
+    progress_group = rich.console.Group(
+        render_process.progress, upload_process.progress
+    )
+    with rich.live.Live(progress_group, console=console, refresh_per_second=10):
+        async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
+            for project in projects:
+                async for _, render in render_process.process(
+                    project,
+                    versions,
+                    vocal_loudness_worth,
+                    verbose=0,
+                ):
+                    renders.append(render)
 
-    async def concurrent_coro(coro: Awaitable[Any]) -> Any:
-        async with concurrency:
-            return await coro
-
-    async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
-        for project in projects:
-            async for _, render in music.render.process.main(
-                project, versions, vocal_loudness_worth, verbose=0
-            ):
-                renders.append(render)
-
-                if upload:
-                    uploads.create_task(
-                        concurrent_coro(
-                            music.upload.process.main(client, oauth_token, [render.fil])
+                    if upload:
+                        uploads.create_task(
+                            upload_process.process(
+                                client,
+                                oauth_token,
+                                [render.fil],
+                            )
                         )
-                    )
 
     if not renders:
         raise click.UsageError("nothing to render")

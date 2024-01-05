@@ -89,7 +89,7 @@ def render_mocks(
         mock.patch(
             "reapy.reascript_api.SNM_SetIntConfigVar", create=True
         ) as mock_set_int_config_var,
-        mock.patch("music.upload.process.main") as mock_upload,
+        mock.patch("music.upload.process.Process.process") as mock_upload,
     ):
         project = (
             mock_project_class.get_or_open.return_value

@@ -20,7 +20,7 @@ with warnings.catch_warnings():
 
 import rich.box
 import rich.console
-import rich.live
+import rich.progress
 import rich.table
 
 from music.__codegen__ import stats
@@ -39,9 +39,6 @@ VOCAL_LOUDNESS_WORTH = 2.0
 
 # Common error code found in SWS functions source
 SWS_ERROR_SENTINEL = -666
-
-# Test-only property. Set to a large number to avoid text wrapping in the console.
-_CONSOLE_WIDTH: int | None = None
 
 
 class RenderResult:
@@ -161,48 +158,6 @@ def _mute(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
     yield
     for track in tracks:
         track.unmute()
-
-
-async def _print_stats_for_render(
-    project: reapy.core.Project,
-    version: SongVersion,
-    verbose: int,
-    render: Callable[[], Awaitable[RenderResult]],
-) -> RenderResult:
-    """Collect and print before and after summary statistics for the given project version render.
-
-    Returns the rendered file, after pretty printing itsprogress and metadata.
-    """
-    name = version.name_for_project_dir(pathlib.Path(project.path))
-    out_fil = pathlib.Path(project.path) / f"{name}.wav"
-
-    console = rich.console.Console(width=_CONSOLE_WIDTH)
-    with console.status(f'[bold green]Rendering "{name}"'):
-        before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
-        out = await render()
-        after_stats = summary_stats_for_file(out_fil, verbose)
-
-    console.print(f"[b default]{name}[/b default]")
-    console.print(f"[default dim italic]{out.fil}[/default dim italic]")
-
-    table = rich.table.Table(
-        box=rich.box.MINIMAL,
-        caption=(
-            f"Rendered in [b]{out.render_delta}[/b], a"
-            f" [b]{out.render_speedup:.1f}x[/b] speedup"
-        ),
-    )
-    table.add_column("", style="blue")
-    table.add_column("Before", header_style="bold blue")
-    table.add_column("After", header_style="bold blue")
-
-    keys = sorted({k for di in (before_stats, after_stats) for k in di})
-    for k in keys:
-        table.add_row(k, *[str(di.get(k, "")) for di in (before_stats, after_stats)])
-
-    console.print(table)
-
-    return out
 
 
 def summary_stats_for_file(
@@ -347,67 +302,135 @@ async def _render_a_cappella(
     return out
 
 
-async def main(
-    project: ExtendedProject,
-    versions: Collection[SongVersion],
-    vocal_loudness_worth: float,
-    verbose: int,
-) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
-    """Render the given versions of the given Reaper project.
+class Process:
+    """Encapsulate the state of rendering a Reaper project."""
 
-    Returns render results if anything was rendered. Skips versions that have
-    no output. For example, if a project does not have vocals, rendering an a
-    capella or instrumental version are skipped.
-    """
-    did_something = False
+    def __init__(self, console: rich.console.Console) -> None:
+        """Initialize."""
+        self.console = console
 
-    vocals = next((track for track in project.tracks if track.name == "Vocals"), None)
+    async def process(
+        self,
+        project: ExtendedProject,
+        versions: Collection[SongVersion],
+        vocal_loudness_worth: float,
+        verbose: int,
+    ) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
+        """Render the given versions of the given Reaper project.
 
-    if SongVersion.MAIN in versions:
-        did_something = True
-        yield (
-            SongVersion.MAIN,
-            await _print_stats_for_render(
-                project,
-                SongVersion.MAIN,
-                verbose,
-                lambda: _render_main(project, vocals, verbose),
-            ),
+        Returns render results if anything was rendered. Skips versions that have
+        no output. For example, if a project does not have vocals, rendering an a
+        capella or instrumental version are skipped.
+        """
+        vocals = next(
+            (track for track in project.tracks if track.name == "Vocals"), None
         )
 
-    if SongVersion.INSTRUMENTAL in versions and vocals:
-        if did_something:
-            print()
-        did_something = True
-        yield (
-            SongVersion.INSTRUMENTAL,
-            await _print_stats_for_render(
-                project,
-                SongVersion.INSTRUMENTAL,
-                verbose,
-                lambda: _render_instrumental(
-                    project,
-                    vocals,
-                    vocal_loudness_worth,
-                    verbose,
-                ),
-            ),
+        def add_task(version: SongVersion) -> rich.progress.TaskID:
+            return self.progress.add_task(
+                f'Rendering "{version.name_for_project_dir(pathlib.Path(project.path))}"',
+                start=False,
+                total=1,
+            )
+
+        results = []
+
+        if SongVersion.MAIN in versions:
+            results.append(
+                (
+                    SongVersion.MAIN,
+                    lambda: _render_main(project, vocals, verbose),
+                    add_task(SongVersion.MAIN),
+                )
+            )
+
+        if SongVersion.INSTRUMENTAL in versions and vocals:
+            results.append(
+                (
+                    SongVersion.INSTRUMENTAL,
+                    lambda: _render_instrumental(
+                        project,
+                        vocals,
+                        vocal_loudness_worth,
+                        verbose,
+                    ),
+                    add_task(SongVersion.INSTRUMENTAL),
+                )
+            )
+
+        if SongVersion.ACAPPELLA in versions and vocals:
+            results.append(
+                (
+                    SongVersion.ACAPPELLA,
+                    lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
+                    add_task(SongVersion.ACAPPELLA),
+                )
+            )
+
+        for i, (version, render, task) in enumerate(results):
+            if i > 0:
+                self.console.print()
+
+            self.progress.start_task(task)
+
+            yield (
+                version,
+                await self._print_stats_for_render(project, version, verbose, render),
+            )
+
+            self.progress.update(task, advance=1)
+
+        if len(results):
+            # Render causes a project to have unsaved changes, no matter what. Save the user a step.
+            project.save()
+
+    @cached_property
+    def progress(self) -> rich.progress.Progress:
+        """Rich progress bar."""
+        return rich.progress.Progress(
+            rich.progress.SpinnerColumn(),
+            rich.progress.TextColumn("{task.description}"),
+            rich.progress.TimeElapsedColumn(),
         )
 
-    if SongVersion.ACAPPELLA in versions and vocals:
-        if did_something:
-            print()
-        did_something = True
-        yield (
-            SongVersion.ACAPPELLA,
-            await _print_stats_for_render(
-                project,
-                SongVersion.ACAPPELLA,
-                verbose,
-                lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
+    async def _print_stats_for_render(
+        self,
+        project: reapy.core.Project,
+        version: SongVersion,
+        verbose: int,
+        render: Callable[[], Awaitable[RenderResult]],
+    ) -> RenderResult:
+        """Collect and print before and after summary statistics for the given project version render.
+
+        Returns the rendered file, after pretty printing itsprogress and metadata.
+        """
+        name = version.name_for_project_dir(pathlib.Path(project.path))
+        out_fil = pathlib.Path(project.path) / f"{name}.wav"
+
+        before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
+        out = await render()
+        after_stats = summary_stats_for_file(out_fil, verbose)
+
+        self.console.print(f"[b default]{name}[/b default]")
+        self.console.print(f"[default dim italic]{out.fil}[/default dim italic]")
+
+        table = rich.table.Table(
+            box=rich.box.MINIMAL,
+            caption=(
+                f"Rendered in [b]{out.render_delta}[/b], a"
+                f" [b]{out.render_speedup:.1f}x[/b] speedup"
             ),
         )
+        table.add_column("", style="blue")
+        table.add_column("Before", header_style="bold blue")
+        table.add_column("After", header_style="bold blue")
 
-    if did_something:
-        # Render causes a project to have unsaved changes, no matter what. Save the user a step.
-        project.save()
+        keys = sorted({k for di in (before_stats, after_stats) for k in di})
+        for k in keys:
+            table.add_row(
+                k, *[str(di.get(k, "")) for di in (before_stats, after_stats)]
+            )
+
+        self.console.print(table)
+
+        return out
