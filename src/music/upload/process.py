@@ -21,6 +21,10 @@ _TRACK_METADATA_TO_UPDATE_KEYS = [
     "title",
 ]
 
+# Allow only 1 upload at a time. Home internet upload bandwidth actively
+# hurts the completion time of multiple uploads.
+_CONCURRENCY = asyncio.Semaphore(1)
+
 
 class Process:
     """Encapsulate the state of uploading audio files."""
@@ -76,16 +80,11 @@ class Process:
 
             tracks_by_file[fil] = track
 
-        for fil, track in tracks_by_file.items():
-            await self._upload_one_file_to_track(
-                client,
-                headers,
-                fil,
-                track["id"],
-                {k: track[k] for k in _TRACK_METADATA_TO_UPDATE_KEYS},
-            )
-
-            self.console.print(track["permalink_url"])
+        async with asyncio.TaskGroup() as processes:
+            for fil, track in tracks_by_file.items():
+                processes.create_task(
+                    self._upload_one_file_to_track(client, headers, fil, track)
+                )
 
     @cached_property
     def progress(self) -> rich.console.Group:
@@ -119,8 +118,7 @@ class Process:
         client: aiohttp.ClientSession,
         headers: dict[str, str],
         fil: Path,
-        track_id: int,
-        track_metadata_to_update: dict[str, str],
+        track: dict[str, Any],
     ) -> None:
         """Perform the API requests for the given audio file to become the new version of the existing SoundCloud track.
 
@@ -131,31 +129,34 @@ class Process:
         5. Confirm the transcoded file is what we want as the new file. Send the
            minimal metadata of the original track.
         """
-        total = fil.stat().st_size
+        filesize = fil.stat().st_size
         task = self.progress_upload.add_task(
-            f'[bold green]Uploading "{fil.name}"', total=total
+            f'[bold green]Uploading "{fil.name}"', start=False, total=filesize
         )
 
-        prepare_upload_resp = await client.post(
-            "https://api-v2.soundcloud.com/uploads/track-upload-policy",
-            headers=headers,
-            json={"filename": fil.name, "filesize": fil.stat().st_size},
-        )
-        prepare_upload_resp.raise_for_status()
-        prepare_upload = await prepare_upload_resp.json()
-        put_upload_headers = prepare_upload["headers"]
-        put_upload_url = prepare_upload["url"]
-        put_upload_uid = prepare_upload["uid"]
+        async with _CONCURRENCY:
+            self.progress_upload.start_task(task)
 
-        upload_resp = await client.put(
-            put_upload_url,
-            data=_file_reader(
-                lambda steps: self.progress_upload.update(task, advance=steps), fil
-            ),
-            headers=put_upload_headers,
-            timeout=60 * 10,
-        )
-        upload_resp.raise_for_status()
+            prepare_upload_resp = await client.post(
+                "https://api-v2.soundcloud.com/uploads/track-upload-policy",
+                headers=headers,
+                json={"filename": fil.name, "filesize": filesize},
+            )
+            prepare_upload_resp.raise_for_status()
+            prepare_upload = await prepare_upload_resp.json()
+            put_upload_headers = prepare_upload["headers"]
+            put_upload_url = prepare_upload["url"]
+            put_upload_uid = prepare_upload["uid"]
+
+            upload_resp = await client.put(
+                put_upload_url,
+                data=_file_reader(
+                    lambda steps: self.progress_upload.update(task, advance=steps), fil
+                ),
+                headers=put_upload_headers,
+                timeout=60 * 10,
+            )
+            upload_resp.raise_for_status()
 
         task = self.progress_transcode.add_task(
             f'[bold green]Transcoding "{fil.name}"', total=1
@@ -177,8 +178,9 @@ class Process:
                 break
             await asyncio.sleep(3)
 
+        track_metadata_to_update = {k: track[k] for k in _TRACK_METADATA_TO_UPDATE_KEYS}
         confirm_upload_resp = await client.put(
-            f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track_id}",
+            f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track['id']}",
             headers=headers,
             json={
                 "track": {
@@ -191,6 +193,8 @@ class Process:
         confirm_upload_resp.raise_for_status()
 
         self.progress_transcode.update(task, advance=1)
+
+        self.console.print(f"{fil.name}:", track["permalink_url"])
 
 
 async def _file_reader(

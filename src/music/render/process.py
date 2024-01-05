@@ -322,58 +322,65 @@ class Process:
         no output. For example, if a project does not have vocals, rendering an a
         capella or instrumental version are skipped.
         """
-        did_something = False
-
         vocals = next(
             (track for track in project.tracks if track.name == "Vocals"), None
         )
 
+        def add_task(version: SongVersion) -> rich.progress.TaskID:
+            return self.progress.add_task(
+                f'Rendering "{version.name_for_project_dir(pathlib.Path(project.path))}"',
+                start=False,
+                total=1,
+            )
+
+        results = []
+
         if SongVersion.MAIN in versions:
-            did_something = True
-            yield (
-                SongVersion.MAIN,
-                await self._print_stats_for_render(
-                    project,
+            results.append(
+                (
                     SongVersion.MAIN,
-                    verbose,
                     lambda: _render_main(project, vocals, verbose),
-                ),
+                    add_task(SongVersion.MAIN),
+                )
             )
 
         if SongVersion.INSTRUMENTAL in versions and vocals:
-            if did_something:
-                print()
-            did_something = True
-            yield (
-                SongVersion.INSTRUMENTAL,
-                await self._print_stats_for_render(
-                    project,
+            results.append(
+                (
                     SongVersion.INSTRUMENTAL,
-                    verbose,
                     lambda: _render_instrumental(
                         project,
                         vocals,
                         vocal_loudness_worth,
                         verbose,
                     ),
-                ),
+                    add_task(SongVersion.INSTRUMENTAL),
+                )
             )
 
         if SongVersion.ACAPPELLA in versions and vocals:
-            if did_something:
-                print()
-            did_something = True
-            yield (
-                SongVersion.ACAPPELLA,
-                await self._print_stats_for_render(
-                    project,
+            results.append(
+                (
                     SongVersion.ACAPPELLA,
-                    verbose,
                     lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
-                ),
+                    add_task(SongVersion.ACAPPELLA),
+                )
             )
 
-        if did_something:
+        for i, (version, render, task) in enumerate(results):
+            if i > 0:
+                self.console.print()
+
+            self.progress.start_task(task)
+
+            yield (
+                version,
+                await self._print_stats_for_render(project, version, verbose, render),
+            )
+
+            self.progress.update(task, advance=1)
+
+        if len(results):
             # Render causes a project to have unsaved changes, no matter what. Save the user a step.
             project.save()
 
@@ -400,11 +407,9 @@ class Process:
         name = version.name_for_project_dir(pathlib.Path(project.path))
         out_fil = pathlib.Path(project.path) / f"{name}.wav"
 
-        task = self.progress.add_task(f'Rendering "{name}"', total=1)
         before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
         out = await render()
         after_stats = summary_stats_for_file(out_fil, verbose)
-        self.progress.update(task, advance=1)
 
         self.console.print(f"[b default]{name}[/b default]")
         self.console.print(f"[default dim italic]{out.fil}[/default dim italic]")

@@ -2,9 +2,7 @@
 
 import asyncio
 import warnings
-from collections.abc import Awaitable
 from pathlib import Path
-from typing import Any
 
 import aiohttp
 import click
@@ -133,14 +131,6 @@ async def main(
 
     renders = []
 
-    # Allow only 1 upload at a time. Home internet upload bandwidth actively
-    # hurts the completion time of multiple uploads.
-    concurrency = asyncio.Semaphore(1)
-
-    async def concurrent_coro(coro: Awaitable[Any]) -> Any:
-        async with concurrency:
-            return await coro
-
     console = rich.console.Console(width=_CONSOLE_WIDTH)
     render_process = music.render.process.Process(console)
     upload_process = music.upload.process.Process(console)
@@ -160,12 +150,10 @@ async def main(
 
                     if upload:
                         uploads.create_task(
-                            concurrent_coro(
-                                upload_process.process(
-                                    client,
-                                    oauth_token,
-                                    [render.fil],
-                                )
+                            upload_process.process(
+                                client,
+                                oauth_token,
+                                [render.fil],
                             )
                         )
 
