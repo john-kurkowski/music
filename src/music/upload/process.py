@@ -9,6 +9,7 @@ from typing import Any
 
 import aiofiles
 import aiohttp
+import rich.box
 import rich.console
 import rich.progress
 
@@ -89,7 +90,9 @@ class Process:
     @cached_property
     def progress(self) -> rich.console.Group:
         """A group of Rich progress bars."""
-        return rich.console.Group(self.progress_upload, self.progress_transcode)
+        return rich.console.Group(
+            self.progress_upload, self.progress_transcode, self.results_table
+        )
 
     @cached_property
     def progress_upload(self) -> rich.progress.Progress:
@@ -112,6 +115,11 @@ class Process:
             rich.progress.TimeElapsedColumn(),
             console=self.console,
         )
+
+    @cached_property
+    def results_table(self) -> rich.table.Table:
+        """Table of successful uploads."""
+        return rich.table.Table(box=rich.box.MINIMAL)
 
     async def _upload_one_file_to_track(
         self,
@@ -194,7 +202,14 @@ class Process:
 
         self.progress_transcode.update(task, advance=1)
 
-        self.console.print(f"{fil.name}:", track["permalink_url"])
+        if not self.results_table.columns:
+            self.results_table.add_column("Title", header_style="bold blue")
+            self.results_table.add_column("URL", header_style="bold blue", style="blue")
+
+        self.results_table.add_row(
+            track["title"],
+            f"[link={track['permalink_url']}]{track['permalink_url']}[/link]",
+        )
 
 
 async def _file_reader(

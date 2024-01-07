@@ -1,12 +1,16 @@
 # serializer version: 1
 # name: test_main_success
   '''
-  some project.wav: https://soundcloud.com/1
-  another project.wav: https://soundcloud.com/2
   ⠋ Uploading "some project.wav"    0:00:00                             0/29 bytes
   ⠋ Uploading "another project.wav" 0:00:00                             0/32 bytes
     Transcoding "some project.wav"    0:00:00
     Transcoding "another project.wav" 0:00:00
+                    ╷                           
+    Title           │ URL                       
+  ╶─────────────────┼──────────────────────────╴
+    some project    │ https://soundcloud.com/1  
+    another project │ https://soundcloud.com/2  
+                    ╵                           
   '''
 # ---
 # name: test_main_success.1

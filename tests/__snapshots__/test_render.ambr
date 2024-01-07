@@ -36,6 +36,7 @@
     Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+  
   '''
 # ---
 # name: test_main_all_versions.1
@@ -245,6 +246,7 @@
     Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+  
   '''
 # ---
 # name: test_main_default_versions.1
@@ -489,6 +491,7 @@
     Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+  
   '''
 # ---
 # name: test_main_filenames_all_versions.1
@@ -899,6 +902,7 @@
    Rendered in 0:00:00, a infx 
              speedup           
     Rendering "Stub Song Title (feat. Stub Artist)" 0:00:00
+  
   '''
 # ---
 # name: test_main_main_version.1
