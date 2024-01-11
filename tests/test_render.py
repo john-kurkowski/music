@@ -350,6 +350,7 @@ def test_main_mocked_calls(
     )
 
     assert not result.exception
+    assert result.stdout == snapshot
     assert not result.stderr
 
     assert render_mocks.mock_calls == snapshot

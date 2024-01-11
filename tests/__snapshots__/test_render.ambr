@@ -967,6 +967,46 @@
   ])
 # ---
 # name: test_main_mocked_calls
+  '''
+  Stub Song Title (feat. Stub Artist)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav
+             ╷        ╷        
+             │ Before │ After  
+  ╶──────────┼────────┼───────╴
+    duration │        │ 1.0    
+    size     │        │ 42.0   
+             ╵        ╵        
+   Rendered in 0:00:00, a infx 
+             speedup           
+  
+  Stub Song Title (feat. Stub Artist) (Instrumental)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav
+             ╷        ╷        
+             │ Before │ After  
+  ╶──────────┼────────┼───────╴
+    duration │        │ 250.1  
+    size     │        │ 1024   
+             ╵        ╵        
+   Rendered in 0:00:00, a infx 
+             speedup           
+  
+  Stub Song Title (feat. Stub Artist) (A Cappella)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav
+             ╷        ╷        
+             │ Before │ After  
+  ╶──────────┼────────┼───────╴
+    duration │        │ 1.0    
+    size     │        │ 42.0   
+             ╵        ╵        
+   Rendered in 0:00:00, a infx 
+             speedup           
+    Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
+    Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
+    Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+  
+  '''
+# ---
+# name: test_main_mocked_calls.1
   dict({
     'duration_delta': _CallList([
     ]),
