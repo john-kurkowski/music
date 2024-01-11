@@ -334,11 +334,7 @@ def test_main_mocked_calls(
     all mocked calls in every test case. So keep this test case snapshot
     assertion separate.
     """
-    some_paths = [
-        tmp_path / "path" / "to" / "some project",
-    ]
-    for path in some_paths:
-        path.mkdir(parents=True)
+    some_paths = [Path(render_mocks.project.path)]
 
     result = CliRunner(mix_stderr=False).invoke(
         render,
