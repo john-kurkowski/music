@@ -12,7 +12,7 @@ from unittest import mock
 import pytest
 from click.testing import CliRunner
 from music.render.command import main as render
-from music.render.process import RenderResult
+from music.render.process import RenderResult, SongVersion
 from syrupy.assertion import SnapshotAssertion
 
 
@@ -329,17 +329,27 @@ def test_main_mocked_calls(
 ) -> None:
     """Test main to verify mocked calls.
 
+    Test a maximal mix of CLI options.
+
     This is useful to test features that _only_ exercise mocked calls, for
-    example toggling a global Reaper preference. It would be noisy to snapshot
-    all mocked calls in every test case. So keep this test case snapshot
-    assertion separate.
+    example toggling a global Reaper preference, or HTTP upload. It would be
+    noisy to snapshot all mocked calls in every test case. So keep this test
+    case snapshot assertion separate.
     """
     some_paths = [Path(render_mocks.project.path)]
+
+    some_unspecified_file = (
+        some_paths[0]
+        / f"{SongVersion.INSTRUMENTAL.name_for_project_dir(some_paths[0])}.wav"
+    )
+    some_unspecified_file.touch()
 
     result = CliRunner(mix_stderr=False).invoke(
         render,
         [
+            "--include-main",
             "--upload",
+            "--upload-existing",
             *[str(path.resolve()) for path in some_paths],
         ],
         catch_exceptions=False,

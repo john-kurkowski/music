@@ -978,31 +978,7 @@
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
-  
-  Stub Song Title (feat. Stub Artist) (Instrumental)
-  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav
-             ╷        ╷        
-             │ Before │ After  
-  ╶──────────┼────────┼───────╴
-    duration │        │ 250.1  
-    size     │        │ 1024   
-             ╵        ╵        
-   Rendered in 0:00:00, a infx 
-             speedup           
-  
-  Stub Song Title (feat. Stub Artist) (A Cappella)
-  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav
-             ╷        ╷        
-             │ Before │ After  
-  ╶──────────┼────────┼───────╴
-    duration │        │ 1.0    
-    size     │        │ 42.0   
-             ╵        ╵        
-   Rendered in 0:00:00, a infx 
-             speedup           
-    Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+    Rendering "Stub Song Title (feat. Stub Artist)" 0:00:00
   
   '''
 # ---
@@ -1038,42 +1014,6 @@
         dict({
         }),
       ),
-      _Call(
-        '',
-        tuple(
-          'runafterstop',
-          -666,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-          'runallonstop',
-          -666,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-          'runafterstop',
-          -666,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-          'runallonstop',
-          -666,
-        ),
-        dict({
-        }),
-      ),
     ]),
     'project': _CallList([
       _Call(
@@ -1081,56 +1021,6 @@
         tuple(
           'RENDER_PATTERN',
           'Stub Song Title (feat. Stub Artist).tmp',
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'render',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'set_info_string',
-        tuple(
-          'RENDER_PATTERN',
-          '$project',
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'set_info_string',
-        tuple(
-          'RENDER_PATTERN',
-          'Stub Song Title (feat. Stub Artist) (Instrumental).tmp',
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'render',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'set_info_string',
-        tuple(
-          'RENDER_PATTERN',
-          '$project',
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'set_info_string',
-        tuple(
-          'RENDER_PATTERN',
-          'Stub Song Title (feat. Stub Artist) (A Cappella).tmp',
         ),
         dict({
         }),
@@ -1196,92 +1086,8 @@
         dict({
         }),
       ),
-      _Call(
-        '',
-        tuple(
-          'runafterstop',
-          0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-          'runallonstop',
-          0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-          'runafterstop',
-          999,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-          'runallonstop',
-          999,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-          'runafterstop',
-          0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-          'runallonstop',
-          0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-          'runafterstop',
-          999,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        '',
-        tuple(
-          'runallonstop',
-          999,
-        ),
-        dict({
-        }),
-      ),
     ]),
     'upload': _CallList([
-      _Call(
-        '',
-        tuple(
-          'CLIENT_SESSION_HERE',
-          'stub-fake-token',
-          list([
-            'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
-          ]),
-        ),
-        dict({
-        }),
-      ),
       _Call(
         '',
         tuple(
@@ -1300,7 +1106,7 @@
           'CLIENT_SESSION_HERE',
           'stub-fake-token',
           list([
-            'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav',
+            'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
           ]),
         ),
         dict({

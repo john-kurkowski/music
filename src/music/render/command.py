@@ -82,6 +82,12 @@ _CONSOLE_WIDTH: int | None = None
     is_flag=True,
 )
 @click.option(
+    "--upload-existing",
+    default=False,
+    help='Whether to additionally upload existing renders to SoundCloud, unspecified by the "--include-*" flags.',
+    is_flag=True,
+)
+@click.option(
     "--vocal-loudness-worth",
     "-vlw",
     default=VOCAL_LOUDNESS_WORTH,
@@ -99,6 +105,7 @@ async def main(
     include_acappella: SongVersion | None,
     oauth_token: str,
     upload: bool,
+    upload_existing: bool,
     vocal_loudness_worth: float,
 ) -> None:
     """Render vocal, instrumental, etc. versions of the given PROJECT_DIRS Reaper projects.
@@ -140,6 +147,22 @@ async def main(
     with rich.live.Live(progress_group, console=console, refresh_per_second=10):
         async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
             for project in projects:
+                if upload_existing:
+                    for existing_version in set(SongVersion).difference(versions):
+                        existing_render_fil = Path(project.path) / (
+                            f"{existing_version.name_for_project_dir(Path(project.path))}.wav"
+                        )
+                        if not existing_render_fil.exists():
+                            continue
+
+                        uploads.create_task(
+                            upload_process.process(
+                                client,
+                                oauth_token,
+                                [existing_render_fil],
+                            )
+                        )
+
                 async for _, render in render_process.process(
                     project,
                     versions,
