@@ -148,20 +148,25 @@ async def main(
         async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
             for project in projects:
                 if upload_existing:
-                    for existing_version in set(SongVersion).difference(versions):
-                        existing_render_fil = Path(project.path) / (
-                            f"{existing_version.name_for_project_dir(Path(project.path))}.wav"
-                        )
-                        if not existing_render_fil.exists():
-                            continue
-
-                        uploads.create_task(
-                            upload_process.process(
-                                client,
-                                oauth_token,
-                                [existing_render_fil],
+                    existing_render_fils = [
+                        fil
+                        for existing_version in set(SongVersion).difference(versions)
+                        if (
+                            fil := Path(project.path)
+                            / (
+                                f"{existing_version.name_for_project_dir(Path(project.path))}.wav"
                             )
                         )
+                        and fil.exists()
+                    ]
+
+                    uploads.create_task(
+                        upload_process.process(
+                            client,
+                            oauth_token,
+                            existing_render_fils,
+                        )
+                    )
 
                 async for _, render in render_process.process(
                     project,
