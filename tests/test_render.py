@@ -12,7 +12,8 @@ from unittest import mock
 import pytest
 from click.testing import CliRunner
 from music.render.command import main as render
-from music.render.process import RenderResult, SongVersion
+from music.render.process import RenderResult
+from music.util import SongVersion
 from syrupy.assertion import SnapshotAssertion
 
 

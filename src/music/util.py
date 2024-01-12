@@ -1,6 +1,7 @@
 """Misc. utilities."""
 
 import asyncio
+import enum
 import warnings
 from collections.abc import Callable, Iterator
 from functools import wraps
@@ -17,6 +18,26 @@ T = TypeVar("T")
 
 # File: Render project, using the most recent render settings, auto-close render dialog
 RENDER_CMD_ID = 42230
+
+
+class SongVersion(enum.Enum):
+    """Different versions of a song to render."""
+
+    MAIN = enum.auto()
+    INSTRUMENTAL = enum.auto()
+    ACAPPELLA = enum.auto()
+
+    def name_for_project_dir(self, project_dir: Path) -> str:
+        """Name of the project for the given song version."""
+        project_name = project_dir.name
+        if self is SongVersion.MAIN:
+            return project_name
+        elif self is SongVersion.INSTRUMENTAL:
+            return f"{project_name} (Instrumental)"
+        elif self is SongVersion.ACAPPELLA:
+            return f"{project_name} (A Cappella)"
+        else:  # pragma: no cover
+            assert_exhaustiveness(self)
 
 
 class ExtendedProject(reapy.core.Project):

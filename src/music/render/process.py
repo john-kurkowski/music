@@ -2,7 +2,6 @@
 
 import contextlib
 import datetime
-import enum
 import math
 import pathlib
 import random
@@ -26,7 +25,7 @@ import rich.table
 from music.__codegen__ import stats
 from music.util import (
     ExtendedProject,
-    assert_exhaustiveness,
+    SongVersion,
     recurse_property,
     set_param_value,
 )
@@ -72,26 +71,6 @@ class RenderResult:
         return (
             (self.duration_delta / self.render_delta) if self.render_delta else math.inf
         )
-
-
-class SongVersion(enum.Enum):
-    """Different versions of a song to render."""
-
-    MAIN = enum.auto()
-    INSTRUMENTAL = enum.auto()
-    ACAPPELLA = enum.auto()
-
-    def name_for_project_dir(self, project_dir: pathlib.Path) -> str:
-        """Name of the project for the given song version."""
-        project_name = project_dir.name
-        if self is SongVersion.MAIN:
-            return project_name
-        elif self is SongVersion.INSTRUMENTAL:
-            return f"{project_name} (Instrumental)"
-        elif self is SongVersion.ACAPPELLA:
-            return f"{project_name} (A Cappella)"
-        else:  # pragma: no cover
-            assert_exhaustiveness(self)
 
 
 def _find_acappella_tracks_to_mute(

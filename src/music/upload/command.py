@@ -8,7 +8,7 @@ import rich.console
 import rich.live
 
 import music.util
-from music.render.process import SongVersion
+from music.util import SongVersion
 
 from .process import Process as UploadProcess
 

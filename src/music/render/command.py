@@ -17,11 +17,11 @@ with warnings.catch_warnings():
 
 import music.upload.process
 import music.util
+from music.util import SongVersion
 
 from .process import (
     SWS_ERROR_SENTINEL,
     VOCAL_LOUDNESS_WORTH,
-    SongVersion,
 )
 
 # Test-only property. Set to a large number to avoid text wrapping in the console.
