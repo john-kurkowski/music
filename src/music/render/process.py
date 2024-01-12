@@ -202,8 +202,8 @@ async def render_version(
         reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", prev_runafterstop)  # type: ignore[attr-defined]
         reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", prev_runallonstop)  # type: ignore[attr-defined]
 
-    out_dir = pathlib.Path(project.path)
-    out_fil = out_dir / f"{out_name}.wav"
+    out_fil = version.path_for_project_dir(pathlib.Path(project.path))
+    out_dir = out_fil.parent
     shutil.move(out_dir / f"{in_name}.wav", out_fil)
 
     return RenderResult(out_fil, datetime.timedelta(seconds=time_end - time_start))
@@ -374,7 +374,7 @@ class Process:
 
     async def _print_stats_for_render(
         self,
-        project: reapy.core.Project,
+        project: ExtendedProject,
         version: SongVersion,
         verbose: int,
         render: Callable[[], Awaitable[RenderResult]],
@@ -384,7 +384,7 @@ class Process:
         Returns the rendered file, after pretty printing itsprogress and metadata.
         """
         name = version.name_for_project_dir(pathlib.Path(project.path))
-        out_fil = pathlib.Path(project.path) / f"{name}.wav"
+        out_fil = version.path_for_project_dir(pathlib.Path(project.path))
 
         before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
         out = await render()

@@ -148,15 +148,11 @@ async def main(
         async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
             for project in projects:
                 if upload_existing:
+                    existing_versions = set(SongVersion).difference(versions)
                     existing_render_fils = [
                         fil
-                        for existing_version in set(SongVersion).difference(versions)
-                        if (
-                            fil := Path(project.path)
-                            / (
-                                f"{existing_version.name_for_project_dir(Path(project.path))}.wav"
-                            )
-                        )
+                        for version in existing_versions
+                        if (fil := version.path_for_project_dir(Path(project.path)))
                         and fil.exists()
                     ]
 

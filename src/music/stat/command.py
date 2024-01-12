@@ -22,8 +22,7 @@ def main(files: list[Path], verbose: int) -> None:
         files = [
             fil
             for version in SongVersion
-            if (fil := project_dir / f"{version.name_for_project_dir(project_dir)}.wav")
-            and fil.exists()
+            if (fil := version.path_for_project_dir(project_dir)) and fil.exists()
         ]
 
     for i, fil in enumerate(files):

@@ -84,8 +84,7 @@ async def main(
         fil
         for project_dir in project_dirs
         for version in versions
-        if (fil := project_dir / f"{version.name_for_project_dir(project_dir)}.wav")
-        and fil.exists()
+        if (fil := version.path_for_project_dir(project_dir)) and fil.exists()
     ]
 
     if not files:

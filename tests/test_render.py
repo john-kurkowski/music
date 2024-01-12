@@ -339,9 +339,8 @@ def test_main_mocked_calls(
     """
     some_paths = [Path(render_mocks.project.path)]
 
-    some_unspecified_file = (
-        some_paths[0]
-        / f"{SongVersion.INSTRUMENTAL.name_for_project_dir(some_paths[0])}.wav"
+    some_unspecified_file = SongVersion.INSTRUMENTAL.path_for_project_dir(
+        Path(render_mocks.project.path)
     )
     some_unspecified_file.touch()
 

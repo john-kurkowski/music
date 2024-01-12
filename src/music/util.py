@@ -39,6 +39,10 @@ class SongVersion(enum.Enum):
         else:  # pragma: no cover
             assert_exhaustiveness(self)
 
+    def path_for_project_dir(self, project_dir: Path) -> Path:
+        """Path of the rendered file for the given song version."""
+        return project_dir / f"{self.name_for_project_dir(project_dir)}.wav"
+
 
 class ExtendedProject(reapy.core.Project):
     """Extend reapy.core.Project with additional properties."""
