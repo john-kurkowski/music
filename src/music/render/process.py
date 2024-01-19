@@ -292,7 +292,7 @@ class Process:
         self,
         project: ExtendedProject,
         versions: Collection[SongVersion],
-        vocal_loudness_worth: float,
+        vocal_loudness_worth: float | None,
         verbose: int,
     ) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
         """Render the given versions of the given Reaper project.
@@ -304,6 +304,11 @@ class Process:
         vocals = next(
             (track for track in project.tracks if track.name == "Vocals"), None
         )
+
+        if vocal_loudness_worth is None:
+            vocal_loudness_worth = float(
+                project.metadata.get("vocal-loudness-worth") or VOCAL_LOUDNESS_WORTH
+            )
 
         def add_task(version: SongVersion) -> rich.progress.TaskID:
             return self.progress.add_task(

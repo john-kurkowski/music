@@ -2,11 +2,12 @@
 
 import asyncio
 import enum
+import json
 import warnings
 from collections.abc import Callable, Iterator
 from functools import wraps
 from pathlib import Path
-from typing import Any, NoReturn, TypeVar
+from typing import Any, NoReturn, TypeVar, cast
 
 import aiohttp
 
@@ -72,6 +73,17 @@ class ExtendedProject(reapy.core.Project):
         )
         reapy.RPR.Main_openProject(str(project_file))  # type: ignore[attr-defined]
         return cls()
+
+    @property
+    def metadata(self) -> dict[str, Any]:
+        """Parse optional author-idiosyncratic metadata from the project notes."""
+        notes = reapy.RPR.GetSetProjectNotes(-1, False, "", 999)[2]  # type: ignore[attr-defined]
+        try:
+            di = json.loads(notes)
+        except json.JSONDecodeError:
+            return {}
+
+        return cast(dict[str, Any], di)
 
     async def render(self) -> None:
         """Trigger Reaper to render the currently open project.

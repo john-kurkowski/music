@@ -42,6 +42,14 @@
 # name: test_main_all_versions.1
   _CallList([
     _Call(
+      'metadata.get',
+      tuple(
+        'vocal-loudness-worth',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -251,6 +259,14 @@
 # ---
 # name: test_main_default_versions.1
   _CallList([
+    _Call(
+      'metadata.get',
+      tuple(
+        'vocal-loudness-worth',
+      ),
+      dict({
+      }),
+    ),
     _Call(
       'set_info_string',
       tuple(
@@ -497,6 +513,14 @@
 # name: test_main_filenames_all_versions.1
   _CallList([
     _Call(
+      'metadata.get',
+      tuple(
+        'vocal-loudness-worth',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -574,6 +598,14 @@
     _Call(
       'save',
       tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'metadata.get',
+      tuple(
+        'vocal-loudness-worth',
       ),
       dict({
       }),
@@ -908,6 +940,14 @@
 # name: test_main_main_version.1
   _CallList([
     _Call(
+      'metadata.get',
+      tuple(
+        'vocal-loudness-worth',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -1016,6 +1056,28 @@
       ),
     ]),
     'project': _CallList([
+      _Call(
+        'metadata.get',
+        tuple(
+          'vocal-loudness-worth',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'metadata.get().__bool__',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'metadata.get().__float__',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
       _Call(
         'set_info_string',
         tuple(
@@ -1126,6 +1188,14 @@
 # ---
 # name: test_main_noop.1
   _CallList([
+    _Call(
+      'metadata.get',
+      tuple(
+        'vocal-loudness-worth',
+      ),
+      dict({
+      }),
+    ),
   ])
 # ---
 # name: test_render_result_render_speedup

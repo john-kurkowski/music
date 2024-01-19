@@ -90,11 +90,12 @@ _CONSOLE_WIDTH: int | None = None
 @click.option(
     "--vocal-loudness-worth",
     "-vlw",
-    default=VOCAL_LOUDNESS_WORTH,
+    default=None,
     help=(
         "How many dBs the vocals in the given track account for, to make up when they"
         " are not present, when rendering only the instrumental or a cappella."
-        f" Defaults to {VOCAL_LOUDNESS_WORTH}."
+        " Defaults to the `vocal-loudness-worth` setting in project notes, or"
+        f" {VOCAL_LOUDNESS_WORTH} if unset."
     ),
     type=float,
 )
@@ -106,7 +107,7 @@ async def main(
     oauth_token: str,
     upload: bool,
     upload_existing: bool,
-    vocal_loudness_worth: float,
+    vocal_loudness_worth: float | None,
 ) -> None:
     """Render vocal, instrumental, etc. versions of the given PROJECT_DIRS Reaper projects.
 
