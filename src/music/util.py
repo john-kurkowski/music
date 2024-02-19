@@ -27,6 +27,7 @@ class SongVersion(enum.Enum):
     MAIN = enum.auto()
     INSTRUMENTAL = enum.auto()
     ACAPPELLA = enum.auto()
+    STEMS = enum.auto()
 
     def name_for_project_dir(self, project_dir: Path) -> str:
         """Name of the project for the given song version."""
@@ -37,12 +38,27 @@ class SongVersion(enum.Enum):
             return f"{project_name} (Instrumental)"
         elif self is SongVersion.ACAPPELLA:
             return f"{project_name} (A Cappella)"
+        elif self is SongVersion.STEMS:
+            return f"{project_name} (Stems)"
         else:  # pragma: no cover
             assert_exhaustiveness(self)
 
     def path_for_project_dir(self, project_dir: Path) -> Path:
         """Path of the rendered file for the given song version."""
-        return project_dir / f"{self.name_for_project_dir(project_dir)}.wav"
+        basename = project_dir / self.name_for_project_dir(project_dir)
+        if self is SongVersion.STEMS:
+            return basename
+
+        return basename.with_suffix(".wav")
+
+    @property
+    def pattern(self) -> list[Path]:
+        """Reaper directory render pattern for the given song version, if any."""
+        if self is SongVersion.STEMS:
+            # Roughly create a directory tree matching the tracks and folders in the Reaper project.
+            return [Path("$folders $tracknumber - $track")]
+
+        return []
 
 
 class ExtendedProject(reapy.core.Project):
@@ -134,6 +150,11 @@ def recurse_property(prop: str, obj: T | None) -> Iterator[T]:
     while obj is not None:
         yield obj
         obj = getattr(obj, prop, None)
+
+
+# @contextlib.contextmanager
+# def with_set_value(f: Callable[[T], T], old_value: T = ...) -> Iterator[None]:
+#     pass
 
 
 def set_param_value(param: reapy.core.FXParam, value: float) -> None:
