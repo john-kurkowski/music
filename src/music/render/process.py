@@ -445,9 +445,11 @@ class Process:
         name = version.name_for_project_dir(Path(project.path))
         out_fil = version.path_for_project_dir(Path(project.path))
 
-        before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
+        before_stats = summary_stats_for_file(out_fil) if out_fil.is_file() else {}
         out = await render()
-        after_stats = summary_stats_for_file(out_fil, verbose)
+        after_stats = (
+            summary_stats_for_file(out_fil, verbose) if out_fil.is_file() else {}
+        )
 
         self.console.print(f"[b default]{name}[/b default]")
         self.console.print(f"[default dim italic]{out.fil}[/default dim italic]")

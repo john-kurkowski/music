@@ -43,5 +43,5 @@ def _files_for_project_dir(project_dir: Path) -> list[Path]:
     return [
         fil
         for version in SongVersion
-        if (fil := version.path_for_project_dir(project_dir)) and fil.exists()
+        if (fil := version.path_for_project_dir(project_dir)) and fil.is_file()
     ]
