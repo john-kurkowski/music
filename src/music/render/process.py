@@ -3,7 +3,6 @@
 import contextlib
 import datetime
 import math
-import pathlib
 import random
 import re
 import shutil
@@ -11,6 +10,7 @@ import subprocess
 import warnings
 from collections.abc import AsyncIterator, Awaitable, Callable, Collection, Iterator
 from functools import cached_property
+from pathlib import Path
 from timeit import default_timer as timer
 
 with warnings.catch_warnings():
@@ -47,7 +47,7 @@ class RenderResult:
     """
 
     def __init__(  # noqa: D107
-        self, fil: pathlib.Path, render_delta: datetime.timedelta
+        self, fil: Path, render_delta: datetime.timedelta
     ):
         self.fil = fil
         self.render_delta = datetime.timedelta(seconds=round(render_delta.seconds))
@@ -139,9 +139,7 @@ def _mute(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
         track.unmute()
 
 
-def summary_stats_for_file(
-    fil: pathlib.Path, verbose: int = 0
-) -> dict[str, float | str]:
+def summary_stats_for_file(fil: Path, verbose: int = 0) -> dict[str, float | str]:
     """Print statistics for the given audio file, like LUFS-I and LRA."""
     cmd = _cmd_for_stats(fil)
     proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
@@ -149,7 +147,7 @@ def summary_stats_for_file(
     return stats.parse_summary_stats(proc_output)
 
 
-def _cmd_for_stats(fil: pathlib.Path) -> list[str | pathlib.Path]:
+def _cmd_for_stats(fil: Path) -> list[str | Path]:
     return [
         "ffmpeg",
         "-i",
@@ -175,7 +173,7 @@ async def render_version(
     Avoids FX tail leaking issues by tweaking certain, global Reaper
     preferences. Resets them after render completion.
     """
-    out_name = version.name_for_project_dir(pathlib.Path(project.path))
+    out_name = version.name_for_project_dir(Path(project.path))
 
     # Avoid "Overwrite" "Render Warning" dialog, which can't be scripted, with a temporary filename
     rand_id = random.randrange(10**5, 10**6)
@@ -202,14 +200,13 @@ async def render_version(
         reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", prev_runafterstop)  # type: ignore[attr-defined]
         reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", prev_runallonstop)  # type: ignore[attr-defined]
 
-    out_fil = version.path_for_project_dir(pathlib.Path(project.path))
-    out_dir = out_fil.parent
-    shutil.move(out_dir / f"{in_name}.wav", out_fil)
+    out_fil = version.path_for_project_dir(Path(project.path))
+    shutil.move(out_fil.with_stem(in_name), out_fil)
 
     return RenderResult(out_fil, datetime.timedelta(seconds=time_end - time_start))
 
 
-def trim_silence(fil: pathlib.Path) -> None:
+def trim_silence(fil: Path) -> None:
     """Trim leading and trailing silence from the given audio file, in-place.
 
     H/T https://superuser.com/a/1715017
@@ -220,7 +217,7 @@ def trim_silence(fil: pathlib.Path) -> None:
     rand_id = random.randrange(10**5, 10**6)
     tmp_fil = f"{fil} {rand_id}.tmp.wav"
 
-    cmd: list[str | pathlib.Path] = [
+    cmd: list[str | Path] = [
         "ffmpeg",
         "-i",
         fil,
@@ -312,7 +309,7 @@ class Process:
 
         def add_task(version: SongVersion) -> rich.progress.TaskID:
             return self.progress.add_task(
-                f'Rendering "{version.name_for_project_dir(pathlib.Path(project.path))}"',
+                f'Rendering "{version.name_for_project_dir(Path(project.path))}"',
                 start=False,
                 total=1,
             )
@@ -388,8 +385,8 @@ class Process:
 
         Returns the rendered file, after pretty printing itsprogress and metadata.
         """
-        name = version.name_for_project_dir(pathlib.Path(project.path))
-        out_fil = version.path_for_project_dir(pathlib.Path(project.path))
+        name = version.name_for_project_dir(Path(project.path))
+        out_fil = version.path_for_project_dir(Path(project.path))
 
         before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
         out = await render()
