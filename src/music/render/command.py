@@ -68,6 +68,16 @@ _CONSOLE_WIDTH: int | None = None
     type=SongVersion,
 )
 @click.option(
+    "--include-stems",
+    default=None,
+    flag_value=SongVersion.STEMS,
+    help=(
+        "Whether to include the mix stems. Defaults to including all versions, unless"
+        ' one of the "--include-*" flags is set.'
+    ),
+    type=SongVersion,
+)
+@click.option(
     "--oauth_token",
     envvar="SOUNDCLOUD_OAUTH_TOKEN",
     help=(
@@ -104,6 +114,7 @@ async def main(
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_acappella: SongVersion | None,
+    include_stems: SongVersion | None,
     oauth_token: str,
     upload: bool,
     upload_existing: bool,
@@ -138,7 +149,12 @@ async def main(
 
     versions = {
         version
-        for version in (include_main, include_instrumental, include_acappella)
+        for version in (
+            include_main,
+            include_instrumental,
+            include_acappella,
+            include_stems,
+        )
         if version
     } or list(SongVersion)
 
@@ -159,7 +175,7 @@ async def main(
                         fil
                         for version in existing_versions
                         if (fil := version.path_for_project_dir(Path(project.path)))
-                        and fil.exists()
+                        and fil.is_file()
                     ]
 
                     uploads.create_task(
@@ -178,7 +194,7 @@ async def main(
                 ):
                     renders.append(render)
 
-                    if upload:
+                    if upload and render.fil.is_file():
                         uploads.create_task(
                             upload_process.process(
                                 client,

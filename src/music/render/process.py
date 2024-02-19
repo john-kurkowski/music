@@ -96,6 +96,20 @@ def _find_acappella_tracks_to_mute(
     ]
 
 
+def _find_stems(project: reapy.core.Project) -> list[reapy.core.Track]:
+    """Find tracks to render as stems.
+
+    Skip tracks that are already muted. Skip tracks that contain no media items
+    and no FX; they're just for grouping and don't perform any processing on
+    the final mix.
+    """
+    return [
+        track
+        for track in project.tracks
+        if not track.is_muted and bool(track.items) or bool(len(track.fxs))
+    ]
+
+
 @contextlib.contextmanager
 def _adjust_master_limiter_threshold(
     project: reapy.core.Project, vocal_loudness_worth: float
@@ -127,6 +141,22 @@ def _adjust_master_limiter_threshold(
     set_param_value(threshold, threshold_louder_value)
     yield
     set_param_value(threshold, threshold_previous_value)
+
+
+@contextlib.contextmanager
+def _disable_fx(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
+    """Disable all effects in the given collection of tracks, then enable them."""
+    fxs = [
+        fx
+        for track in tracks
+        for i in range(len(track.fxs))
+        if (fx := track.fxs[i]) and fx.is_enabled
+    ]
+    for fx in fxs:
+        fx.disable()
+    yield
+    for fx in fxs:
+        fx.enable()
 
 
 @contextlib.contextmanager
@@ -188,8 +218,10 @@ async def render_version(
     )
     reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", 0)  # type: ignore[attr-defined]
     reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", 0)  # type: ignore[attr-defined]
+    # TODO: set stems options, like mono
 
-    project.set_info_string("RENDER_PATTERN", in_name)
+    pattern = Path(in_name).joinpath(*version.pattern)
+    project.set_info_string("RENDER_PATTERN", str(pattern))
     time_start = timer()
     try:
         await project.render()
@@ -278,6 +310,22 @@ async def _render_a_cappella(
     return out
 
 
+async def _render_stems(
+    project: ExtendedProject,
+    vocals: reapy.core.Track | None,
+    verbose: int,
+) -> RenderResult:
+    if vocals:
+        vocals.unsolo()
+        vocals.unmute()
+    for track in project.tracks:
+        track.unselect()
+    for track in _find_stems(project):
+        track.select()
+    with _disable_fx([project.master_track]):
+        return await render_version(project, SongVersion.STEMS)
+
+
 class Process:
     """Encapsulate the state of rendering a Reaper project."""
 
@@ -345,6 +393,15 @@ class Process:
                     SongVersion.ACAPPELLA,
                     lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
                     add_task(SongVersion.ACAPPELLA),
+                )
+            )
+
+        if SongVersion.STEMS in versions:
+            results.append(
+                (
+                    SongVersion.STEMS,
+                    lambda: _render_stems(project, vocals, verbose),
+                    add_task(SongVersion.STEMS),
                 )
             )
 
