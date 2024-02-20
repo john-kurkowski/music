@@ -25,7 +25,7 @@ from .process import Process as UploadProcess
     default=None,
     flag_value=SongVersion.MAIN,
     help=(
-        "Whether to include the main version. Defaults to including all versions,"
+        "Whether to include the main version. Defaults to including all uploadable versions,"
         ' unless one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -36,7 +36,7 @@ from .process import Process as UploadProcess
     flag_value=SongVersion.INSTRUMENTAL,
     help=(
         "Whether to include the instrumental version."
-        " Defaults to including all versions,"
+        " Defaults to including all uploadable versions,"
         ' unless one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -47,7 +47,7 @@ from .process import Process as UploadProcess
     flag_value=SongVersion.ACAPPELLA,
     help=(
         "Whether to include the a cappella version."
-        " Defaults to including all versions, unless"
+        " Defaults to including all uploadable versions, unless"
         ' one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -83,7 +83,7 @@ async def main(
         version
         for version in (include_main, include_instrumental, include_acappella)
         if version
-    } or list(SongVersion)
+    } or (SongVersion.MAIN, SongVersion.INSTRUMENTAL, SongVersion.ACAPPELLA)
 
     files = [
         fil

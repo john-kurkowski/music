@@ -40,7 +40,7 @@ _CONSOLE_WIDTH: int | None = None
     default=None,
     flag_value=SongVersion.MAIN,
     help=(
-        "Whether to include the main version. Defaults to including all versions,"
+        "Whether to include the main version. Defaults to including main, instrumental, and a cappella versions,"
         ' unless one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -51,7 +51,7 @@ _CONSOLE_WIDTH: int | None = None
     flag_value=SongVersion.INSTRUMENTAL,
     help=(
         "Whether to include the instrumental version. This version is skipped"
-        " if no vocals exist. Defaults to including all versions,"
+        " if no vocals exist. Defaults to including main, instrumental, and a cappella versions,"
         ' unless one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -62,7 +62,7 @@ _CONSOLE_WIDTH: int | None = None
     flag_value=SongVersion.ACAPPELLA,
     help=(
         "Whether to include the a cappella version. This version is skipped if"
-        " no vocals exist. Defaults to including all versions, unless"
+        " no vocals exist. Defaults to including main, instrumental, and a cappella versions, unless"
         ' one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -72,7 +72,7 @@ _CONSOLE_WIDTH: int | None = None
     default=None,
     flag_value=SongVersion.STEMS,
     help=(
-        "Whether to include the mix stems. Defaults to including all versions, unless"
+        "Whether to include the mix stems. Defaults to including main, instrumental, and a cappella versions, unless"
         ' one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -156,7 +156,7 @@ async def main(
             include_stems,
         )
         if version
-    } or list(SongVersion)
+    } or (SongVersion.MAIN, SongVersion.INSTRUMENTAL, SongVersion.ACAPPELLA)
 
     renders = []
 
