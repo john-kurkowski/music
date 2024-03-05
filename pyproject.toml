@@ -42,6 +42,8 @@ strict = true
 extend-exclude = [
     "__codegen__",
 ]
+
+[tool.ruff.lint]
 select = [
   "A",
   "B",
@@ -57,7 +59,7 @@ select = [
 # E501 - line too long; if formatter does its job, I'm not worried about the rare long line
 ignore = ["E501"]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "pep257"
 
 [tool.pytest.ini_options]

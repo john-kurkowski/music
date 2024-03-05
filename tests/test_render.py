@@ -92,9 +92,9 @@ def render_mocks(
         ) as mock_set_int_config_var,
         mock.patch("music.upload.process.Process.process") as mock_upload,
     ):
-        project = (
-            mock_project_class.get_or_open.return_value
-        ) = mock_project_class.return_value
+        project = mock_project_class.get_or_open.return_value = (
+            mock_project_class.return_value
+        )
 
         render_patterns = []
 
