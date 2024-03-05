@@ -116,6 +116,11 @@ async def main(
     Overwrites existing versions. Prints statistics for each output file as it
     is rendered.
     """
+    if (upload or upload_existing) and not oauth_token:
+        raise click.MissingParameter(
+            param_hint="'SOUNDCLOUD_OAUTH_TOKEN'", param_type="envvar"
+        )
+
     projects = (
         (music.util.ExtendedProject.get_or_open(path) for path in project_dirs)
         if project_dirs

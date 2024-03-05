@@ -71,6 +71,11 @@ async def main(
 
     Defaults to uploading all rendered versions of the currently open project.
     """
+    if not oauth_token:
+        raise click.MissingParameter(
+            param_hint="'SOUNDCLOUD_OAUTH_TOKEN'", param_type="envvar"
+        )
+
     if not project_dirs:
         project_dirs = [Path(music.util.ExtendedProject().path)]
 
