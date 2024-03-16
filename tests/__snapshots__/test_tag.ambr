@@ -3,25 +3,28 @@
   ''
 # ---
 # name: test_main.1
-  _Call(
-    tuple(
-      list([
-        'lame',
-        '--preset',
-        'standard',
-        '--ta',
-        'Bluu',
-        '--tl',
-        'Album Title Here',
-        '--tn',
-        '01',
-        '--tt',
-        'Song Title Here',
-        'TMP_PATH_HERE/path/to/Album Title Here/01 - Song Title Here.wav',
-        'TMP_PATH_HERE/path/to/Album Title Here/01 - Song Title Here.mp3',
-      ]),
+  _CallList([
+    _Call(
+      '',
+      tuple(
+        list([
+          'lame',
+          '--preset',
+          'standard',
+          '--ta',
+          'Bluu',
+          '--tl',
+          'Album Title Here',
+          '--tn',
+          '01',
+          '--tt',
+          'Song Title Here',
+          'TMP_PATH_HERE/path/to/Album Title Here/01 - Song Title Here.wav',
+          'TMP_PATH_HERE/path/to/Album Title Here/01 - Song Title Here.mp3',
+        ]),
+      ),
+      dict({
+      }),
     ),
-    dict({
-    }),
-  )
+  ])
 # ---

@@ -50,6 +50,20 @@
       }),
     ),
     _Call(
+      'metadata.get().__bool__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'metadata.get().__float__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -136,6 +150,7 @@
 # name: test_main_all_versions.2
   _CallList([
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -157,6 +172,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -178,6 +194,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -195,6 +212,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -263,6 +281,20 @@
       'metadata.get',
       tuple(
         'vocal-loudness-worth',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'metadata.get().__bool__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'metadata.get().__float__',
+      tuple(
       ),
       dict({
       }),
@@ -354,6 +386,7 @@
 # name: test_main_default_versions.2
   _CallList([
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -375,6 +408,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -396,6 +430,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -413,6 +448,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -521,6 +557,20 @@
       }),
     ),
     _Call(
+      'metadata.get().__bool__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'metadata.get().__float__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -606,6 +656,20 @@
       'metadata.get',
       tuple(
         'vocal-loudness-worth',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'metadata.get().__bool__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'metadata.get().__float__',
+      tuple(
       ),
       dict({
       }),
@@ -697,6 +761,7 @@
 # name: test_main_filenames_all_versions.2
   _CallList([
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -718,6 +783,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -739,6 +805,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -756,6 +823,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -777,6 +845,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -798,6 +867,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -819,6 +889,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -840,6 +911,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -861,6 +933,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -882,6 +955,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -899,6 +973,7 @@
       }),
     ),
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -948,6 +1023,20 @@
       }),
     ),
     _Call(
+      'metadata.get().__bool__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'metadata.get().__float__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -984,6 +1073,7 @@
 # name: test_main_main_version.2
   _CallList([
     _Call(
+      '',
       tuple(
         list([
           'ffmpeg',
@@ -1196,11 +1286,26 @@
       dict({
       }),
     ),
+    _Call(
+      'metadata.get().__bool__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'metadata.get().__float__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
   ])
 # ---
 # name: test_render_result_render_speedup
   _CallList([
     _Call(
+      '',
       tuple(
         list([
           'ffprobe',

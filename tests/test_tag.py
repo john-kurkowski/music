@@ -27,4 +27,4 @@ def test_main(
     assert not result.exception
     assert result.stdout == snapshot
 
-    assert mock_subprocess.call_args == snapshot
+    assert mock_subprocess.mock_calls == snapshot

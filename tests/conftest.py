@@ -24,10 +24,7 @@ class RequestsMocks:
 
     @property
     def mock_calls(self) -> dict[str, Any]:
-        """A dictionary of calls, methods, magic methods, and return value mocks made for each attribute of this class.
-
-        See also unittest.mock.Mock.mock_calls.
-        """
+        """A dict of _all_ calls to this class's mock objects."""
         return {
             k.name: getattr(self, k.name).mock_calls for k in dataclasses.fields(self)
         }
@@ -48,15 +45,13 @@ def pytest_collection_modifyitems(
 def snapshot(
     monkeypatch: pytest.MonkeyPatch, snapshot: SnapshotAssertion, tmp_path: Path
 ) -> SnapshotAssertion:
-    """Override. Make syrupy's snapshot fixture strip verbose class `__repr__`s, temporary paths, and temporary tokens from any paths within a snapshot.
+    """Override syrupy's snapshot fixture to be more deterministic.
 
-    Verbose class `__repr__`s can change between library versions, and we
-    usually don't care about 3rd party internals.
-
-    Temporary paths can change between test runs.
-
-    In the case of console output, ensure no text wrapping occurs, so the
-    regular expression matches.
+    * Verbose class `__repr__`s can change between library versions, and we
+      usually don't care about 3rd party internals.
+    * Temporary paths can change between test runs.
+    * In the case of console output, ensure no text wrapping occurs, so the
+      regular expression matches.
     """
     monkeypatch.setattr("music.render.command._CONSOLE_WIDTH", 999)
 

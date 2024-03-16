@@ -4,7 +4,7 @@ import dataclasses
 import datetime
 import itertools
 import math
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 from pathlib import Path
 from typing import Any
 from unittest import mock
@@ -17,27 +17,17 @@ from music.util import SongVersion
 from syrupy.assertion import SnapshotAssertion
 
 
-def Track(name: str, params: list[mock.Mock] | None = None) -> mock.Mock:  # noqa: N802
+def Track(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: N802
     """Mock reapy's Track class."""
     rv = mock.Mock()
     rv.name = name
-    rv.params = params if params else []
+    rv.params = params
     return rv
-
-
-@pytest.fixture
-def parse_summary_stats() -> Iterator[mock.Mock]:
-    """Stub parsing ffmpeg output.
-
-    The unit test module should not run or test external commands.
-    """
-    with mock.patch("music.__codegen__.stats.parse_summary_stats") as parse:
-        yield parse
 
 
 @dataclasses.dataclass(kw_only=True)
 class RenderMocks:
-    """Collection of all mocked classes and functions to render a song."""
+    """Collection of all mocked objects to render a song."""
 
     duration_delta: mock.Mock
     get_int_config_var: mock.Mock
@@ -47,10 +37,7 @@ class RenderMocks:
 
     @property
     def mock_calls(self) -> dict[str, Any]:
-        """A dictionary of calls, methods, magic methods, and return value mocks made for each attribute of this class.
-
-        See also unittest.mock.Mock.mock_calls.
-        """
+        """A dict of _all_ calls to this class's mock objects."""
         return {
             k.name: getattr(self, k.name).mock_calls for k in dataclasses.fields(self)
         }
@@ -58,7 +45,7 @@ class RenderMocks:
 
 @pytest.fixture
 def render_mocks(
-    monkeypatch: pytest.MonkeyPatch, parse_summary_stats: mock.Mock, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> Iterator[RenderMocks]:
     """Mock reapy's Project class and global settings functions.
 
@@ -79,6 +66,9 @@ def render_mocks(
     threshold.functions = {"SetParamNormalized": mock.Mock()}
 
     with (
+        mock.patch(
+            "music.__codegen__.stats.parse_summary_stats"
+        ) as mock_parse_summary_stats,
         mock.patch("music.util.ExtendedProject") as mock_project_class,
         mock.patch(
             "music.render.process.RenderResult.duration_delta",
@@ -118,7 +108,7 @@ def render_mocks(
         project.tracks = [Track(name="Vocals"), Track(name="Drums")]
         project.set_info_string.side_effect = collect_render_patterns
         project.render.side_effect = render_fake_file
-        parse_summary_stats.side_effect = itertools.cycle(
+        mock_parse_summary_stats.side_effect = itertools.cycle(
             [
                 {"duration": 1.0, "size": 42.0},
                 {"duration": 250.1, "size": 1024},
@@ -179,13 +169,11 @@ def test_render_result_render_speedup(
     snapshot: SnapshotAssertion, subprocess: mock.Mock, tmp_path: Path
 ) -> None:
     """Test RenderResult.render_speedup."""
-    proc = mock.Mock()
-    proc.stdout = """
+    subprocess.return_value.stdout = """
     [FORMAT]
     duration=23.209501
     [/FORMAT]
     """
-    subprocess.return_value = proc
 
     obj1 = RenderResult(tmp_path, datetime.timedelta(seconds=4.5))
     obj2 = RenderResult(tmp_path, datetime.timedelta(seconds=0.1))
@@ -193,8 +181,8 @@ def test_render_result_render_speedup(
     assert obj1.render_speedup == 5.75
     assert obj2.render_speedup == math.inf
 
-    assert subprocess.call_count
-    assert subprocess.call_args_list == snapshot
+    assert subprocess.mock_calls
+    assert subprocess.mock_calls == snapshot
 
 
 @mock.patch("reapy.reascript_api.SNM_GetIntConfigVar", create=True)
@@ -228,7 +216,7 @@ def test_main_noop(render_mocks: RenderMocks, snapshot: SnapshotAssertion) -> No
     assert not result.stdout
     assert result.stderr == snapshot
 
-    assert render_mocks.project.method_calls == snapshot
+    assert render_mocks.project.mock_calls == snapshot
 
 
 def test_main_main_version(
@@ -245,9 +233,9 @@ def test_main_main_version(
     assert result.stdout == snapshot
     assert not result.stderr
 
-    assert render_mocks.project.method_calls == snapshot
-    assert subprocess_with_output.call_count
-    assert subprocess_with_output.call_args_list == snapshot
+    assert render_mocks.project.mock_calls == snapshot
+    assert subprocess_with_output.mock_calls
+    assert subprocess_with_output.mock_calls == snapshot
 
 
 def test_main_default_versions(
@@ -262,9 +250,9 @@ def test_main_default_versions(
     assert result.stdout == snapshot
     assert not result.stderr
 
-    assert render_mocks.project.method_calls == snapshot
-    assert subprocess_with_output.call_count
-    assert subprocess_with_output.call_args_list == snapshot
+    assert render_mocks.project.mock_calls == snapshot
+    assert subprocess_with_output.mock_calls
+    assert subprocess_with_output.mock_calls == snapshot
 
 
 def test_main_all_versions(
@@ -283,9 +271,9 @@ def test_main_all_versions(
     assert result.stdout == snapshot
     assert not result.stderr
 
-    assert render_mocks.project.method_calls == snapshot
-    assert subprocess_with_output.call_count
-    assert subprocess_with_output.call_args_list == snapshot
+    assert render_mocks.project.mock_calls == snapshot
+    assert subprocess_with_output.mock_calls
+    assert subprocess_with_output.mock_calls == snapshot
 
 
 def test_main_filenames_all_versions(
@@ -317,9 +305,9 @@ def test_main_filenames_all_versions(
     assert result.stdout == snapshot
     assert not result.stderr
 
-    assert render_mocks.project.method_calls == snapshot
-    assert subprocess_with_output.call_count
-    assert subprocess_with_output.call_args_list == snapshot
+    assert render_mocks.project.mock_calls == snapshot
+    assert subprocess_with_output.mock_calls
+    assert subprocess_with_output.mock_calls == snapshot
 
 
 def test_main_mocked_calls(
