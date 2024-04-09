@@ -30,6 +30,10 @@ from music.util import (
     set_param_value,
 )
 
+# RENDER_SETTINGS bit flags
+MONO_TRACKS_TO_MONO_FILES = 16
+SELECTED_TRACKS_VIA_MASTER = 128
+
 # Experimentally determined dB scale for Reaper's built-in VST: ReaLimit
 LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
 
@@ -228,7 +232,14 @@ async def render_version(
     )
     reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", 0)  # type: ignore[attr-defined]
     reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", 0)  # type: ignore[attr-defined]
-    # TODO: set stems options, like mono
+
+    prev_render_settings = None
+    if version == SongVersion.STEMS:
+        prev_render_settings = project.get_info_value("RENDER_SETTINGS")
+        project.set_info_value(
+            "RENDER_SETTINGS",
+            MONO_TRACKS_TO_MONO_FILES | SELECTED_TRACKS_VIA_MASTER,
+        )
 
     pattern = Path(in_name).joinpath(*version.pattern)
     project.set_info_string("RENDER_PATTERN", str(pattern))
@@ -238,6 +249,9 @@ async def render_version(
         time_end = timer()
     finally:
         project.set_info_string("RENDER_PATTERN", "$project")
+
+        if prev_render_settings is not None:
+            project.set_info_value("RENDER_SETTINGS", prev_render_settings)
 
         reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", prev_runafterstop)  # type: ignore[attr-defined]
         reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", prev_runallonstop)  # type: ignore[attr-defined]
