@@ -47,11 +47,11 @@ class SongVersion(enum.Enum):
 
     def path_for_project_dir(self, project_dir: Path) -> Path:
         """Path of the rendered file for the given song version."""
-        basename = project_dir / self.name_for_project_dir(project_dir)
+        path = project_dir / self.name_for_project_dir(project_dir)
         if self is SongVersion.STEMS:
-            return basename
+            return path
 
-        return basename.with_suffix(".wav")
+        return Path(f"{path}.wav")
 
     @property
     def pattern(self) -> list[Path]:
