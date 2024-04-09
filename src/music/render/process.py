@@ -27,6 +27,7 @@ from music.util import (
     ExtendedProject,
     SongVersion,
     recurse_property,
+    rm_rf,
     set_param_value,
 )
 
@@ -257,7 +258,9 @@ async def render_version(
         reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", prev_runallonstop)  # type: ignore[attr-defined]
 
     out_fil = version.path_for_project_dir(Path(project.path))
-    shutil.move(out_fil.with_stem(in_name), out_fil)
+    tmp_fil = out_fil.with_stem(in_name)
+    rm_rf(out_fil)
+    shutil.move(tmp_fil, out_fil)
 
     return RenderResult(out_fil, datetime.timedelta(seconds=time_end - time_start))
 

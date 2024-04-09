@@ -3,6 +3,8 @@
 import asyncio
 import enum
 import json
+import os
+import shutil
 import warnings
 from collections.abc import Callable, Iterator
 from functools import wraps
@@ -151,6 +153,14 @@ def recurse_property(prop: str, obj: T | None) -> Iterator[T]:
     while obj is not None:
         yield obj
         obj = getattr(obj, prop, None)
+
+
+def rm_rf(path: Path) -> None:
+    """Delete a file or directory recursively, if it exists, similarly to `rm -rf <PATH>`."""
+    if os.path.isdir(path) and not os.path.islink(path):
+        shutil.rmtree(path)
+    elif os.path.exists(path):
+        os.remove(path)
 
 
 # @contextlib.contextmanager
