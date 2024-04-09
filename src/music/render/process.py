@@ -54,16 +54,26 @@ class RenderResult:
 
     @cached_property
     def duration_delta(self) -> datetime.timedelta:
-        """How long the audio file is."""
-        proc = subprocess.run(
-            ["ffprobe", "-i", self.fil, "-show_entries", "format=duration"],
-            capture_output=True,
-            check=True,
-            text=True,
-        )
-        proc_output = proc.stdout
-        delta_str = re.search(r"duration=(\S+)", proc_output).group(1)  # type: ignore[union-attr]
-        return datetime.timedelta(seconds=round(float(delta_str)))
+        """How long the audio file is.
+
+        If the file a directory, sums the length of all audio files in the
+        directory, recursively.
+        """
+
+        def delta_for_audio(fil: Path) -> float:
+            proc = subprocess.run(
+                ["ffprobe", "-i", fil, "-show_entries", "format=duration"],
+                capture_output=True,
+                check=True,
+                text=True,
+            )
+            proc_output = proc.stdout
+            delta_str = re.search(r"duration=(\S+)", proc_output).group(1)  # type: ignore[union-attr]
+            return float(delta_str)
+
+        fils = self.fil.glob("**/*.wav") if self.fil.is_dir() else [self.fil]
+        deltas = [delta_for_audio(fil) for fil in fils]
+        return datetime.timedelta(seconds=round(sum(deltas)))
 
     @property
     def render_speedup(self) -> float:
