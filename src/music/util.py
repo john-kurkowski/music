@@ -163,11 +163,6 @@ def rm_rf(path: Path) -> None:
         os.remove(path)
 
 
-# @contextlib.contextmanager
-# def with_set_value(f: Callable[[T], T], old_value: T = ...) -> Iterator[None]:
-#     pass
-
-
 def set_param_value(param: reapy.core.FXParam, value: float) -> None:
     """Set a parameter's value.
 
