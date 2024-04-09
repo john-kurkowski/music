@@ -120,7 +120,7 @@ def _find_stems(project: reapy.core.Project) -> list[reapy.core.Track]:
     return [
         track
         for track in project.tracks
-        if not track.is_muted and bool(track.items) or bool(len(track.fxs))
+        if not track.is_muted and (bool(track.items) or bool(len(track.fxs)))
     ]
 
 
