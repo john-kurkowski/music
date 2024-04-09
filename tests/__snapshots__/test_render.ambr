@@ -1310,7 +1310,7 @@
         list([
           'ffprobe',
           '-i',
-          'TMP_PATH_HERE',
+          'TMP_PATH_HERE/foo.wav',
           '-show_entries',
           'format=duration',
         ]),

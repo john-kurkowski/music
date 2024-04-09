@@ -175,8 +175,11 @@ def test_render_result_render_speedup(
     [/FORMAT]
     """
 
-    obj1 = RenderResult(tmp_path, datetime.timedelta(seconds=4.5))
-    obj2 = RenderResult(tmp_path, datetime.timedelta(seconds=0.1))
+    some_file = tmp_path / "foo.wav"
+    some_file.touch()
+
+    obj1 = RenderResult(some_file, datetime.timedelta(seconds=4.5))
+    obj2 = RenderResult(some_file, datetime.timedelta(seconds=0.1))
 
     assert obj1.render_speedup == 5.75
     assert obj2.render_speedup == math.inf
