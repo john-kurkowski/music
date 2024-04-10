@@ -1,14 +1,11 @@
-"""Render processing classes and functions."""
+"""Render processing class and functions to handle the possible versions of a song."""
 
-import contextlib
 import datetime
-import math
 import random
-import re
 import shutil
 import subprocess
 import warnings
-from collections.abc import AsyncIterator, Awaitable, Callable, Collection, Iterator
+from collections.abc import AsyncIterator, Awaitable, Callable, Collection
 from functools import cached_property
 from pathlib import Path
 from timeit import default_timer as timer
@@ -26,162 +23,26 @@ from music.__codegen__ import stats
 from music.util import (
     ExtendedProject,
     SongVersion,
-    recurse_property,
     rm_rf,
-    set_param_value,
 )
+
+from .contextmanagers import (
+    adjust_master_limiter_threshold,
+    mute_tracks,
+    toggle_fx_for_tracks,
+)
+from .result import RenderResult
+from .tracks import find_acappella_tracks_to_mute, find_stems
 
 # RENDER_SETTINGS bit flags
 MONO_TRACKS_TO_MONO_FILES = 16
 SELECTED_TRACKS_VIA_MASTER = 128
-
-# Experimentally determined dB scale for Reaper's built-in VST: ReaLimit
-LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
 
 # The typical loudness of vocals, in dBs, relative to the instrumental
 VOCAL_LOUDNESS_WORTH = 2.0
 
 # Common error code found in SWS functions source
 SWS_ERROR_SENTINEL = -666
-
-
-class RenderResult:
-    """Summary statistics of an audio render.
-
-    Rounds times to the nearest second. Microseconds are irrelevant for human DAW operators.
-    """
-
-    def __init__(  # noqa: D107
-        self, fil: Path, render_delta: datetime.timedelta
-    ):
-        self.fil = fil
-        self.render_delta = datetime.timedelta(seconds=round(render_delta.seconds))
-
-    @cached_property
-    def duration_delta(self) -> datetime.timedelta:
-        """How long the audio file is.
-
-        If the file a directory, sums the length of all audio files in the
-        directory, recursively.
-        """
-
-        def delta_for_audio(fil: Path) -> float:
-            proc = subprocess.run(
-                ["ffprobe", "-i", fil, "-show_entries", "format=duration"],
-                capture_output=True,
-                check=True,
-                text=True,
-            )
-            proc_output = proc.stdout
-            delta_str = re.search(r"duration=(\S+)", proc_output).group(1)  # type: ignore[union-attr]
-            return float(delta_str)
-
-        fils = self.fil.glob("**/*.wav") if self.fil.is_dir() else [self.fil]
-        deltas = [delta_for_audio(fil) for fil in fils]
-        return datetime.timedelta(seconds=round(sum(deltas)))
-
-    @property
-    def render_speedup(self) -> float:
-        """How much faster the render was than the audio file's duration."""
-        return (
-            (self.duration_delta / self.render_delta) if self.render_delta else math.inf
-        )
-
-
-def _find_acappella_tracks_to_mute(
-    project: reapy.core.Project,
-) -> list[reapy.core.Track]:
-    """Find tracks to mute when rendering the a cappella version of the song.
-
-    reapy.core.Track.solo() doesn't work as expected, so we have to mute
-    multiple tracks by hand. Skip tracks that are already muted (wouldn't want
-    to ultimately unmute them). Skip tracks that contain no media items
-    themselves and still might contribute to the vocal, e.g. sends with FX.
-    """
-
-    def is_vocal(track: reapy.Track) -> bool:
-        return any(
-            track.name == "Vocals" for track in recurse_property("parent_track", track)
-        )
-
-    return [
-        track
-        for track in project.tracks
-        if not track.is_muted and bool(track.items) and not is_vocal(track)
-    ]
-
-
-def _find_stems(project: reapy.core.Project) -> list[reapy.core.Track]:
-    """Find tracks to render as stems.
-
-    Skip tracks that are already muted. Skip tracks that contain no media items
-    and no FX; they're just for grouping and don't perform any processing on
-    the final mix.
-    """
-    return [
-        track
-        for track in project.tracks
-        if not track.is_muted and (bool(track.items) or bool(len(track.fxs)))
-    ]
-
-
-@contextlib.contextmanager
-def _adjust_master_limiter_threshold(
-    project: reapy.core.Project, vocal_loudness_worth: float
-) -> Iterator[None]:
-    """Find the master track's master limiter's threshold parameter and adjust its value without the vocal, then set it back to its original value."""
-    limiters = [fx for fx in project.master_track.fxs[::-1] if "Limit" in fx.name]
-    if not limiters:
-        raise ValueError("Master limiter not found")
-    limiter = limiters[0]
-
-    def safe_param_name(param: reapy.core.FXParam) -> str:
-        """Work around uncaught exception for non-UTF-8 strings in parameter names."""
-        try:
-            return param.name
-        except reapy.errors.DistError as ex:
-            if "UnicodeDecodeError" in str(ex):
-                return ""
-            raise
-
-    thresholds = [
-        param for param in limiter.params if "Threshold" in safe_param_name(param)
-    ]
-    threshold = thresholds[0]
-    threshold_previous_value = threshold.normalized
-    threshold_louder_value = (
-        (threshold_previous_value * LIMITER_RANGE) - vocal_loudness_worth
-    ) / LIMITER_RANGE
-
-    set_param_value(threshold, threshold_louder_value)
-    yield
-    set_param_value(threshold, threshold_previous_value)
-
-
-@contextlib.contextmanager
-def _disable_fx(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
-    """Disable all effects in the given collection of tracks, then enable them."""
-    fxs = [
-        fx
-        for track in tracks
-        for i in range(len(track.fxs))
-        if (fx := track.fxs[i]) and fx.is_enabled
-    ]
-    for fx in fxs:
-        fx.disable()
-    yield
-    for fx in fxs:
-        fx.enable()
-
-
-@contextlib.contextmanager
-def _mute(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
-    """Mute all tracks in the given collection, then unmute them."""
-    for track in tracks:
-        track.mute()
-    yield
-    for track in tracks:
-        track.unmute()
 
 
 def summary_stats_for_file(fil: Path, verbose: int = 0) -> dict[str, float | str]:
@@ -318,8 +179,8 @@ async def _render_instrumental(
     verbose: int,
 ) -> RenderResult:
     with (
-        _adjust_master_limiter_threshold(project, vocal_loudness_worth),
-        _mute((vocals,)),
+        adjust_master_limiter_threshold(project, vocal_loudness_worth),
+        mute_tracks((vocals,)),
     ):
         return await render_version(project, SongVersion.INSTRUMENTAL)
 
@@ -329,11 +190,11 @@ async def _render_a_cappella(
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
-    tracks_to_mute = _find_acappella_tracks_to_mute(project)
+    tracks_to_mute = find_acappella_tracks_to_mute(project)
 
     with (
-        _adjust_master_limiter_threshold(project, vocal_loudness_worth),
-        _mute(tracks_to_mute),
+        adjust_master_limiter_threshold(project, vocal_loudness_worth),
+        mute_tracks(tracks_to_mute),
     ):
         out = await render_version(project, SongVersion.ACAPPELLA)
 
@@ -351,9 +212,9 @@ async def _render_stems(
         vocals.unmute()
     for track in project.tracks:
         track.unselect()
-    for track in _find_stems(project):
+    for track in find_stems(project):
         track.select()
-    with _disable_fx([project.master_track]):
+    with toggle_fx_for_tracks([project.master_track], is_enabled=False):
         return await render_version(project, SongVersion.STEMS)
 
 
@@ -386,13 +247,6 @@ class Process:
                 project.metadata.get("vocal-loudness-worth") or VOCAL_LOUDNESS_WORTH
             )
 
-        def add_task(version: SongVersion) -> rich.progress.TaskID:
-            return self.progress.add_task(
-                f'Rendering "{version.name_for_project_dir(Path(project.path))}"',
-                start=False,
-                total=1,
-            )
-
         results = []
 
         if SongVersion.MAIN in versions:
@@ -400,7 +254,7 @@ class Process:
                 (
                     SongVersion.MAIN,
                     lambda: _render_main(project, vocals, verbose),
-                    add_task(SongVersion.MAIN),
+                    self._add_task(project, SongVersion.MAIN),
                 )
             )
 
@@ -414,7 +268,7 @@ class Process:
                         vocal_loudness_worth,
                         verbose,
                     ),
-                    add_task(SongVersion.INSTRUMENTAL),
+                    self._add_task(project, SongVersion.INSTRUMENTAL),
                 )
             )
 
@@ -423,7 +277,7 @@ class Process:
                 (
                     SongVersion.ACAPPELLA,
                     lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
-                    add_task(SongVersion.ACAPPELLA),
+                    self._add_task(project, SongVersion.ACAPPELLA),
                 )
             )
 
@@ -432,7 +286,7 @@ class Process:
                 (
                     SongVersion.STEMS,
                     lambda: _render_stems(project, vocals, verbose),
-                    add_task(SongVersion.STEMS),
+                    self._add_task(project, SongVersion.STEMS),
                 )
             )
 
@@ -460,6 +314,15 @@ class Process:
             rich.progress.SpinnerColumn(),
             rich.progress.TextColumn("{task.description}"),
             rich.progress.TimeElapsedColumn(),
+        )
+
+    def _add_task(
+        self, project: ExtendedProject, version: SongVersion
+    ) -> rich.progress.TaskID:
+        return self.progress.add_task(
+            f'Rendering "{version.name_for_project_dir(Path(project.path))}"',
+            start=False,
+            total=1,
         )
 
     async def _print_stats_for_render(
