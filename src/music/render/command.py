@@ -15,11 +15,12 @@ with warnings.catch_warnings():
     import reapy
 
 
+import music.render.process
 import music.upload.process
 import music.util
 from music.util import SongVersion
 
-from .process import (
+from .consts import (
     SWS_ERROR_SENTINEL,
     VOCAL_LOUDNESS_WORTH,
 )

@@ -74,6 +74,14 @@
       }),
     ),
     _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -93,7 +101,15 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -118,7 +134,15 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -143,7 +167,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -161,6 +185,14 @@
       tuple(
         'RENDER_SETTINGS',
         144,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -185,7 +217,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -361,6 +393,14 @@
       }),
     ),
     _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -380,7 +420,15 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -405,7 +453,15 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -430,7 +486,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -652,6 +708,14 @@
       }),
     ),
     _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -671,7 +735,15 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -696,7 +768,15 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -721,7 +801,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -739,6 +819,14 @@
       tuple(
         'RENDER_SETTINGS',
         144,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -763,7 +851,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -807,6 +895,14 @@
       }),
     ),
     _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -826,7 +922,15 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -851,7 +955,15 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -876,7 +988,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -894,6 +1006,14 @@
       tuple(
         'RENDER_SETTINGS',
         144,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
       ),
       dict({
       }),
@@ -918,7 +1038,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -1220,6 +1340,14 @@
       }),
     ),
     _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -1239,7 +1367,7 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
-        '$project',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -1312,7 +1440,7 @@
       _Call(
         '',
         tuple(
-          'runafterstop',
+          'runallonstop',
           -666,
         ),
         dict({
@@ -1321,7 +1449,7 @@
       _Call(
         '',
         tuple(
-          'runallonstop',
+          'runafterstop',
           -666,
         ),
         dict({
@@ -1352,6 +1480,14 @@
         }),
       ),
       _Call(
+        'get_info_string',
+        tuple(
+          'RENDER_PATTERN',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
         'set_info_string',
         tuple(
           'RENDER_PATTERN',
@@ -1371,7 +1507,7 @@
         'set_info_string',
         tuple(
           'RENDER_PATTERN',
-          '$project',
+          'ASYNC_ITERABLE_HERE',
         ),
         dict({
         }),
@@ -1388,7 +1524,7 @@
       _Call(
         '',
         tuple(
-          'runafterstop',
+          'runallonstop',
           0,
         ),
         dict({
@@ -1397,7 +1533,7 @@
       _Call(
         '',
         tuple(
-          'runallonstop',
+          'runafterstop',
           0,
         ),
         dict({

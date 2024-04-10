@@ -26,23 +26,17 @@ from music.util import (
     rm_rf,
 )
 
+from .consts import VOCAL_LOUDNESS_WORTH
 from .contextmanagers import (
     adjust_master_limiter_threshold,
+    adjust_render_pattern,
+    adjust_render_settings,
+    avoid_fx_tails,
     mute_tracks,
     toggle_fx_for_tracks,
 )
 from .result import RenderResult
 from .tracks import find_acappella_tracks_to_mute, find_stems
-
-# RENDER_SETTINGS bit flags
-MONO_TRACKS_TO_MONO_FILES = 16
-SELECTED_TRACKS_VIA_MASTER = 128
-
-# The typical loudness of vocals, in dBs, relative to the instrumental
-VOCAL_LOUDNESS_WORTH = 2.0
-
-# Common error code found in SWS functions source
-SWS_ERROR_SENTINEL = -666
 
 
 def summary_stats_for_file(fil: Path, verbose: int = 0) -> dict[str, float | str]:
@@ -76,8 +70,8 @@ async def render_version(
     Names the output file according to the given version. Writes to a temporary
     file first, then overwrites any existing file of the same song version.
 
-    Avoids FX tail leaking issues by tweaking certain, global Reaper
-    preferences. Resets them after render completion.
+    Adjusts some global and project preferences, then restores the original
+    values after render completion.
     """
     out_name = version.name_for_project_dir(Path(project.path))
 
@@ -85,38 +79,14 @@ async def render_version(
     rand_id = random.randrange(10**5, 10**6)
     in_name = f"{out_name} {rand_id}.tmp"
 
-    # Avoid FX tails at the beginning of the render
-    prev_runafterstop = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
-        "runafterstop", SWS_ERROR_SENTINEL
-    )
-    prev_runallonstop = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
-        "runallonstop", SWS_ERROR_SENTINEL
-    )
-    reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", 0)  # type: ignore[attr-defined]
-    reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", 0)  # type: ignore[attr-defined]
-
-    prev_render_settings = None
-    if version == SongVersion.STEMS:
-        prev_render_settings = project.get_info_value("RENDER_SETTINGS")
-        project.set_info_value(
-            "RENDER_SETTINGS",
-            MONO_TRACKS_TO_MONO_FILES | SELECTED_TRACKS_VIA_MASTER,
-        )
-
-    pattern = Path(in_name).joinpath(*version.pattern)
-    project.set_info_string("RENDER_PATTERN", str(pattern))
-    time_start = timer()
-    try:
+    with (
+        avoid_fx_tails(),
+        adjust_render_settings(project, version),
+        adjust_render_pattern(project, Path(in_name).joinpath(*version.pattern)),
+    ):
+        time_start = timer()
         await project.render()
         time_end = timer()
-    finally:
-        project.set_info_string("RENDER_PATTERN", "$project")
-
-        if prev_render_settings is not None:
-            project.set_info_value("RENDER_SETTINGS", prev_render_settings)
-
-        reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", prev_runafterstop)  # type: ignore[attr-defined]
-        reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", prev_runallonstop)  # type: ignore[attr-defined]
 
     out_fil = version.path_for_project_dir(Path(project.path))
     if version == SongVersion.STEMS:
