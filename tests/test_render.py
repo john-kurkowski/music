@@ -93,7 +93,9 @@ def render_mocks(
                 render_patterns.append(value)
 
         async def render_fake_file() -> None:
-            (Path(project.path) / f"{render_patterns[-1]}.wav").touch()
+            path = Path(project.path) / f"{render_patterns[-1]}.wav"
+            path.parent.mkdir(exist_ok=True, parents=True)
+            path.touch()
 
         path = tmp_path / "Stub Song Title (feat. Stub Artist)"
         path.mkdir()
@@ -266,7 +268,12 @@ def test_main_all_versions(
     """Test main with all versions."""
     result = CliRunner(mix_stderr=False).invoke(
         render,
-        ["--include-main", "--include-instrumental", "--include-acappella"],
+        [
+            "--include-main",
+            "--include-instrumental",
+            "--include-acappella",
+            "--include-stems",
+        ],
         catch_exceptions=False,
     )
 
@@ -299,6 +306,7 @@ def test_main_filenames_all_versions(
             "--include-main",
             "--include-instrumental",
             "--include-acappella",
+            "--include-stems",
             *[str(path.resolve()) for path in some_paths],
         ],
         catch_exceptions=False,

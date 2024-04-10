@@ -258,7 +258,11 @@ async def render_version(
         reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", prev_runallonstop)  # type: ignore[attr-defined]
 
     out_fil = version.path_for_project_dir(Path(project.path))
-    tmp_fil = out_fil.with_stem(in_name)
+    if version == SongVersion.STEMS:
+        tmp_fil = out_fil.parent / in_name
+    else:
+        tmp_fil = out_fil.with_stem(in_name)
+
     rm_rf(out_fil)
     shutil.move(tmp_fil, out_fil)
 
