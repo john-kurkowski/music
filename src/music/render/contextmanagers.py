@@ -24,10 +24,9 @@ with warnings.catch_warnings():
 T = TypeVar("T")
 
 
-@contextlib.contextmanager
 def adjust_master_limiter_threshold(
     project: reapy.core.Project, vocal_loudness_worth: float
-) -> Iterator[None]:
+) -> contextlib.AbstractContextManager[None]:
     """Find the `project` master track's master limiter's threshold parameter and adjust its value without the vocal, then restore the original value."""
     limiters = [fx for fx in project.master_track.fxs[::-1] if "Limit" in fx.name]
     if not limiters:
@@ -52,9 +51,11 @@ def adjust_master_limiter_threshold(
         (threshold_previous_value * LIMITER_RANGE) - vocal_loudness_worth
     ) / LIMITER_RANGE
 
-    set_param_value(threshold, threshold_louder_value)
-    yield
-    set_param_value(threshold, threshold_previous_value)
+    return get_set_restore(
+        lambda: threshold_previous_value,
+        partial(set_param_value, threshold),
+        threshold_louder_value,
+    )
 
 
 def adjust_render_pattern(
