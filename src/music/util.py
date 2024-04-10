@@ -3,6 +3,8 @@
 import asyncio
 import enum
 import json
+import os
+import shutil
 import warnings
 from collections.abc import Callable, Iterator
 from functools import wraps
@@ -27,6 +29,7 @@ class SongVersion(enum.Enum):
     MAIN = enum.auto()
     INSTRUMENTAL = enum.auto()
     ACAPPELLA = enum.auto()
+    STEMS = enum.auto()
 
     def name_for_project_dir(self, project_dir: Path) -> str:
         """Name of the project for the given song version."""
@@ -37,12 +40,27 @@ class SongVersion(enum.Enum):
             return f"{project_name} (Instrumental)"
         elif self is SongVersion.ACAPPELLA:
             return f"{project_name} (A Cappella)"
+        elif self is SongVersion.STEMS:
+            return f"{project_name} (Stems)"
         else:  # pragma: no cover
             assert_exhaustiveness(self)
 
     def path_for_project_dir(self, project_dir: Path) -> Path:
         """Path of the rendered file for the given song version."""
-        return project_dir / f"{self.name_for_project_dir(project_dir)}.wav"
+        path = project_dir / self.name_for_project_dir(project_dir)
+        if self is SongVersion.STEMS:
+            return path
+
+        return Path(f"{path}.wav")
+
+    @property
+    def pattern(self) -> list[Path]:
+        """Reaper directory render pattern for the given song version, if any."""
+        if self is SongVersion.STEMS:
+            # Roughly create a directory tree matching the tracks and folders in the Reaper project.
+            return [Path("$folders $tracknumber - $track")]
+
+        return []
 
 
 class ExtendedProject(reapy.core.Project):
@@ -97,6 +115,7 @@ class ExtendedProject(reapy.core.Project):
         async with aiohttp.ClientSession() as client:
             resp = await client.get(
                 f"http://localhost:{port}/_/{RENDER_CMD_ID}",
+                timeout=aiohttp.ClientTimeout(total=60 * 30),
             )
             resp.raise_for_status()
 
@@ -134,6 +153,14 @@ def recurse_property(prop: str, obj: T | None) -> Iterator[T]:
     while obj is not None:
         yield obj
         obj = getattr(obj, prop, None)
+
+
+def rm_rf(path: Path) -> None:
+    """Delete a file or directory recursively, if it exists, similarly to `rm -rf <PATH>`."""
+    if os.path.isdir(path) and not os.path.islink(path):
+        shutil.rmtree(path)
+    elif os.path.exists(path):
+        os.remove(path)
 
 
 def set_param_value(param: reapy.core.FXParam, value: float) -> None:

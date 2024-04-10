@@ -33,9 +33,19 @@
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
+  
+  Stub Song Title (feat. Stub Artist) (Stems)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Stems)
+     ╷        ╷        
+     │ Before │ After  
+  ╶──┼────────┼───────╴
+     ╵        ╵        
+  Rendered in 0:00:00, 
+     a infx speedup    
     Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+    Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
   
   '''
 # ---
@@ -134,6 +144,57 @@
       tuple(
         'RENDER_PATTERN',
         '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_SETTINGS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_SETTINGS',
+        144,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Stub Song Title (feat. Stub Artist) (Stems).tmp/$folders $tracknumber - $track',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'render',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_SETTINGS',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -505,6 +566,15 @@
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
+  
+  Stub Song Title (feat. Stub Artist) (Stems)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Stems)
+     ╷        ╷        
+     │ Before │ After  
+  ╶──┼────────┼───────╴
+     ╵        ╵        
+  Rendered in 0:00:00, 
+     a infx speedup    
   Stub Song Title (feat. Stub Artist)
   TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav
              ╷        ╷        
@@ -537,12 +607,23 @@
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
+  
+  Stub Song Title (feat. Stub Artist) (Stems)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Stems)
+     ╷        ╷        
+     │ Before │ After  
+  ╶──┼────────┼───────╴
+     ╵        ╵        
+  Rendered in 0:00:00, 
+     a infx speedup    
     Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+    Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
     Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
     Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+    Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
   
   '''
 # ---
@@ -641,6 +722,57 @@
       tuple(
         'RENDER_PATTERN',
         '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_SETTINGS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_SETTINGS',
+        144,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Stub Song Title (feat. Stub Artist) (Stems).tmp/$folders $tracknumber - $track',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'render',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_SETTINGS',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -745,6 +877,57 @@
       tuple(
         'RENDER_PATTERN',
         '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_SETTINGS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_SETTINGS',
+        144,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Stub Song Title (feat. Stub Artist) (Stems).tmp/$folders $tracknumber - $track',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'render',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        '$project',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_SETTINGS',
+        'ASYNC_ITERABLE_HERE',
       ),
       dict({
       }),
@@ -1310,7 +1493,7 @@
         list([
           'ffprobe',
           '-i',
-          'TMP_PATH_HERE',
+          'TMP_PATH_HERE/foo.wav',
           '-show_entries',
           'format=duration',
         ]),

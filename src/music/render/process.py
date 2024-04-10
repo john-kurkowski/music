@@ -27,8 +27,13 @@ from music.util import (
     ExtendedProject,
     SongVersion,
     recurse_property,
+    rm_rf,
     set_param_value,
 )
+
+# RENDER_SETTINGS bit flags
+MONO_TRACKS_TO_MONO_FILES = 16
+SELECTED_TRACKS_VIA_MASTER = 128
 
 # Experimentally determined dB scale for Reaper's built-in VST: ReaLimit
 LIMITER_RANGE = sum(abs(point) for point in (-60.0, 12.0))
@@ -54,16 +59,26 @@ class RenderResult:
 
     @cached_property
     def duration_delta(self) -> datetime.timedelta:
-        """How long the audio file is."""
-        proc = subprocess.run(
-            ["ffprobe", "-i", self.fil, "-show_entries", "format=duration"],
-            capture_output=True,
-            check=True,
-            text=True,
-        )
-        proc_output = proc.stdout
-        delta_str = re.search(r"duration=(\S+)", proc_output).group(1)  # type: ignore[union-attr]
-        return datetime.timedelta(seconds=round(float(delta_str)))
+        """How long the audio file is.
+
+        If the file a directory, sums the length of all audio files in the
+        directory, recursively.
+        """
+
+        def delta_for_audio(fil: Path) -> float:
+            proc = subprocess.run(
+                ["ffprobe", "-i", fil, "-show_entries", "format=duration"],
+                capture_output=True,
+                check=True,
+                text=True,
+            )
+            proc_output = proc.stdout
+            delta_str = re.search(r"duration=(\S+)", proc_output).group(1)  # type: ignore[union-attr]
+            return float(delta_str)
+
+        fils = self.fil.glob("**/*.wav") if self.fil.is_dir() else [self.fil]
+        deltas = [delta_for_audio(fil) for fil in fils]
+        return datetime.timedelta(seconds=round(sum(deltas)))
 
     @property
     def render_speedup(self) -> float:
@@ -93,6 +108,20 @@ def _find_acappella_tracks_to_mute(
         track
         for track in project.tracks
         if not track.is_muted and bool(track.items) and not is_vocal(track)
+    ]
+
+
+def _find_stems(project: reapy.core.Project) -> list[reapy.core.Track]:
+    """Find tracks to render as stems.
+
+    Skip tracks that are already muted. Skip tracks that contain no media items
+    and no FX; they're just for grouping and don't perform any processing on
+    the final mix.
+    """
+    return [
+        track
+        for track in project.tracks
+        if not track.is_muted and (bool(track.items) or bool(len(track.fxs)))
     ]
 
 
@@ -127,6 +156,22 @@ def _adjust_master_limiter_threshold(
     set_param_value(threshold, threshold_louder_value)
     yield
     set_param_value(threshold, threshold_previous_value)
+
+
+@contextlib.contextmanager
+def _disable_fx(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
+    """Disable all effects in the given collection of tracks, then enable them."""
+    fxs = [
+        fx
+        for track in tracks
+        for i in range(len(track.fxs))
+        if (fx := track.fxs[i]) and fx.is_enabled
+    ]
+    for fx in fxs:
+        fx.disable()
+    yield
+    for fx in fxs:
+        fx.enable()
 
 
 @contextlib.contextmanager
@@ -189,7 +234,16 @@ async def render_version(
     reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", 0)  # type: ignore[attr-defined]
     reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", 0)  # type: ignore[attr-defined]
 
-    project.set_info_string("RENDER_PATTERN", in_name)
+    prev_render_settings = None
+    if version == SongVersion.STEMS:
+        prev_render_settings = project.get_info_value("RENDER_SETTINGS")
+        project.set_info_value(
+            "RENDER_SETTINGS",
+            MONO_TRACKS_TO_MONO_FILES | SELECTED_TRACKS_VIA_MASTER,
+        )
+
+    pattern = Path(in_name).joinpath(*version.pattern)
+    project.set_info_string("RENDER_PATTERN", str(pattern))
     time_start = timer()
     try:
         await project.render()
@@ -197,11 +251,20 @@ async def render_version(
     finally:
         project.set_info_string("RENDER_PATTERN", "$project")
 
+        if prev_render_settings is not None:
+            project.set_info_value("RENDER_SETTINGS", prev_render_settings)
+
         reapy.reascript_api.SNM_SetIntConfigVar("runafterstop", prev_runafterstop)  # type: ignore[attr-defined]
         reapy.reascript_api.SNM_SetIntConfigVar("runallonstop", prev_runallonstop)  # type: ignore[attr-defined]
 
     out_fil = version.path_for_project_dir(Path(project.path))
-    shutil.move(out_fil.with_stem(in_name), out_fil)
+    if version == SongVersion.STEMS:
+        tmp_fil = out_fil.parent / in_name
+    else:
+        tmp_fil = out_fil.with_stem(in_name)
+
+    rm_rf(out_fil)
+    shutil.move(tmp_fil, out_fil)
 
     return RenderResult(out_fil, datetime.timedelta(seconds=time_end - time_start))
 
@@ -278,6 +341,22 @@ async def _render_a_cappella(
     return out
 
 
+async def _render_stems(
+    project: ExtendedProject,
+    vocals: reapy.core.Track | None,
+    verbose: int,
+) -> RenderResult:
+    if vocals:
+        vocals.unsolo()
+        vocals.unmute()
+    for track in project.tracks:
+        track.unselect()
+    for track in _find_stems(project):
+        track.select()
+    with _disable_fx([project.master_track]):
+        return await render_version(project, SongVersion.STEMS)
+
+
 class Process:
     """Encapsulate the state of rendering a Reaper project."""
 
@@ -348,6 +427,15 @@ class Process:
                 )
             )
 
+        if SongVersion.STEMS in versions:
+            results.append(
+                (
+                    SongVersion.STEMS,
+                    lambda: _render_stems(project, vocals, verbose),
+                    add_task(SongVersion.STEMS),
+                )
+            )
+
         for i, (version, render, task) in enumerate(results):
             if i > 0:
                 self.console.print()
@@ -388,9 +476,11 @@ class Process:
         name = version.name_for_project_dir(Path(project.path))
         out_fil = version.path_for_project_dir(Path(project.path))
 
-        before_stats = summary_stats_for_file(out_fil) if out_fil.exists() else {}
+        before_stats = summary_stats_for_file(out_fil) if out_fil.is_file() else {}
         out = await render()
-        after_stats = summary_stats_for_file(out_fil, verbose)
+        after_stats = (
+            summary_stats_for_file(out_fil, verbose) if out_fil.is_file() else {}
+        )
 
         self.console.print(f"[b default]{name}[/b default]")
         self.console.print(f"[default dim italic]{out.fil}[/default dim italic]")

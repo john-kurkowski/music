@@ -14,6 +14,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from .conftest import RequestsMocks
 
+ST_MODE_IS_FILE = 33188
+
 
 @pytest.fixture
 def some_paths(tmp_path: Path) -> list[Path]:
@@ -83,7 +85,8 @@ def test_main_tracks_newer(
         """
         if self in some_paths:
             return mock.Mock(
-                st_mtime=datetime.datetime.fromisoformat(old_timestamp).timestamp()
+                st_mode=ST_MODE_IS_FILE,
+                st_mtime=datetime.datetime.fromisoformat(old_timestamp).timestamp(),
             )
 
         return original_stat(self, *args, **kwargs)
