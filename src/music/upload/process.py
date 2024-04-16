@@ -57,7 +57,7 @@ class Process:
             params={"limit": 999},
             timeout=10,
         )
-        tracks_resp.raise_for_status()
+        await _raise_for_status(tracks_resp)
 
         files_by_stem = {file.stem: file for file in files}
         tracks_by_title = {
@@ -150,7 +150,7 @@ class Process:
                 headers=headers,
                 json={"filename": fil.name, "filesize": filesize},
             )
-            prepare_upload_resp.raise_for_status()
+            await _raise_for_status(prepare_upload_resp)
             prepare_upload = await prepare_upload_resp.json()
             put_upload_headers = prepare_upload["headers"]
             put_upload_url = prepare_upload["url"]
@@ -164,7 +164,7 @@ class Process:
                 headers=put_upload_headers,
                 timeout=60 * 10,
             )
-            upload_resp.raise_for_status()
+            await _raise_for_status(upload_resp)
 
         task = self.progress_transcode.add_task(
             f'[bold green]Transcoding "{fil.name}"', total=1
@@ -174,13 +174,13 @@ class Process:
             f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
             headers=headers,
         )
-        transcoding_resp.raise_for_status()
+        await _raise_for_status(transcoding_resp)
         while True:
             transcoding_resp = await client.get(
                 f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
                 headers=headers,
             )
-            transcoding_resp.raise_for_status()
+            await _raise_for_status(transcoding_resp)
             transcoding = await transcoding_resp.json()
             if transcoding["status"] == "finished":
                 break
@@ -198,7 +198,7 @@ class Process:
                 },
             },
         )
-        confirm_upload_resp.raise_for_status()
+        await _raise_for_status(confirm_upload_resp)
 
         self.progress_transcode.update(task, advance=1)
 
@@ -210,6 +210,21 @@ class Process:
             track["title"],
             f"[link={track['permalink_url']}]{track['permalink_url']}[/link]",
         )
+
+
+async def _raise_for_status(resp: aiohttp.ClientResponse) -> None:
+    """Decorate `aiohttp.ClientResponse.raise_for_status()` with response body text.
+
+    The exception raised by `aiohttp.ClientResponse.raise_for_status()`
+    normally only provides high level diagnostics, like error code and a brief
+    message. The body has more info.
+    """
+    try:
+        resp.raise_for_status()
+    except aiohttp.ClientResponseError as ex:
+        text = await resp.text()
+        ex.message = f'{ex.message} "{text}"'
+        raise
 
 
 async def _file_reader(
