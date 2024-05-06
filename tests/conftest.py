@@ -30,6 +30,13 @@ class RequestsMocks:
         }
 
 
+@pytest.fixture(autouse=True)
+def envvars(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Stub environment variables, to avoid snapshotting secrets."""
+    monkeypatch.setenv("SOUNDCLOUD_ADDITIONAL_HEADERS", "X-Test-Additional-Header: 1")
+    monkeypatch.setenv("SOUNDCLOUD_OAUTH_TOKEN", "stub-fake-token")
+
+
 def pytest_collection_modifyitems(
     session: pytest.Session, config: pytest.Config, items: list[pytest.Item]
 ) -> None:

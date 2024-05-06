@@ -1564,6 +1564,9 @@
         tuple(
           'CLIENT_SESSION_HERE',
           'stub-fake-token',
+          dict({
+            'X-Test-Additional-Header': '1',
+          }),
           list([
             'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
           ]),
@@ -1576,6 +1579,9 @@
         tuple(
           'CLIENT_SESSION_HERE',
           'stub-fake-token',
+          dict({
+            'X-Test-Additional-Header': '1',
+          }),
           list([
             'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
           ]),

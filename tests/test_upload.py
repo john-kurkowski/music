@@ -31,13 +31,6 @@ def some_paths(tmp_path: Path) -> list[Path]:
     return some_paths
 
 
-@pytest.fixture(autouse=True)
-def envvars(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Stub environment variables, to avoid snapshotting secrets."""
-    monkeypatch.setenv("SOUNDCLOUD_ADDITIONAL_HEADERS", "X-Test-Additional-Header: 1")
-    monkeypatch.setenv("SOUNDCLOUD_OAUTH_TOKEN", "stub-fake-token")
-
-
 def test_main_no_network_calls(some_paths: list[Path]) -> None:
     """Test that main network calls are blocked."""
     with pytest.raises(pytest_socket.SocketConnectBlockedError):

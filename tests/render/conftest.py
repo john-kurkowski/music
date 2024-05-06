@@ -38,9 +38,7 @@ class RenderMocks:
 
 
 @pytest.fixture
-def render_mocks(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> Iterator[RenderMocks]:
+def render_mocks(tmp_path: Path) -> Iterator[RenderMocks]:
     """Mock reapy's Project class and global settings functions.
 
     Stubs and occasionally fakes enough of a Project for coverage of this
@@ -52,8 +50,6 @@ def render_mocks(
           action) and rendering, writes a fake file with the expected filename.
     * Sets up the expected FX that would be in a project.
     """
-    monkeypatch.setenv("SOUNDCLOUD_OAUTH_TOKEN", "stub-fake-token")
-
     threshold = mock.Mock()
     threshold.name = "Threshold"
     threshold.normalized = -42.0

@@ -38,8 +38,8 @@ class Process:
         self,
         client: aiohttp.ClientSession,
         oauth_token: str,
+        additional_headers: dict[str, Any],
         files: list[Path],
-        additional_headers: dict[str, Any] | None = None,
     ) -> None:
         """Upload the given audio files to SoundCloud.
 
@@ -53,7 +53,7 @@ class Process:
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,"
                 " like Gecko) Chrome/105.0.0.0 Safari/537.36"
             ),
-            **(additional_headers or {}),
+            **additional_headers,
         }
 
         tracks_resp = await client.get(

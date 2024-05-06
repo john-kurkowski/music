@@ -1,6 +1,7 @@
 """Render command."""
 
 import asyncio
+import email
 import warnings
 from pathlib import Path
 
@@ -35,6 +36,15 @@ _CONSOLE_WIDTH: int | None = None
     "project_dirs",
     nargs=-1,
     type=click.Path(dir_okay=True, exists=True, file_okay=False, path_type=Path),
+)
+@click.option(
+    "--additional_headers",
+    envvar="SOUNDCLOUD_ADDITIONAL_HEADERS",
+    required=False,
+    help=(
+        "SoundCloud additional HTTP request headers. Read from the environment variable"
+        " SOUNDCLOUD_ADDITIONAL_HEADERS."
+    ),
 )
 @click.option(
     "--include-main",
@@ -112,6 +122,7 @@ _CONSOLE_WIDTH: int | None = None
 )
 async def main(
     project_dirs: list[Path],
+    additional_headers: str,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_acappella: SongVersion | None,
@@ -132,6 +143,8 @@ async def main(
         raise click.MissingParameter(
             param_hint="'SOUNDCLOUD_OAUTH_TOKEN'", param_type="envvar"
         )
+
+    parsed_additional_headers = {**email.message_from_string(additional_headers)}
 
     projects = (
         (music.util.ExtendedProject.get_or_open(path) for path in project_dirs)
@@ -183,6 +196,7 @@ async def main(
                         upload_process.process(
                             client,
                             oauth_token,
+                            parsed_additional_headers,
                             existing_render_fils,
                         )
                     )
@@ -200,6 +214,7 @@ async def main(
                             upload_process.process(
                                 client,
                                 oauth_token,
+                                parsed_additional_headers,
                                 [render.fil],
                             )
                         )

@@ -22,6 +22,15 @@ from .process import Process as UploadProcess
     type=click.Path(dir_okay=True, exists=True, file_okay=False, path_type=Path),
 )
 @click.option(
+    "--additional_headers",
+    envvar="SOUNDCLOUD_ADDITIONAL_HEADERS",
+    required=False,
+    help=(
+        "SoundCloud additional HTTP request headers. Read from the environment variable"
+        " SOUNDCLOUD_ADDITIONAL_HEADERS."
+    ),
+)
+@click.option(
     "--include-main",
     default=None,
     flag_value=SongVersion.MAIN,
@@ -61,22 +70,13 @@ from .process import Process as UploadProcess
         " SOUNDCLOUD_OAUTH_TOKEN."
     ),
 )
-@click.option(
-    "--additional_headers",
-    envvar="SOUNDCLOUD_ADDITIONAL_HEADERS",
-    required=False,
-    help=(
-        "SoundCloud additional HTTP request headers. Read from the environment variable"
-        " SOUNDCLOUD_ADDITIONAL_HEADERS."
-    ),
-)
 async def main(
     project_dirs: list[Path],
+    additional_headers: str,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_acappella: SongVersion | None,
     oauth_token: str,
-    additional_headers: str,
 ) -> None:
     """Upload rendered output of the PROJECT_DIRS Reaper projects to SoundCloud.
 
@@ -112,6 +112,4 @@ async def main(
     process = UploadProcess(console)
     with rich.live.Live(process.progress, console=console, refresh_per_second=10):
         async with aiohttp.ClientSession() as client:
-            await process.process(
-                client, oauth_token, files, additional_headers=parsed_additional_headers
-            )
+            await process.process(client, oauth_token, parsed_additional_headers, files)
