@@ -1,5 +1,6 @@
 """Upload command."""
 
+import email
 from pathlib import Path
 
 import aiohttp
@@ -60,12 +61,22 @@ from .process import Process as UploadProcess
         " SOUNDCLOUD_OAUTH_TOKEN."
     ),
 )
+@click.option(
+    "--additional_headers",
+    envvar="SOUNDCLOUD_ADDITIONAL_HEADERS",
+    required=False,
+    help=(
+        "SoundCloud additional HTTP request headers. Read from the environment variable"
+        " SOUNDCLOUD_ADDITIONAL_HEADERS."
+    ),
+)
 async def main(
     project_dirs: list[Path],
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_acappella: SongVersion | None,
     oauth_token: str,
+    additional_headers: str,
 ) -> None:
     """Upload rendered output of the PROJECT_DIRS Reaper projects to SoundCloud.
 
@@ -75,6 +86,8 @@ async def main(
         raise click.MissingParameter(
             param_hint="'SOUNDCLOUD_OAUTH_TOKEN'", param_type="envvar"
         )
+
+    parsed_additional_headers = {**email.message_from_string(additional_headers)}
 
     if not project_dirs:
         project_dirs = [Path(music.util.ExtendedProject().path)]
@@ -99,4 +112,6 @@ async def main(
     process = UploadProcess(console)
     with rich.live.Live(process.progress, console=console, refresh_per_second=10):
         async with aiohttp.ClientSession() as client:
-            await process.process(client, oauth_token, files)
+            await process.process(
+                client, oauth_token, files, additional_headers=parsed_additional_headers
+            )

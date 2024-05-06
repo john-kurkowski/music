@@ -26,6 +26,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
           'params': dict({
             'limit': 999,
@@ -43,6 +44,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
         }),
       ),
@@ -56,6 +58,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
         }),
       ),
@@ -71,6 +74,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
           'json': dict({
             'filename': 'some project.wav',
@@ -88,6 +92,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
         }),
       ),
@@ -101,6 +106,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
           'json': dict({
             'filename': 'another project.wav',
@@ -118,6 +124,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
         }),
       ),
@@ -146,6 +153,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
           'json': dict({
             'track': dict({
@@ -179,6 +187,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
           'json': dict({
             'track': dict({
@@ -212,6 +221,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
           'params': dict({
             'limit': 999,
@@ -242,6 +252,7 @@
             'Accept': 'application/json',
             'Authorization': 'OAuth stub-fake-token',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            'X-Test-Additional-Header': '1',
           }),
           'params': dict({
             'limit': 999,
