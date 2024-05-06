@@ -219,11 +219,14 @@ async def _raise_for_status(resp: aiohttp.ClientResponse) -> None:
     normally only provides high level diagnostics, like error code and a brief
     message. The body has more info.
     """
+    if resp.ok:
+        return
+
+    text = await resp.text()
     try:
         resp.raise_for_status()
     except aiohttp.ClientResponseError as ex:
-        text = await resp.text()
-        ex.message = f'{ex.message} "{text}"'
+        ex.message = f'{ex.message} (with body "{text}")'
         raise
 
 
