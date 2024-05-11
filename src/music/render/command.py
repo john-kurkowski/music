@@ -3,6 +3,7 @@
 import asyncio
 import email
 import warnings
+from collections.abc import Collection
 from pathlib import Path
 
 import aiohttp
@@ -25,6 +26,7 @@ from .consts import (
     SWS_ERROR_SENTINEL,
     VOCAL_LOUDNESS_WORTH,
 )
+from .result import RenderResult
 
 # Test-only property. Set to a large number to avoid text wrapping in the console.
 _CONSOLE_WIDTH: int | None = None
@@ -152,14 +154,7 @@ async def main(
         else [music.util.ExtendedProject()]
     )
 
-    offlineinact = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
-        "offlineinact", SWS_ERROR_SENTINEL
-    )
-    if offlineinact != 0:
-        raise click.UsageError(
-            'Reaper preference "Set media items offline when application is not active"'
-            " must be unchecked, or media items will be silent in the render."
-        )
+    _validate_reaper()
 
     versions = {
         version
@@ -173,6 +168,7 @@ async def main(
     } or (SongVersion.MAIN, SongVersion.INSTRUMENTAL, SongVersion.ACAPPELLA)
 
     renders = []
+    uploads = []
 
     console = rich.console.Console(width=_CONSOLE_WIDTH)
     render_process = music.render.process.Process(console)
@@ -181,23 +177,17 @@ async def main(
         render_process.progress, upload_process.progress
     )
     with rich.live.Live(progress_group, console=console, refresh_per_second=10):
-        async with aiohttp.ClientSession() as client, asyncio.TaskGroup() as uploads:
+        async with aiohttp.ClientSession() as client:
             for project in projects:
                 if upload_existing:
-                    existing_versions = set(SongVersion).difference(versions)
-                    existing_render_fils = [
-                        fil
-                        for version in existing_versions
-                        if (fil := version.path_for_project_dir(Path(project.path)))
-                        and fil.is_file()
-                    ]
-
-                    uploads.create_task(
-                        upload_process.process(
-                            client,
-                            oauth_token,
-                            parsed_additional_headers,
-                            existing_render_fils,
+                    uploads.append(
+                        asyncio.create_task(
+                            upload_process.process(
+                                client,
+                                oauth_token,
+                                parsed_additional_headers,
+                                _existing_render_fils(project, versions),
+                            )
                         )
                     )
 
@@ -210,14 +200,60 @@ async def main(
                     renders.append(render)
 
                     if upload and render.fil.is_file():
-                        uploads.create_task(
-                            upload_process.process(
-                                client,
-                                oauth_token,
-                                parsed_additional_headers,
-                                [render.fil],
+                        uploads.append(
+                            asyncio.create_task(
+                                upload_process.process(
+                                    client,
+                                    oauth_token,
+                                    parsed_additional_headers,
+                                    [render.fil],
+                                )
                             )
                         )
 
+            _report(renders, await asyncio.gather(*uploads, return_exceptions=True))
+
+
+def _existing_render_fils(
+    project: music.util.ExtendedProject, versions: Collection[SongVersion]
+) -> list[Path]:
+    """Return a project's existing render files to upload.
+
+    Eases uploading newer files when the render was performed separately.
+    """
+    existing_versions = set(SongVersion).difference(versions)
+    return [
+        fil
+        for version in existing_versions
+        if (fil := version.path_for_project_dir(Path(project.path))) and fil.is_file()
+    ]
+
+
+def _report(renders: list[RenderResult], uploads: list[None | BaseException]) -> None:
+    has_error = False
+
+    upload_exceptions = [e for e in uploads if isinstance(e, BaseException)]
+    if upload_exceptions:
+        has_error = True
+        for e in upload_exceptions:
+            click.echo(e, err=True)
+
     if not renders:
-        raise click.UsageError("nothing to render")
+        has_error = True
+        click.echo("Error: nothing to render", err=True)
+
+    if has_error:
+        raise click.exceptions.Exit(2)
+
+
+def _validate_reaper() -> None:
+    offlineinact = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
+        "offlineinact", SWS_ERROR_SENTINEL
+    )
+    if offlineinact != 0:
+        click.echo(
+            'Reaper preference "Set media items offline when application is not active"'
+            " must be unchecked, or media items will be silent in the render.",
+            err=True,
+        )
+        raise click.exceptions.Exit(2)

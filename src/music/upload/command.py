@@ -106,7 +106,8 @@ async def main(
     ]
 
     if not files:
-        raise click.UsageError("nothing to upload")
+        click.echo("Error: nothing to upload", err=True)
+        raise click.exceptions.Exit(2)
 
     console = rich.console.Console()
     process = UploadProcess(console)

@@ -1594,9 +1594,6 @@
 # ---
 # name: test_main_noop
   '''
-  Usage: render [OPTIONS] [PROJECT_DIRS]...
-  Try 'render --help' for help.
-  
   Error: nothing to render
   
   '''
