@@ -28,6 +28,7 @@ class SongVersion(enum.Enum):
 
     MAIN = enum.auto()
     INSTRUMENTAL = enum.auto()
+    INSTRUMENTAL_DJ = enum.auto()
     ACAPPELLA = enum.auto()
     STEMS = enum.auto()
 
@@ -38,6 +39,8 @@ class SongVersion(enum.Enum):
             return project_name
         elif self is SongVersion.INSTRUMENTAL:
             return f"{project_name} (Instrumental)"
+        elif self is SongVersion.INSTRUMENTAL_DJ:
+            return f"{project_name} (DJ Instrumental)"
         elif self is SongVersion.ACAPPELLA:
             return f"{project_name} (A Cappella)"
         elif self is SongVersion.STEMS:

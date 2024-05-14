@@ -32,6 +32,24 @@ def find_acappella_tracks_to_mute(
     ]
 
 
+def find_vox_tracks_to_mute(
+    project: reapy.core.Project,
+) -> list[reapy.core.Track]:
+    """Find vox tracks to mute when rendering the DJ instrumental of the song.
+
+    The DJ instrumental is similar to the instrumental, but also mutes tracks
+    tagged as providing vocal samples, via the substring "(vox)".
+
+    Skip tracks that are already muted (wouldn't want to ultimately unmute
+    them).
+    """
+    return [
+        track
+        for track in project.tracks
+        if not track.is_muted and "(vox)" in track.name.lower()
+    ]
+
+
 def find_stems(project: reapy.core.Project) -> list[reapy.core.Track]:
     """Find tracks to render as stems.
 

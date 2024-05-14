@@ -36,7 +36,7 @@ from .contextmanagers import (
     toggle_fx_for_tracks,
 )
 from .result import RenderResult
-from .tracks import find_acappella_tracks_to_mute, find_stems
+from .tracks import find_acappella_tracks_to_mute, find_stems, find_vox_tracks_to_mute
 
 
 def summary_stats_for_file(fil: Path, verbose: int = 0) -> dict[str, float | str]:
@@ -148,11 +148,26 @@ async def _render_instrumental(
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
+    tracks_to_mute = (vocals,)
+
     with (
         adjust_master_limiter_threshold(project, vocal_loudness_worth),
-        mute_tracks((vocals,)),
+        mute_tracks(tracks_to_mute),
     ):
         return await render_version(project, SongVersion.INSTRUMENTAL)
+
+
+async def _render_instrumental_dj(
+    project: ExtendedProject,
+    tracks_to_mute: list[reapy.core.Track],
+    vocal_loudness_worth: float,
+    verbose: int,
+) -> RenderResult:
+    with (
+        adjust_master_limiter_threshold(project, vocal_loudness_worth),
+        mute_tracks(tracks_to_mute),
+    ):
+        return await render_version(project, SongVersion.INSTRUMENTAL_DJ)
 
 
 async def _render_a_cappella(
@@ -239,6 +254,24 @@ class Process:
                         verbose,
                     ),
                     self._add_task(project, SongVersion.INSTRUMENTAL),
+                )
+            )
+
+        if SongVersion.INSTRUMENTAL_DJ in versions and find_vox_tracks_to_mute(project):
+            results.append(
+                (
+                    SongVersion.INSTRUMENTAL_DJ,
+                    lambda: _render_instrumental_dj(
+                        project,
+                        [
+                            track
+                            for track in [vocals, *find_vox_tracks_to_mute(project)]
+                            if track
+                        ],
+                        vocal_loudness_worth,
+                        verbose,
+                    ),
+                    self._add_task(project, SongVersion.INSTRUMENTAL_DJ),
                 )
             )
 

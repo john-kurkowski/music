@@ -35,7 +35,8 @@ from .process import Process as UploadProcess
     default=None,
     flag_value=SongVersion.MAIN,
     help=(
-        "Whether to include the main version. Defaults to including all uploadable versions,"
+        "Whether to include the main version."
+        " Defaults to including main, instrumental, and a cappella versions,"
         ' unless one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -46,7 +47,18 @@ from .process import Process as UploadProcess
     flag_value=SongVersion.INSTRUMENTAL,
     help=(
         "Whether to include the instrumental version."
-        " Defaults to including all uploadable versions,"
+        " Defaults to including main, instrumental, and a cappella versions,"
+        ' unless one of the "--include-*" flags is set.'
+    ),
+    type=SongVersion,
+)
+@click.option(
+    "--include-instrumental-dj",
+    default=None,
+    flag_value=SongVersion.INSTRUMENTAL_DJ,
+    help=(
+        "Whether to include the DJ instrumental version."
+        " Defaults to including main, instrumental, and a cappella versions,"
         ' unless one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -57,7 +69,7 @@ from .process import Process as UploadProcess
     flag_value=SongVersion.ACAPPELLA,
     help=(
         "Whether to include the a cappella version."
-        " Defaults to including all uploadable versions, unless"
+        " Defaults to including main, instrumental, and a cappella versions,"
         ' one of the "--include-*" flags is set.'
     ),
     type=SongVersion,
@@ -75,6 +87,7 @@ async def main(
     additional_headers: str,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
+    include_instrumental_dj: SongVersion | None,
     include_acappella: SongVersion | None,
     oauth_token: str,
 ) -> None:
@@ -94,9 +107,18 @@ async def main(
 
     versions = {
         version
-        for version in (include_main, include_instrumental, include_acappella)
+        for version in (
+            include_main,
+            include_instrumental,
+            include_instrumental_dj,
+            include_acappella,
+        )
         if version
-    } or (SongVersion.MAIN, SongVersion.INSTRUMENTAL, SongVersion.ACAPPELLA)
+    } or (
+        SongVersion.MAIN,
+        SongVersion.INSTRUMENTAL,
+        SongVersion.ACAPPELLA,
+    )
 
     files = [
         fil

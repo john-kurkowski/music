@@ -70,6 +70,17 @@ _CONSOLE_WIDTH: int | None = None
     type=SongVersion,
 )
 @click.option(
+    "--include-instrumental-dj",
+    default=None,
+    flag_value=SongVersion.INSTRUMENTAL_DJ,
+    help=(
+        "Whether to include the DJ instrumental version. This version is skipped"
+        " if no vocal samples exist. Defaults to including main, instrumental, and a cappella versions,"
+        ' unless one of the "--include-*" flags is set.'
+    ),
+    type=SongVersion,
+)
+@click.option(
     "--include-acappella",
     default=None,
     flag_value=SongVersion.ACAPPELLA,
@@ -127,6 +138,7 @@ async def main(
     additional_headers: str,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
+    include_instrumental_dj: SongVersion | None,
     include_acappella: SongVersion | None,
     include_stems: SongVersion | None,
     oauth_token: str,
@@ -161,6 +173,7 @@ async def main(
         for version in (
             include_main,
             include_instrumental,
+            include_instrumental_dj,
             include_acappella,
             include_stems,
         )
