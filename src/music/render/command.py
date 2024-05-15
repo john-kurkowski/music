@@ -1,9 +1,10 @@
 """Render command."""
 
 import asyncio
+import dataclasses
 import email
 import warnings
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 from pathlib import Path
 
 import aiohttp
@@ -180,51 +181,105 @@ async def main(
         if version
     } or (SongVersion.MAIN, SongVersion.INSTRUMENTAL, SongVersion.ACAPPELLA)
 
-    renders = []
-    uploads = []
-
-    console = rich.console.Console(width=_CONSOLE_WIDTH)
-    render_process = music.render.process.Process(console)
-    upload_process = music.upload.process.Process(console)
-    progress_group = rich.console.Group(
-        render_process.progress, upload_process.progress
+    command = _Command(
+        parsed_additional_headers,
+        oauth_token,
+        upload,
+        upload_existing,
+        vocal_loudness_worth,
+        projects,
+        versions,
     )
-    with rich.live.Live(progress_group, console=console, refresh_per_second=10):
-        async with aiohttp.ClientSession() as client:
-            for project in projects:
-                if upload_existing:
-                    uploads.append(
-                        asyncio.create_task(
-                            upload_process.process(
-                                client,
-                                oauth_token,
-                                parsed_additional_headers,
-                                _existing_render_fils(project, versions),
-                            )
+
+    renders, uploads = await command()
+    _report(renders, uploads)
+
+
+@dataclasses.dataclass
+class _Command:
+    """Wrap parsed command line arguments."""
+
+    additional_headers: dict[str, str]
+    oauth_token: str
+    upload: bool
+    upload_existing: bool
+    vocal_loudness_worth: float | None
+    projects: Iterable[music.util.ExtendedProject]
+    versions: Collection[SongVersion]
+
+    def __post_init__(
+        self,
+    ) -> None:
+        """Initialize properties not provided by the caller."""
+        self.console = rich.console.Console(width=_CONSOLE_WIDTH)
+        self.render_process = music.render.process.Process(self.console)
+        self.upload_process = music.upload.process.Process(self.console)
+
+    async def __call__(self) -> tuple[list[RenderResult], list[BaseException | None]]:
+        """Render all given projects."""
+        progress_group = rich.console.Group(
+            self.render_process.progress, self.upload_process.progress
+        )
+        with rich.live.Live(
+            progress_group, console=self.console, refresh_per_second=10
+        ):
+            async with aiohttp.ClientSession() as client:
+                renders = []
+                uploads = []
+                async for renders_, uploads_ in (
+                    await self._render_project(client, project)
+                    for project in self.projects
+                ):
+                    renders.extend(renders_)
+                    uploads.extend(uploads_)
+                return renders, await asyncio.gather(*uploads, return_exceptions=True)
+
+    async def _render_project(
+        self, client: aiohttp.ClientSession, project: music.util.ExtendedProject
+    ) -> tuple[list[RenderResult], list[asyncio.Task[None]]]:
+        """Render a single project.
+
+        Eagerly uploads existing renders, then synchronously renders versions,
+        enqueuing further uploads as renders complete.
+
+        Returns a tuple of (renders, uploads).
+        """
+        renders = []
+        uploads = []
+
+        if self.upload_existing:
+            uploads.append(
+                asyncio.create_task(
+                    self.upload_process.process(
+                        client,
+                        self.oauth_token,
+                        self.additional_headers,
+                        _existing_render_fils(project, self.versions),
+                    )
+                )
+            )
+
+        async for _, render in self.render_process.process(
+            project,
+            self.versions,
+            self.vocal_loudness_worth,
+            verbose=0,
+        ):
+            renders.append(render)
+
+            if self.upload and render.fil.is_file():
+                uploads.append(
+                    asyncio.create_task(
+                        self.upload_process.process(
+                            client,
+                            self.oauth_token,
+                            self.additional_headers,
+                            [render.fil],
                         )
                     )
+                )
 
-                async for _, render in render_process.process(
-                    project,
-                    versions,
-                    vocal_loudness_worth,
-                    verbose=0,
-                ):
-                    renders.append(render)
-
-                    if upload and render.fil.is_file():
-                        uploads.append(
-                            asyncio.create_task(
-                                upload_process.process(
-                                    client,
-                                    oauth_token,
-                                    parsed_additional_headers,
-                                    [render.fil],
-                                )
-                            )
-                        )
-
-            _report(renders, await asyncio.gather(*uploads, return_exceptions=True))
+        return renders, uploads
 
 
 def _existing_render_fils(
