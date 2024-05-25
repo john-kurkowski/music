@@ -103,7 +103,7 @@ class Process:
     def progress_upload(self) -> rich.progress.Progress:
         """Progress bar for uploads."""
         return rich.progress.Progress(
-            rich.progress.SpinnerColumn(),
+            rich.progress.SpinnerColumn(finished_text="[green]✓[/green]"),
             rich.progress.TextColumn("{task.description}"),
             rich.progress.TimeElapsedColumn(),
             rich.progress.BarColumn(),
@@ -115,7 +115,7 @@ class Process:
     def progress_transcode(self) -> rich.progress.Progress:
         """Progress bar for transcodes."""
         return rich.progress.Progress(
-            rich.progress.SpinnerColumn(),
+            rich.progress.SpinnerColumn(finished_text="[green]✓[/green]"),
             rich.progress.TextColumn("{task.description}"),
             rich.progress.TimeElapsedColumn(),
             console=self.console,

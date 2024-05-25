@@ -314,7 +314,7 @@ class Process:
     def progress(self) -> rich.progress.Progress:
         """Rich progress bar."""
         return rich.progress.Progress(
-            rich.progress.SpinnerColumn(),
+            rich.progress.SpinnerColumn(finished_text="[green]✓[/green]"),
             rich.progress.TextColumn("{task.description}"),
             rich.progress.TimeElapsedColumn(),
         )

@@ -42,10 +42,10 @@
      ╵        ╵        
   Rendered in 0:00:00, 
      a infx speedup    
-    Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
   
   '''
 # ---
@@ -362,9 +362,9 @@
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
-    Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
   
   '''
 # ---
@@ -672,14 +672,14 @@
      ╵        ╵        
   Rendered in 0:00:00, 
      a infx speedup    
-    Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
-    Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
   
   '''
 # ---
@@ -1311,7 +1311,7 @@
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
-    Rendering "Stub Song Title (feat. Stub Artist)" 0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist)" 0:00:00
   
   '''
 # ---
@@ -1419,7 +1419,7 @@
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
-    Rendering "Stub Song Title (feat. Stub Artist)" 0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist)" 0:00:00
   
   '''
 # ---
