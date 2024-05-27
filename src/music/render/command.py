@@ -32,6 +32,8 @@ from .result import RenderResult
 # Test-only property. Set to a large number to avoid text wrapping in the console.
 _CONSOLE_WIDTH: int | None = None
 
+UploadResult = asyncio.Task[None]
+
 
 @click.command("render")
 @music.util.coro
@@ -236,7 +238,7 @@ class _Command:
 
     async def _render_project(
         self, client: aiohttp.ClientSession, project: music.util.ExtendedProject
-    ) -> tuple[list[RenderResult], list[asyncio.Task[None]]]:
+    ) -> tuple[list[RenderResult], list[UploadResult]]:
         """Render a single project.
 
         Eagerly uploads existing renders, then synchronously renders versions,
