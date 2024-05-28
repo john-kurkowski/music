@@ -22,8 +22,9 @@ _TRACK_METADATA_TO_UPDATE_KEYS = [
     "title",
 ]
 
-# Allow only 1 upload at a time. Home internet upload bandwidth actively
-# hurts the completion time of multiple uploads.
+# Allow only 1 upload at a time. Home internet upload bandwidth actively hurts
+# the completion time of multiple uploads. It is also suspected that concurrent
+# mutating requests more likely incur captchas.
 _CONCURRENCY = asyncio.Semaphore(1)
 
 
@@ -171,39 +172,41 @@ class Process:
             )
             await _raise_for_status(upload_resp)
 
-        task = self.progress_transcode.add_task(
-            f'[bold green]Transcoding "{fil.name}"', total=1
-        )
+            task = self.progress_transcode.add_task(
+                f'[bold green]Transcoding "{fil.name}"', total=1
+            )
 
-        transcoding_resp = await client.post(
-            f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
-            headers=headers,
-        )
-        await _raise_for_status(transcoding_resp)
-        while True:
-            transcoding_resp = await client.get(
+            transcoding_resp = await client.post(
                 f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
                 headers=headers,
             )
             await _raise_for_status(transcoding_resp)
-            transcoding = await transcoding_resp.json()
-            if transcoding["status"] == "finished":
-                break
-            await asyncio.sleep(3)
+            while True:
+                transcoding_resp = await client.get(
+                    f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
+                    headers=headers,
+                )
+                await _raise_for_status(transcoding_resp)
+                transcoding = await transcoding_resp.json()
+                if transcoding["status"] == "finished":
+                    break
+                await asyncio.sleep(3)
 
-        track_metadata_to_update = {k: track[k] for k in _TRACK_METADATA_TO_UPDATE_KEYS}
-        confirm_upload_resp = await client.put(
-            f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track['id']}",
-            headers=headers,
-            json={
-                "track": {
-                    **track_metadata_to_update,
-                    "replacing_original_filename": fil.name,
-                    "replacing_uid": put_upload_uid,
+            track_metadata_to_update = {
+                k: track[k] for k in _TRACK_METADATA_TO_UPDATE_KEYS
+            }
+            confirm_upload_resp = await client.put(
+                f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track['id']}",
+                headers=headers,
+                json={
+                    "track": {
+                        **track_metadata_to_update,
+                        "replacing_original_filename": fil.name,
+                        "replacing_uid": put_upload_uid,
+                    },
                 },
-            },
-        )
-        await _raise_for_status(confirm_upload_resp)
+            )
+            await _raise_for_status(confirm_upload_resp)
 
         self.progress_transcode.update(task, advance=1)
 
