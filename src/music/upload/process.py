@@ -5,7 +5,7 @@ import datetime
 from collections.abc import AsyncGenerator, Callable
 from functools import cached_property
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import aiofiles
 import aiohttp
@@ -26,6 +26,12 @@ _TRACK_METADATA_TO_UPDATE_KEYS = [
 # the completion time of multiple uploads. It is also suspected that concurrent
 # mutating requests more likely incur captchas.
 _CONCURRENCY = asyncio.Semaphore(1)
+
+
+class _PrepareUploadResponse(TypedDict):
+    headers: dict[str, str]
+    uid: str
+    url: str
 
 
 class Process:
@@ -143,70 +149,22 @@ class Process:
         5. Confirm the transcoded file is what we want as the new file. Send the
            minimal metadata of the original track.
         """
-        filesize = fil.stat().st_size
         task = self.progress_upload.add_task(
-            f'[bold green]Uploading "{fil.name}"', start=False, total=filesize
+            f'[bold green]Uploading "{fil.name}"', start=False, total=fil.stat().st_size
         )
 
         async with _CONCURRENCY:
             self.progress_upload.start_task(task)
 
-            prepare_upload_resp = await client.post(
-                "https://api-v2.soundcloud.com/uploads/track-upload-policy",
-                headers=headers,
-                json={"filename": fil.name, "filesize": filesize},
-            )
-            await _raise_for_status(prepare_upload_resp)
-            prepare_upload = await prepare_upload_resp.json()
-            put_upload_headers = prepare_upload["headers"]
-            put_upload_url = prepare_upload["url"]
-            put_upload_uid = prepare_upload["uid"]
-
-            upload_resp = await client.put(
-                put_upload_url,
-                data=_file_reader(
-                    lambda steps: self.progress_upload.update(task, advance=steps), fil
-                ),
-                headers=put_upload_headers,
-                timeout=60 * 10,
-            )
-            await _raise_for_status(upload_resp)
+            upload = await self._prepare_upload(client, headers, fil)
+            await self._upload(client, task, fil, upload)
 
             task = self.progress_transcode.add_task(
                 f'[bold green]Transcoding "{fil.name}"', total=1
             )
 
-            transcoding_resp = await client.post(
-                f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
-                headers=headers,
-            )
-            await _raise_for_status(transcoding_resp)
-            while True:
-                transcoding_resp = await client.get(
-                    f"https://api-v2.soundcloud.com/uploads/{put_upload_uid}/track-transcoding",
-                    headers=headers,
-                )
-                await _raise_for_status(transcoding_resp)
-                transcoding = await transcoding_resp.json()
-                if transcoding["status"] == "finished":
-                    break
-                await asyncio.sleep(3)
-
-            track_metadata_to_update = {
-                k: track[k] for k in _TRACK_METADATA_TO_UPDATE_KEYS
-            }
-            confirm_upload_resp = await client.put(
-                f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track['id']}",
-                headers=headers,
-                json={
-                    "track": {
-                        **track_metadata_to_update,
-                        "replacing_original_filename": fil.name,
-                        "replacing_uid": put_upload_uid,
-                    },
-                },
-            )
-            await _raise_for_status(confirm_upload_resp)
+            await self._transcode(client, headers, upload)
+            await self._confirm_upload(client, headers, track, fil, upload)
 
         self.progress_transcode.update(task, advance=1)
 
@@ -218,6 +176,93 @@ class Process:
             track["title"],
             f"[link={track['permalink_url']}]{track['permalink_url']}[/link]",
         )
+
+    async def _confirm_upload(
+        self,
+        client: aiohttp.ClientSession,
+        headers: dict[str, str],
+        track: dict[str, Any],
+        fil: Path,
+        upload: _PrepareUploadResponse,
+    ) -> None:
+        """Confirm the transcoded file is what we want as the new file.
+
+        Send the minimal metadata of the original track.
+        """
+        track_metadata_to_update = {k: track[k] for k in _TRACK_METADATA_TO_UPDATE_KEYS}
+        resp = await client.put(
+            f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track['id']}",
+            headers=headers,
+            json={
+                "track": {
+                    **track_metadata_to_update,
+                    "replacing_original_filename": fil.name,
+                    "replacing_uid": upload["uid"],
+                },
+            },
+        )
+        await _raise_for_status(resp)
+
+    async def _prepare_upload(
+        self, client: aiohttp.ClientSession, headers: dict[str, str], fil: Path
+    ) -> _PrepareUploadResponse:
+        """Request an AWS S3 upload URL."""
+        resp = await client.post(
+            "https://api-v2.soundcloud.com/uploads/track-upload-policy",
+            headers=headers,
+            json={"filename": fil.name, "filesize": fil.stat().st_size},
+        )
+        await _raise_for_status(resp)
+        upload = await resp.json()
+        return {
+            "headers": upload["headers"],
+            "uid": upload["uid"],
+            "url": upload["url"],
+        }
+
+    async def _transcode(
+        self,
+        client: aiohttp.ClientSession,
+        headers: dict[str, str],
+        upload: _PrepareUploadResponse,
+    ) -> None:
+        """Request transcoding of the uploaded audio file.
+
+        Polls for transcoding to finish.
+        """
+        resp = await client.post(
+            f"https://api-v2.soundcloud.com/uploads/{upload['uid']}/track-transcoding",
+            headers=headers,
+        )
+        await _raise_for_status(resp)
+        while True:
+            resp = await client.get(
+                f"https://api-v2.soundcloud.com/uploads/{upload['uid']}/track-transcoding",
+                headers=headers,
+            )
+            await _raise_for_status(resp)
+            transcoding = await resp.json()
+            if transcoding["status"] == "finished":
+                break
+            await asyncio.sleep(3)
+
+    async def _upload(
+        self,
+        client: aiohttp.ClientSession,
+        task: rich.progress.TaskID,
+        fil: Path,
+        upload: _PrepareUploadResponse,
+    ) -> None:
+        """Upload the audio file to the prepared upload destination."""
+        resp = await client.put(
+            upload["url"],
+            data=_file_reader(
+                lambda steps: self.progress_upload.update(task, advance=steps), fil
+            ),
+            headers=upload["headers"],
+            timeout=60 * 10,
+        )
+        await _raise_for_status(resp)
 
 
 async def _raise_for_status(resp: aiohttp.ClientResponse) -> None:
