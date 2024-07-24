@@ -33,6 +33,7 @@ from .contextmanagers import (
     adjust_render_settings,
     avoid_fx_tails,
     mute_tracks,
+    normalize_tempo,
     toggle_fx_for_tracks,
 )
 from .result import RenderResult
@@ -166,6 +167,7 @@ async def _render_instrumental_dj(
     with (
         adjust_master_limiter_threshold(project, vocal_loudness_worth),
         mute_tracks(tracks_to_mute),
+        normalize_tempo(project),
     ):
         return await render_version(project, SongVersion.INSTRUMENTAL_DJ)
 
@@ -201,6 +203,10 @@ async def _render_stems(
         track.select()
     with toggle_fx_for_tracks([project.master_track], is_enabled=False):
         return await render_version(project, SongVersion.STEMS)
+
+
+def _has_instrumental_dj_difference(project: ExtendedProject) -> bool:
+    return bool(find_vox_tracks_to_mute(project)) or project.n_tempo_markers > 1
 
 
 class Process:
@@ -257,7 +263,9 @@ class Process:
                 )
             )
 
-        if SongVersion.INSTRUMENTAL_DJ in versions and find_vox_tracks_to_mute(project):
+        if SongVersion.INSTRUMENTAL_DJ in versions and _has_instrumental_dj_difference(
+            project
+        ):
             results.append(
                 (
                     SongVersion.INSTRUMENTAL_DJ,
