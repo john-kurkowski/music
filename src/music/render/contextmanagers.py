@@ -28,6 +28,9 @@ def adjust_master_limiter_threshold(
     project: reapy.core.Project, vocal_loudness_worth: float
 ) -> contextlib.AbstractContextManager[None]:
     """Find the `project` master track's master limiter's threshold parameter and adjust its value without the vocal, then restore the original value."""
+    if vocal_loudness_worth == 0.0:
+        return contextlib.nullcontext()
+
     limiters = [fx for fx in project.master_track.fxs[::-1] if "Limit" in fx.name]
     if not limiters:
         raise ValueError("Master limiter not found")
