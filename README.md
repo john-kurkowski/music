@@ -40,7 +40,8 @@ For example:
 music render
 ```
 
-Which renders the current project in Reaper, with terminal output like the following.
+Which renders the current project in Reaper, with terminal output like the
+following.
 
 [![asciicast](https://asciinema.org/a/630914.svg)](https://asciinema.org/a/630914)
 
@@ -65,3 +66,10 @@ above, and on push. You can also run them manually.
 ```sh
 pre-commit run --all-files
 ```
+
+### Debug
+
+When using `breakpoint()`, you'll probably want to disable
+[rich](https://github.com/Textualize/rich) output, via the `TERM=dumb`
+environment variable. That will make the Python interactive debugger easier to
+see.
