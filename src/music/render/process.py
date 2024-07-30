@@ -306,10 +306,9 @@ class Process:
 
             self.progress.update(task, advance=1)
 
-        # TODO: REVERT ME. Avoiding saves while developing experimental feature.
-        # if len(results):
-        #     # Render causes a project to have unsaved changes, no matter what. Save the user a step.
-        #     project.save()
+        if len(results):
+            # Render causes a project to have unsaved changes, no matter what. Save the user a step.
+            project.save()
 
     @cached_property
     def progress(self) -> rich.progress.Progress:
