@@ -36,7 +36,7 @@ class RenderResult:
             )
             proc_output = proc.stdout
             delta_str = re.search(r"duration=(\S+)", proc_output).group(1)  # type: ignore[union-attr]
-            return float(delta_str)
+            return 0.0 if delta_str == "N/A" else float(delta_str)
 
         fils = self.fil.glob("**/*.wav") if self.fil.is_dir() else [self.fil]
         deltas = [delta_for_audio(fil) for fil in fils]
