@@ -31,7 +31,7 @@
           'params': dict({
             'limit': 999,
           }),
-          'timeout': 10,
+          'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
         }),
       ),
       _Call(
@@ -140,7 +140,7 @@
           'headers': dict({
             'some-uploader-id': 'some-uploader-value',
           }),
-          'timeout': 600,
+          'timeout': ClientTimeout(total=600, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
         }),
       ),
       _Call(
@@ -174,7 +174,7 @@
           'headers': dict({
             'some-uploader-id': 'some-uploader-value',
           }),
-          'timeout': 600,
+          'timeout': ClientTimeout(total=600, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
         }),
       ),
       _Call(
@@ -226,7 +226,7 @@
           'params': dict({
             'limit': 999,
           }),
-          'timeout': 10,
+          'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
         }),
       ),
     ]),
@@ -257,7 +257,7 @@
           'params': dict({
             'limit': 999,
           }),
-          'timeout': 10,
+          'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
         }),
       ),
     ]),

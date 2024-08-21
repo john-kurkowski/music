@@ -67,7 +67,7 @@ class Process:
             f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
             headers=headers,
             params={"limit": 999},
-            timeout=10,
+            timeout=aiohttp.ClientTimeout(total=10),
         )
         await _raise_for_status(tracks_resp)
 
@@ -260,7 +260,7 @@ class Process:
                 lambda steps: self.progress_upload.update(task, advance=steps), fil
             ),
             headers=upload["headers"],
-            timeout=60 * 10,
+            timeout=aiohttp.ClientTimeout(total=60 * 10),
         )
         await _raise_for_status(resp)
 
