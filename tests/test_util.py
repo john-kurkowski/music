@@ -3,9 +3,10 @@
 from pathlib import Path
 from unittest import mock
 
-import music.util
 import pytest
 from syrupy.assertion import SnapshotAssertion
+
+import music.util
 
 from .conftest import RequestsMocks
 

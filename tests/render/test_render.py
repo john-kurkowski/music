@@ -6,10 +6,11 @@ from pathlib import Path
 from unittest import mock
 
 from click.testing import CliRunner
+from syrupy.assertion import SnapshotAssertion
+
 from music.render.command import main as render
 from music.render.result import RenderResult
 from music.util import SongVersion
-from syrupy.assertion import SnapshotAssertion
 
 from .conftest import RenderMocks
 

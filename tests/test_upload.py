@@ -9,8 +9,9 @@ from unittest import mock
 import pytest
 import pytest_socket  # type: ignore[import-untyped]
 from click.testing import CliRunner
-from music.upload.command import main as upload
 from syrupy.assertion import SnapshotAssertion
+
+from music.upload.command import main as upload
 
 from .conftest import RequestsMocks
 

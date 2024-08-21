@@ -1,8 +1,9 @@
 """CLI entry point tests."""
 
 from click.testing import CliRunner
-from music.__main__ import cli
 from syrupy.assertion import SnapshotAssertion
+
+from music.__main__ import cli
 
 
 def test_help(snapshot: SnapshotAssertion) -> None:

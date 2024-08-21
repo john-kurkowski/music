@@ -4,8 +4,9 @@ from pathlib import Path
 from unittest import mock
 
 from click.testing import CliRunner
-from music.stat.command import main as stat
 from syrupy.assertion import SnapshotAssertion
+
+from music.stat.command import main as stat
 
 
 @mock.patch("music.render.process.summary_stats_for_file")
