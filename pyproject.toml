@@ -69,4 +69,5 @@ addopts = [
   '--cov-report',
   'html',
   '--disable-socket',
+  '--allow-unix-socket',
 ]

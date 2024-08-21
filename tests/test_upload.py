@@ -34,7 +34,7 @@ def some_paths(tmp_path: Path) -> list[Path]:
 
 def test_main_no_network_calls(some_paths: list[Path]) -> None:
     """Test that main network calls are blocked."""
-    with pytest.raises(pytest_socket.SocketConnectBlockedError):
+    with pytest.raises(pytest_socket.SocketBlockedError):
         CliRunner(mix_stderr=False).invoke(
             upload,
             [str(path.parent.resolve()) for path in some_paths],
