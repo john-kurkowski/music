@@ -29,6 +29,8 @@ def Track(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: 
     rv = mock.create_autospec(reapy.core.Track)
     rv.name = name
     rv.params = params
+    rv.is_muted = False
+    rv.parent_track = None
     return cast(mock.Mock, rv)
 
 
