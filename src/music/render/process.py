@@ -9,6 +9,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable, Collection
 from functools import cached_property
 from pathlib import Path
 from timeit import default_timer as timer
+from typing import Literal
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -142,22 +143,8 @@ async def _render_main(
     return await render_version(project, SongVersion.MAIN)
 
 
-async def _render_instrumental(
-    project: ExtendedProject,
-    vocals: reapy.core.Track,
-    vocal_loudness_worth: float,
-    verbose: int,
-) -> RenderResult:
-    tracks_to_mute = (vocals,)
-
-    with (
-        adjust_master_limiter_threshold(project, vocal_loudness_worth),
-        mute_tracks(tracks_to_mute),
-    ):
-        return await render_version(project, SongVersion.INSTRUMENTAL)
-
-
-async def _render_instrumental_dj(
+async def _render_version_with_muted_tracks(
+    version: Literal[SongVersion.INSTRUMENTAL, SongVersion.INSTRUMENTAL_DJ],
     project: ExtendedProject,
     tracks_to_mute: list[reapy.core.Track],
     vocal_loudness_worth: float,
@@ -167,7 +154,7 @@ async def _render_instrumental_dj(
         adjust_master_limiter_threshold(project, vocal_loudness_worth),
         mute_tracks(tracks_to_mute),
     ):
-        return await render_version(project, SongVersion.INSTRUMENTAL_DJ)
+        return await render_version(project, version)
 
 
 async def _render_a_cappella(
@@ -243,13 +230,18 @@ class Process:
                 )
             )
 
-        if SongVersion.INSTRUMENTAL in versions and vocals:
+        if SongVersion.INSTRUMENTAL in versions and find_vox_tracks_to_mute(project):
             results.append(
                 (
                     SongVersion.INSTRUMENTAL,
-                    lambda: _render_instrumental(
+                    lambda: _render_version_with_muted_tracks(
+                        SongVersion.INSTRUMENTAL,
                         project,
-                        vocals,
+                        [
+                            track
+                            for track in [vocals, *find_vox_tracks_to_mute(project)]
+                            if track
+                        ],
                         vocal_loudness_worth,
                         verbose,
                     ),
@@ -257,17 +249,14 @@ class Process:
                 )
             )
 
-        if SongVersion.INSTRUMENTAL_DJ in versions and find_vox_tracks_to_mute(project):
+        if SongVersion.INSTRUMENTAL_DJ in versions and vocals:
             results.append(
                 (
                     SongVersion.INSTRUMENTAL_DJ,
-                    lambda: _render_instrumental_dj(
+                    lambda: _render_version_with_muted_tracks(
+                        SongVersion.INSTRUMENTAL_DJ,
                         project,
-                        [
-                            track
-                            for track in [vocals, *find_vox_tracks_to_mute(project)]
-                            if track
-                        ],
+                        [vocals],
                         vocal_loudness_worth,
                         verbose,
                     ),

@@ -56,7 +56,9 @@ def test_main_noop(render_mocks: RenderMocks, snapshot: SnapshotAssertion) -> No
     If a project has no vocals, it does not make sense to render its instrumental nor cappella.
     """
     render_mocks.project.tracks = [
-        t for t in render_mocks.project.tracks if t.name != "Vocals"
+        t
+        for t in render_mocks.project.tracks
+        if t.name != "Vocals" and "(vox)" not in t.name.lower()
     ]
 
     result = CliRunner(mix_stderr=False).invoke(
