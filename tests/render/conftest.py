@@ -3,20 +3,33 @@
 import dataclasses
 import datetime
 import itertools
+import warnings
 from collections.abc import Collection, Iterator
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest import mock
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", message="Can't reach distant API")
+    import reapy
 
 import pytest
 
 
-def Track(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: N802
-    """Mock reapy's Track class."""
-    rv = mock.Mock()
+def Fx(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: N802
+    """Mock reapy's Fx class."""
+    rv = mock.create_autospec(reapy.core.FX)
     rv.name = name
     rv.params = params
-    return rv
+    return cast(mock.Mock, rv)
+
+
+def Track(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: N802
+    """Mock reapy's Track class."""
+    rv = mock.create_autospec(reapy.core.Track)
+    rv.name = name
+    rv.params = params
+    return cast(mock.Mock, rv)
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -50,10 +63,12 @@ def render_mocks(tmp_path: Path) -> Iterator[RenderMocks]:
           action) and rendering, writes a fake file with the expected filename.
     * Sets up the expected FX that would be in a project.
     """
-    threshold = mock.Mock()
+    threshold = mock.create_autospec(reapy.core.FXParam)
     threshold.name = "Threshold"
     threshold.normalized = -42.0
     threshold.functions = {"SetParamNormalized": mock.Mock()}
+    threshold.index = 0
+    threshold.parent_list = mock.create_autospec(reapy.core.FXParamsList)
 
     with (
         mock.patch(
@@ -91,10 +106,11 @@ def render_mocks(tmp_path: Path) -> Iterator[RenderMocks]:
         path.mkdir()
         project.path = str(path)
 
+        project.master_track = Track("Master Track")
         project.master_track.fxs = [
-            Track("ReaEQ"),
-            Track("ReaXComp"),
-            Track("Master Limiter", params=[threshold]),
+            Fx("ReaEQ"),
+            Fx("ReaXComp"),
+            Fx("Master Limiter", params=[threshold]),
         ]
 
         project.tracks = [Track(name="Vocals"), Track(name="Drums")]
