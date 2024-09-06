@@ -119,6 +119,7 @@ def test_main_all_versions(
         [
             "--include-main",
             "--include-instrumental",
+            "--include-instrumental-dj",
             "--include-acappella",
             "--include-stems",
         ],
@@ -153,6 +154,7 @@ def test_main_filenames_all_versions(
         [
             "--include-main",
             "--include-instrumental",
+            "--include-instrumental-dj",
             "--include-acappella",
             "--include-stems",
             *[str(path.resolve()) for path in some_paths],

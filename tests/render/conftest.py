@@ -115,7 +115,11 @@ def render_mocks(tmp_path: Path) -> Iterator[RenderMocks]:
             Fx("Master Limiter", params=[threshold]),
         ]
 
-        project.tracks = [Track(name="Vocals"), Track(name="Drums")]
+        project.tracks = [
+            Track(name="Vocals"),
+            Track(name="DJ Scratch (vox)"),
+            Track(name="Drums"),
+        ]
         project.set_info_string.side_effect = collect_render_patterns
         project.render.side_effect = render_fake_file
         mock_parse_summary_stats.side_effect = itertools.cycle(

@@ -23,13 +23,24 @@
    Rendered in 0:00:00, a infx 
              speedup           
   
-  Stub Song Title (feat. Stub Artist) (A Cappella)
-  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav
+  Stub Song Title (feat. Stub Artist) (DJ Instrumental)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (DJ Instrumental).wav
              ╷        ╷        
              │ Before │ After  
   ╶──────────┼────────┼───────╴
     duration │        │ 1.0    
     size     │        │ 42.0   
+             ╵        ╵        
+   Rendered in 0:00:00, a infx 
+             speedup           
+  
+  Stub Song Title (feat. Stub Artist) (A Cappella)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav
+             ╷        ╷        
+             │ Before │ After  
+  ╶──────────┼────────┼───────╴
+    duration │        │ 250.1  
+    size     │        │ 1024   
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
@@ -42,10 +53,11 @@
      ╵        ╵        
   Rendered in 0:00:00, 
      a infx speedup    
-  ✓ Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
-  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
-  ✓ Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
-  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist)"                   0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)"    0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (DJ Instrumental)" 0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"      0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Stems)"           0:00:00
   
   '''
 # ---
@@ -119,6 +131,39 @@
       tuple(
         'RENDER_PATTERN',
         'Stub Song Title (feat. Stub Artist) (Instrumental).tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'render',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Stub Song Title (feat. Stub Artist) (DJ Instrumental).tmp',
       ),
       dict({
       }),
@@ -271,6 +316,28 @@
           'ffmpeg',
           '-i',
           'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      '',
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (DJ Instrumental).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
@@ -612,13 +679,24 @@
    Rendered in 0:00:00, a infx 
              speedup           
   
-  Stub Song Title (feat. Stub Artist) (A Cappella)
-  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav
+  Stub Song Title (feat. Stub Artist) (DJ Instrumental)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (DJ Instrumental).wav
              ╷        ╷        
              │ Before │ After  
   ╶──────────┼────────┼───────╴
     duration │        │ 1.0    
     size     │        │ 42.0   
+             ╵        ╵        
+   Rendered in 0:00:00, a infx 
+             speedup           
+  
+  Stub Song Title (feat. Stub Artist) (A Cappella)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav
+             ╷        ╷        
+             │ Before │ After  
+  ╶──────────┼────────┼───────╴
+    duration │        │ 250.1  
+    size     │        │ 1024   
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
@@ -636,8 +714,8 @@
              ╷        ╷        
              │ Before │ After  
   ╶──────────┼────────┼───────╴
-    duration │ 250.1  │ 1.0    
-    size     │ 1024   │ 42.0   
+    duration │ 1.0    │ 250.1  
+    size     │ 42.0   │ 1024   
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
@@ -647,8 +725,19 @@
              ╷        ╷        
              │ Before │ After  
   ╶──────────┼────────┼───────╴
-    duration │ 250.1  │ 1.0    
-    size     │ 1024   │ 42.0   
+    duration │ 1.0    │ 250.1  
+    size     │ 42.0   │ 1024   
+             ╵        ╵        
+   Rendered in 0:00:00, a infx 
+             speedup           
+  
+  Stub Song Title (feat. Stub Artist) (DJ Instrumental)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (DJ Instrumental).wav
+             ╷        ╷        
+             │ Before │ After  
+  ╶──────────┼────────┼───────╴
+    duration │ 1.0    │ 250.1  
+    size     │ 42.0   │ 1024   
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
@@ -658,8 +747,8 @@
              ╷        ╷        
              │ Before │ After  
   ╶──────────┼────────┼───────╴
-    duration │ 250.1  │ 1.0    
-    size     │ 1024   │ 42.0   
+    duration │ 1.0    │ 250.1  
+    size     │ 42.0   │ 1024   
              ╵        ╵        
    Rendered in 0:00:00, a infx 
              speedup           
@@ -672,14 +761,16 @@
      ╵        ╵        
   Rendered in 0:00:00, 
      a infx speedup    
-  ✓ Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
-  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
-  ✓ Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
-  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
-  ✓ Rendering "Stub Song Title (feat. Stub Artist)"                0:00:00
-  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
-  ✓ Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"   0:00:00
-  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Stems)"        0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist)"                   0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)"    0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (DJ Instrumental)" 0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"      0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Stems)"           0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist)"                   0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)"    0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (DJ Instrumental)" 0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (A Cappella)"      0:00:00
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Stems)"           0:00:00
   
   '''
 # ---
@@ -753,6 +844,39 @@
       tuple(
         'RENDER_PATTERN',
         'Stub Song Title (feat. Stub Artist) (Instrumental).tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'render',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Stub Song Title (feat. Stub Artist) (DJ Instrumental).tmp',
       ),
       dict({
       }),
@@ -940,6 +1064,39 @@
       tuple(
         'RENDER_PATTERN',
         'Stub Song Title (feat. Stub Artist) (Instrumental).tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'render',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Stub Song Title (feat. Stub Artist) (DJ Instrumental).tmp',
       ),
       dict({
       }),
@@ -1113,6 +1270,28 @@
         list([
           'ffmpeg',
           '-i',
+          'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (DJ Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      '',
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
           'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav',
           '-filter:a',
           'areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=3.0:start_threshold=0.02,areverse,atrim=start=0.2,silenceremove=start_periods=1:start_silence=1.0:start_threshold=0.02',
@@ -1220,6 +1399,50 @@
           'ffmpeg',
           '-i',
           'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      '',
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (DJ Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+    _Call(
+      '',
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (DJ Instrumental).wav',
           '-filter:a',
           'volumedetect,ebur128=framelog=verbose',
           '-hide_banner',
