@@ -53,7 +53,9 @@ class RenderMocks:
 
 
 @pytest.fixture
-def render_mocks(tmp_path: Path) -> Iterator[RenderMocks]:
+def render_mocks(
+    master_track: reapy.core.Track, tmp_path: Path, tracks: list[reapy.core.Track]
+) -> Iterator[RenderMocks]:
     """Mock reapy's Project class and global settings functions.
 
     Stubs and occasionally fakes enough of a Project for coverage of this
@@ -63,15 +65,8 @@ def render_mocks(tmp_path: Path) -> Iterator[RenderMocks]:
         * Mostly returns stub output, ignoring the input.
         * The exception is after naming a render (via the "RENDER_PATTERN"
           action) and rendering, writes a fake file with the expected filename.
-    * Sets up the expected FX that would be in a project.
+    * Sets up typical tracks and FX that would be in a project.
     """
-    threshold = mock.create_autospec(reapy.core.FXParam)
-    threshold.name = "Threshold"
-    threshold.normalized = -42.0
-    threshold.functions = {"SetParamNormalized": mock.Mock()}
-    threshold.index = 0
-    threshold.parent_list = mock.create_autospec(reapy.core.FXParamsList)
-
     with (
         mock.patch(
             "music.__codegen__.stats.parse_summary_stats"
@@ -108,18 +103,9 @@ def render_mocks(tmp_path: Path) -> Iterator[RenderMocks]:
         path.mkdir()
         project.path = str(path)
 
-        project.master_track = Track("Master Track")
-        project.master_track.fxs = [
-            Fx("ReaEQ"),
-            Fx("ReaXComp"),
-            Fx("Master Limiter", params=[threshold]),
-        ]
+        project.master_track = master_track
+        project.tracks = tracks
 
-        project.tracks = [
-            Track(name="Vocals"),
-            Track(name="DJ Scratch (vox)"),
-            Track(name="Drums"),
-        ]
         project.set_info_string.side_effect = collect_render_patterns
         project.render.side_effect = render_fake_file
         mock_parse_summary_stats.side_effect = itertools.cycle(
@@ -145,6 +131,36 @@ def render_mocks(tmp_path: Path) -> Iterator[RenderMocks]:
             set_int_config_var=mock_set_int_config_var,
             upload=mock_upload,
         )
+
+
+@pytest.fixture
+def master_track() -> mock.Mock:
+    """Mock the master track of a project, with the typical FX I use."""
+    threshold = mock.create_autospec(reapy.core.FXParam)
+    threshold.name = "Threshold"
+    threshold.normalized = -42.0
+    threshold.functions = {"SetParamNormalized": mock.Mock()}
+    threshold.index = 0
+    threshold.parent_list = mock.create_autospec(reapy.core.FXParamsList)
+
+    rv = Track("Master Track")
+    rv.fxs = [
+        Fx("ReaEQ"),
+        Fx("ReaXComp"),
+        Fx("Master Limiter", params=[threshold]),
+    ]
+
+    return rv
+
+
+@pytest.fixture
+def tracks() -> list[mock.Mock]:
+    """Mock typical tracks in a project."""
+    return [
+        Track(name="Vocals"),
+        Track(name="DJ Scratch (vox)"),
+        Track(name="Drums"),
+    ]
 
 
 @pytest.fixture
