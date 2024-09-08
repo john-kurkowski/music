@@ -12,7 +12,7 @@ classifiers = [
 
 dependencies = [
     "aiofiles",
-    "aiohttp<3.10.0",
+    "aiohttp",
     "click",
     "openai",
     "python-reapy",
