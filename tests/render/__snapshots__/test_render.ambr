@@ -67,13 +67,7 @@
       'metadata.get',
       tuple(
         'vocal-loudness-worth',
-      ),
-      dict({
-      }),
-    ),
-    _Call(
-      'metadata.get().__bool__',
-      tuple(
+        2.0,
       ),
       dict({
       }),
@@ -441,13 +435,7 @@
       'metadata.get',
       tuple(
         'vocal-loudness-worth',
-      ),
-      dict({
-      }),
-    ),
-    _Call(
-      'metadata.get().__bool__',
-      tuple(
+        2.0,
       ),
       dict({
       }),
@@ -780,13 +768,7 @@
       'metadata.get',
       tuple(
         'vocal-loudness-worth',
-      ),
-      dict({
-      }),
-    ),
-    _Call(
-      'metadata.get().__bool__',
-      tuple(
+        2.0,
       ),
       dict({
       }),
@@ -1000,13 +982,7 @@
       'metadata.get',
       tuple(
         'vocal-loudness-worth',
-      ),
-      dict({
-      }),
-    ),
-    _Call(
-      'metadata.get().__bool__',
-      tuple(
+        2.0,
       ),
       dict({
       }),
@@ -1544,13 +1520,7 @@
       'metadata.get',
       tuple(
         'vocal-loudness-worth',
-      ),
-      dict({
-      }),
-    ),
-    _Call(
-      'metadata.get().__bool__',
-      tuple(
+        2.0,
       ),
       dict({
       }),
@@ -1684,13 +1654,7 @@
         'metadata.get',
         tuple(
           'vocal-loudness-worth',
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'metadata.get().__bool__',
-        tuple(
+          2.0,
         ),
         dict({
         }),
@@ -1827,13 +1791,7 @@
       'metadata.get',
       tuple(
         'vocal-loudness-worth',
-      ),
-      dict({
-      }),
-    ),
-    _Call(
-      'metadata.get().__bool__',
-      tuple(
+        2.0,
       ),
       dict({
       }),

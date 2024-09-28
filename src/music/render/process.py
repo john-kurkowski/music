@@ -216,7 +216,7 @@ class Process:
 
         if vocal_loudness_worth is None:
             vocal_loudness_worth = float(
-                project.metadata.get("vocal-loudness-worth") or VOCAL_LOUDNESS_WORTH
+                project.metadata.get("vocal-loudness-worth", VOCAL_LOUDNESS_WORTH)
             )
 
         results = []
