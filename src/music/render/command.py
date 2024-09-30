@@ -121,7 +121,12 @@ UploadResult = asyncio.Task[None]
 @click.option(
     "--upload-existing",
     default=False,
-    help='Whether to additionally upload existing renders to SoundCloud, unspecified by the "--include-*" flags.',
+    help=(
+        "Whether to additionally upload previous, not-yet-uploaded renders to"
+        ' SoundCloud, unspecified by the "--include-*" flags. (Previous renders that'
+        ' _are_ specified by the "--include-*" flags are re-rendered instead, as if'
+        " this flag was omitted.)"
+    ),
     is_flag=True,
 )
 @click.option(
