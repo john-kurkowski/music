@@ -7,6 +7,7 @@ from typing import Any
 from unittest import mock
 
 import pytest
+import pytest_socket  # type: ignore[import-untyped]
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
@@ -33,21 +34,12 @@ def some_paths(tmp_path: Path) -> list[Path]:
 
 def test_main_no_network_calls(some_paths: list[Path]) -> None:
     """Test that main network calls are blocked."""
-    # aiohttp 3.10.0 seems to swallow the conventional exception from
-    # pytest_socket, and then has its own, more generic, uncaught exception in
-    # a transitive project, aiohappyeyeballs. Instead of verifying
-    # pytest_socket directly, verify the exception from aiohappyeyeballs.
-    #
-    # with pytest.raises(pytest_socket.SocketBlockedError):
-    with pytest.raises(IndexError) as exc:
+    with pytest.raises(pytest_socket.SocketBlockedError):
         CliRunner(mix_stderr=False).invoke(
             upload,
             [str(path.parent.resolve()) for path in some_paths],
             catch_exceptions=False,
         )
-
-    if "aiohappyeyeballs" not in str(exc.traceback[-1].path):
-        raise exc.value
 
 
 def test_main_tracks_not_found(
