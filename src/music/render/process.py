@@ -230,7 +230,9 @@ class Process:
                 )
             )
 
-        if SongVersion.INSTRUMENTAL in versions and find_vox_tracks_to_mute(project):
+        if SongVersion.INSTRUMENTAL in versions and (
+            vocals or find_vox_tracks_to_mute(project)
+        ):
             results.append(
                 (
                     SongVersion.INSTRUMENTAL,
@@ -249,7 +251,14 @@ class Process:
                 )
             )
 
-        if SongVersion.INSTRUMENTAL_DJ in versions and vocals:
+        # SongVersion.INSTRUMENTAL_DJ only mutes the main vocal. However, if
+        # there are no other vox tracks, the version is identical to
+        # SongVersion.INSTRUMENTAL, and is skipped.
+        if (
+            SongVersion.INSTRUMENTAL_DJ in versions
+            and vocals
+            and find_vox_tracks_to_mute(project)
+        ):
             results.append(
                 (
                     SongVersion.INSTRUMENTAL_DJ,

@@ -63,7 +63,7 @@ def test_main_noop(render_mocks: RenderMocks, snapshot: SnapshotAssertion) -> No
 
     result = CliRunner(mix_stderr=False).invoke(
         render,
-        ["--include-instrumental", "--include-acappella"],
+        ["--include-instrumental", "--include-instrumental-dj", "--include-acappella"],
         catch_exceptions=False,
     )
 
@@ -100,6 +100,37 @@ def test_main_default_versions(
 ) -> None:
     """Test main with default versions."""
     result = CliRunner(mix_stderr=False).invoke(render, [], catch_exceptions=False)
+
+    assert not result.exception
+    assert result.stdout == snapshot
+    assert not result.stderr
+
+    assert render_mocks.project.mock_calls == snapshot
+    assert subprocess_with_output.mock_calls
+    assert subprocess_with_output.mock_calls == snapshot
+
+
+def test_main_instrumental_versions_only_main_vocals(
+    render_mocks: RenderMocks,
+    snapshot: SnapshotAssertion,
+    subprocess_with_output: mock.Mock,
+) -> None:
+    """Test main with 2 instrumental versions.
+
+    With only a main vocal track, only 1 instrumental version should render.
+    Otherwise the versions would be identical.
+
+    Other tests in this suite cover rendering 2 instrumental versions.
+    """
+    render_mocks.project.tracks = [
+        t for t in render_mocks.project.tracks if "(vox)" not in t.name.lower()
+    ]
+
+    result = CliRunner(mix_stderr=False).invoke(
+        render,
+        ["--include-instrumental", "--include-instrumental-dj"],
+        catch_exceptions=False,
+    )
 
     assert not result.exception
     assert result.stdout == snapshot

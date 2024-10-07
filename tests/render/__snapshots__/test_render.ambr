@@ -1498,6 +1498,108 @@
     ),
   ])
 # ---
+# name: test_main_instrumental_versions_only_main_vocals
+  '''
+  Stub Song Title (feat. Stub Artist) (Instrumental)
+  TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav
+             ╷        ╷        
+             │ Before │ After  
+  ╶──────────┼────────┼───────╴
+    duration │        │ 1.0    
+    size     │        │ 42.0   
+             ╵        ╵        
+   Rendered in 0:00:00, a infx 
+             speedup           
+  ✓ Rendering "Stub Song Title (feat. Stub Artist) (Instrumental)" 0:00:00
+  
+  '''
+# ---
+# name: test_main_instrumental_versions_only_main_vocals.1
+  _CallList([
+    _Call(
+      'metadata.get',
+      tuple(
+        'vocal-loudness-worth',
+        2.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'metadata.get().__float__',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_PATTERN',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'Stub Song Title (feat. Stub Artist) (Instrumental).tmp',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'render',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_PATTERN',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'save',
+      tuple(
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_main_instrumental_versions_only_main_vocals.2
+  _CallList([
+    _Call(
+      '',
+      tuple(
+        list([
+          'ffmpeg',
+          '-i',
+          'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+          '-filter:a',
+          'volumedetect,ebur128=framelog=verbose',
+          '-hide_banner',
+          '-nostats',
+          '-f',
+          'null',
+          '/dev/null',
+        ]),
+      ),
+      dict({
+        'check': True,
+        'stderr': -1,
+        'text': True,
+      }),
+    ),
+  ])
+# ---
 # name: test_main_main_version
   '''
   Stub Song Title (feat. Stub Artist)
