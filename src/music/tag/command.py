@@ -14,5 +14,5 @@ from .process import main as _tag
     type=click.Path(exists=True, path_type=Path),
 )
 def main(file: Path) -> None:
-    """Encode .wav FILE to .mp3 and tag with artist, album, and track number."""
+    """Encode FILE to .mp3 and tag with artist, etc metadata."""
     _tag(file)

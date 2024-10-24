@@ -18,7 +18,10 @@ import click
     type=click.Path(dir_okay=False, exists=True, file_okay=True, path_type=Path),
 )
 def main(dst_dir: Path, files: list[Path]) -> None:
-    """Export the given FILES to the given DST_DIR directory, in album order."""
+    """Export the given FILES to the given DST_DIR directory.
+
+    Exports in album order.
+    """
     dst_dir.mkdir(exist_ok=True)
 
     for i, src in enumerate(files):

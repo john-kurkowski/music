@@ -10,12 +10,12 @@
   
   Commands:
     codegen  Generate code for this package.
-    export   Export the given FILES to the given DST_DIR directory, in album...
+    export   Export the given FILES to the given DST_DIR directory.
     open     Show the folder containing the current project.
-    render   Render vocal, instrumental, etc.
-    stat     Print statistics, like LUFS-I and LRA, for the given audio files...
-    tag      Encode .wav FILE to .mp3 and tag with artist, album, and track...
-    upload   Upload rendered output of the PROJECT_DIRS Reaper projects to...
+    render   Render vocal, instrumental, etc versions of projects.
+    stat     Print statistics for the given audio files or project renders.
+    tag      Encode FILE to .mp3 and tag with artist, etc metadata.
+    upload   Upload PROJECT_DIRS renders.
   
   '''
 # ---

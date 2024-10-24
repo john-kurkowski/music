@@ -17,9 +17,12 @@ from music.util import SongVersion
 )
 @click.option("--verbose", "-v", count=True)
 def main(files_or_project_dirs: list[Path], verbose: int) -> None:
-    """Print statistics, like LUFS-I and LRA, for the given audio files or Reaper project directories's rendered versions FILES_OR_PROJECT_DIRS.
+    """Print statistics for the given audio files or project renders.
 
-    Defaults FILES_OR_PROJECT_DIRS to all rendered versions of the currently open project.
+    Prints audio statistics like LUFS-I and LRA. If input in
+    FILES_OR_PROJECT_DIRS is a folder, all that project's rendered versions
+    will be used. Defaults FILES_OR_PROJECT_DIRS to all rendered versions of
+    the currently open project.
     """
     if not files_or_project_dirs:
         files_or_project_dirs = [Path(music.util.ExtendedProject().path)]

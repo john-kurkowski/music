@@ -91,7 +91,10 @@ async def main(
     include_acappella: SongVersion | None,
     oauth_token: str,
 ) -> None:
-    """Upload rendered output of the PROJECT_DIRS Reaper projects to SoundCloud.
+    """Upload PROJECT_DIRS renders.
+
+    Uploads to SoundCloud. Renders with matching name must exist in SoundCloud
+    already, and will be overwritten.
 
     Defaults to uploading all rendered versions of the currently open project.
     """

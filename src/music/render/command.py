@@ -154,9 +154,10 @@ async def main(
     upload_existing: bool,
     vocal_loudness_worth: float | None,
 ) -> None:
-    """Render vocal, instrumental, etc. versions of the given PROJECT_DIRS Reaper projects.
+    """Render vocal, instrumental, etc versions of projects.
 
-    Defaults to rendering the currently open project.
+    Accepts 0 or more PROJECT_DIRS projects. Defaults to rendering the currently
+    open project.
 
     Overwrites existing versions. Prints statistics for each output file as it
     is rendered.
