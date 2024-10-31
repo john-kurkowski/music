@@ -72,9 +72,10 @@ def adjust_render_pattern(
     )
 
 
+@contextlib.contextmanager
 def adjust_render_settings(
     project: ExtendedProject, version: SongVersion
-) -> contextlib.AbstractContextManager[None]:
+) -> Iterator[None]:
     """Set the `project` RENDER_SETTINGS according to `version`, then restore the original value.
 
     This only changes anything for rendering stems. There are several Reaper
@@ -83,19 +84,21 @@ def adjust_render_settings(
     master track. While there, as a slight time and space efficiency, keep mono
     files in mono.
     """
-    if version != SongVersion.STEMS:
-        return contextlib.nullcontext()
-
-    render_settings = MONO_TRACKS_TO_MONO_FILES | SELECTED_TRACKS_VIA_MASTER
-
-    return get_set_restore(
-        partial(project.get_info_value, "RENDER_SETTINGS"),
-        partial(
-            project.set_info_value,
-            "RENDER_SETTINGS",
-        ),
-        cast(float, render_settings),
+    render_settings_ctx: contextlib.AbstractContextManager[None] = (
+        contextlib.nullcontext()
     )
+
+    if version == SongVersion.STEMS:
+        render_settings = MONO_TRACKS_TO_MONO_FILES | SELECTED_TRACKS_VIA_MASTER
+
+        render_settings_ctx = get_set_restore(
+            partial(project.get_info_value, "RENDER_SETTINGS"),
+            partial(project.set_info_value, "RENDER_SETTINGS"),
+            cast(float, render_settings),
+        )
+
+    with render_settings_ctx:
+        yield
 
 
 @contextlib.contextmanager
