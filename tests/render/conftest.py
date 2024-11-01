@@ -16,6 +16,14 @@ with warnings.catch_warnings():
 import pytest
 
 
+def Item(position: float, length: float) -> mock.Mock:  # noqa: N802
+    """Mock reapy's Item class."""
+    rv = mock.create_autospec(reapy.core.Item)
+    rv.position = position
+    rv.length = length
+    return cast(mock.Mock, rv)
+
+
 def Fx(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: N802
     """Mock reapy's Fx class."""
     rv = mock.create_autospec(reapy.core.FX)
@@ -29,6 +37,7 @@ def Track(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: 
     rv = mock.create_autospec(reapy.core.Track)
     rv.name = name
     rv.params = params
+    rv.items = [Item(float(i * i), (i * i) + 1.5) for i in range(1, 4)]
     rv.is_muted = False
     rv.parent_track = None
     return cast(mock.Mock, rv)

@@ -7,7 +7,7 @@ from functools import partial
 from pathlib import Path
 from typing import TypeVar, cast
 
-from music.util import ExtendedProject, SongVersion, set_param_value
+from music.util import ExtendedProject, SongVersion, recurse_property, set_param_value
 
 from .consts import (
     LIMITER_RANGE,
@@ -76,13 +76,18 @@ def adjust_render_pattern(
 def adjust_render_settings(
     project: ExtendedProject, version: SongVersion
 ) -> Iterator[None]:
-    """Set the `project` RENDER_SETTINGS according to `version`, then restore the original value.
+    """Set various `project` render settings according to `version`, then restore the original values.
 
-    This only changes anything for rendering stems. There are several Reaper
-    render presets for stems. The best one I've found for my conventions is
-    selecting tracks (elsewhere in this folder) and processing them through the
-    master track. While there, as a slight time and space efficiency, keep mono
-    files in mono.
+    This sets the render start and end to contain all unmuted media items.
+    Different song versions may therefore have different starts and ends and
+    durations. This is more flexible than a human remembering to set fixed,
+    custom times in the Reaper GUI, per song version.
+
+    When rendering the stems version, this function sets additional settings.
+    While there are several Reaper render presets for stems, the best one I've
+    found for my conventions is selecting tracks (elsewhere in this folder) and
+    processing them through the master track. As a slight time and space
+    efficiency, keep mono files in mono.
     """
     render_settings_ctx: contextlib.AbstractContextManager[None] = (
         contextlib.nullcontext()
@@ -97,7 +102,44 @@ def adjust_render_settings(
             cast(float, render_settings),
         )
 
-    with render_settings_ctx:
+    custom_time_bounds = 0
+    startpos = min(
+        (
+            item.position
+            for track in project.tracks
+            if not _is_muted(track)
+            for item in track.items
+        ),
+        default=0.0,
+    )
+    endpos = max(
+        (
+            item.position + item.length
+            for track in project.tracks
+            if not _is_muted(track)
+            for item in track.items
+        ),
+        default=0.0,
+    )
+
+    with (
+        render_settings_ctx,
+        get_set_restore(
+            partial(project.get_info_value, "RENDER_BOUNDSFLAG"),
+            partial(project.set_info_value, "RENDER_BOUNDSFLAG"),
+            cast(float, custom_time_bounds),
+        ),
+        get_set_restore(
+            partial(project.get_info_value, "RENDER_STARTPOS"),
+            partial(project.set_info_value, "RENDER_STARTPOS"),
+            startpos,
+        ),
+        get_set_restore(
+            partial(project.get_info_value, "RENDER_ENDPOS"),
+            partial(project.set_info_value, "RENDER_ENDPOS"),
+            endpos,
+        ),
+    ):
         yield
 
 
@@ -174,3 +216,10 @@ def toggle_fx_for_tracks(
     yield
     for fx in fxs:
         fx.is_enabled = not is_enabled
+
+
+def _is_muted(track: reapy.core.Track) -> bool:
+    return track.is_muted or any(
+        parent_track.is_muted
+        for parent_track in recurse_property("parent_track", track)
+    )

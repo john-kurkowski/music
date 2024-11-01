@@ -80,6 +80,57 @@
       }),
     ),
     _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -108,6 +159,84 @@
       tuple(
         'RENDER_PATTERN',
         'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
       ),
       dict({
       }),
@@ -146,6 +275,84 @@
       }),
     ),
     _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -174,6 +381,84 @@
       tuple(
         'RENDER_PATTERN',
         'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
       ),
       dict({
       }),
@@ -212,6 +497,33 @@
       }),
     ),
     _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_value',
       tuple(
         'RENDER_SETTINGS',
@@ -224,6 +536,57 @@
       tuple(
         'RENDER_SETTINGS',
         144,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
       ),
       dict({
       }),
@@ -256,6 +619,33 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
         'ASYNC_ITERABLE_HERE',
       ),
       dict({
@@ -448,6 +838,57 @@
       }),
     ),
     _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -476,6 +917,84 @@
       tuple(
         'RENDER_PATTERN',
         'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
       ),
       dict({
       }),
@@ -514,6 +1033,84 @@
       }),
     ),
     _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -541,6 +1138,33 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
         'ASYNC_ITERABLE_HERE',
       ),
       dict({
@@ -781,6 +1405,57 @@
       }),
     ),
     _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -809,6 +1484,84 @@
       tuple(
         'RENDER_PATTERN',
         'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
       ),
       dict({
       }),
@@ -847,6 +1600,84 @@
       }),
     ),
     _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -875,6 +1706,84 @@
       tuple(
         'RENDER_PATTERN',
         'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
       ),
       dict({
       }),
@@ -913,6 +1822,33 @@
       }),
     ),
     _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_value',
       tuple(
         'RENDER_SETTINGS',
@@ -925,6 +1861,57 @@
       tuple(
         'RENDER_SETTINGS',
         144,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
       ),
       dict({
       }),
@@ -957,6 +1944,33 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
         'ASYNC_ITERABLE_HERE',
       ),
       dict({
@@ -995,6 +2009,57 @@
       }),
     ),
     _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -1023,6 +2088,84 @@
       tuple(
         'RENDER_PATTERN',
         'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
       ),
       dict({
       }),
@@ -1061,6 +2204,84 @@
       }),
     ),
     _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -1089,6 +2310,84 @@
       tuple(
         'RENDER_PATTERN',
         'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
       ),
       dict({
       }),
@@ -1127,6 +2426,33 @@
       }),
     ),
     _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_value',
       tuple(
         'RENDER_SETTINGS',
@@ -1139,6 +2465,57 @@
       tuple(
         'RENDER_SETTINGS',
         144,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
       ),
       dict({
       }),
@@ -1171,6 +2548,33 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
         'ASYNC_ITERABLE_HERE',
       ),
       dict({
@@ -1533,6 +2937,57 @@
       }),
     ),
     _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -1560,6 +3015,33 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
         'ASYNC_ITERABLE_HERE',
       ),
       dict({
@@ -1635,6 +3117,57 @@
       }),
     ),
     _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
+        0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        1.0,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        19.5,
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_string',
       tuple(
         'RENDER_PATTERN',
@@ -1662,6 +3195,33 @@
       'set_info_string',
       tuple(
         'RENDER_PATTERN',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_ENDPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_STARTPOS',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_value',
+      tuple(
+        'RENDER_BOUNDSFLAG',
         'ASYNC_ITERABLE_HERE',
       ),
       dict({
@@ -1769,6 +3329,57 @@
         }),
       ),
       _Call(
+        'get_info_value',
+        tuple(
+          'RENDER_BOUNDSFLAG',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_value',
+        tuple(
+          'RENDER_BOUNDSFLAG',
+          0,
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'get_info_value',
+        tuple(
+          'RENDER_STARTPOS',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_value',
+        tuple(
+          'RENDER_STARTPOS',
+          1.0,
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'get_info_value',
+        tuple(
+          'RENDER_ENDPOS',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_value',
+        tuple(
+          'RENDER_ENDPOS',
+          19.5,
+        ),
+        dict({
+        }),
+      ),
+      _Call(
         'get_info_string',
         tuple(
           'RENDER_PATTERN',
@@ -1796,6 +3407,33 @@
         'set_info_string',
         tuple(
           'RENDER_PATTERN',
+          'ASYNC_ITERABLE_HERE',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_value',
+        tuple(
+          'RENDER_ENDPOS',
+          'ASYNC_ITERABLE_HERE',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_value',
+        tuple(
+          'RENDER_STARTPOS',
+          'ASYNC_ITERABLE_HERE',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_value',
+        tuple(
+          'RENDER_BOUNDSFLAG',
           'ASYNC_ITERABLE_HERE',
         ),
         dict({
