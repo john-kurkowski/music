@@ -269,9 +269,9 @@ class _Command:
 
         async for _, render in self.render_process.process(
             project,
-            self.versions,
-            self.vocal_loudness_worth,
+            *self.versions,
             verbose=0,
+            vocal_loudness_worth=self.vocal_loudness_worth,
         ):
             renders.append(render)
 

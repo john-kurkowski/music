@@ -5,7 +5,7 @@ import random
 import shutil
 import subprocess
 import warnings
-from collections.abc import AsyncIterator, Awaitable, Callable, Collection
+from collections.abc import AsyncIterator, Awaitable, Callable
 from functools import cached_property
 from pathlib import Path
 from timeit import default_timer as timer
@@ -200,9 +200,9 @@ class Process:
     async def process(
         self,
         project: ExtendedProject,
-        versions: Collection[SongVersion],
-        vocal_loudness_worth: float | None,
+        *versions: SongVersion,
         verbose: int,
+        vocal_loudness_worth: float | None,
     ) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
         """Render the given versions of the given Reaper project.
 
