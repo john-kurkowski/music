@@ -40,7 +40,7 @@ from .result import RenderResult
 from .tracks import find_acappella_tracks_to_mute, find_stems, find_vox_tracks_to_mute
 
 
-def summary_stats_for_file(fil: Path, verbose: int = 0) -> dict[str, float | str]:
+def summary_stats_for_file(fil: Path, *, verbose: int = 0) -> dict[str, float | str]:
     """Print statistics for the given audio file, like LUFS-I and LRA."""
     cmd = _cmd_for_stats(fil)
     proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
@@ -135,18 +135,18 @@ def trim_silence(fil: Path) -> None:
 
 
 async def _render_main(
-    project: ExtendedProject, vocals: reapy.core.Track | None, verbose: int
+    project: ExtendedProject, *vocals: reapy.core.Track, verbose: int
 ) -> RenderResult:
-    if vocals:
-        vocals.unsolo()
-        vocals.unmute()
+    for vocal in vocals:
+        vocal.unsolo()
+        vocal.unmute()
     return await render_version(project, SongVersion.MAIN)
 
 
 async def _render_version_with_muted_tracks(
     version: Literal[SongVersion.INSTRUMENTAL, SongVersion.INSTRUMENTAL_DJ],
     project: ExtendedProject,
-    tracks_to_mute: list[reapy.core.Track],
+    *tracks_to_mute: reapy.core.Track,
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
@@ -159,6 +159,7 @@ async def _render_version_with_muted_tracks(
 
 async def _render_a_cappella(
     project: ExtendedProject,
+    *,
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
@@ -176,12 +177,12 @@ async def _render_a_cappella(
 
 async def _render_stems(
     project: ExtendedProject,
-    vocals: reapy.core.Track | None,
+    *vocals: reapy.core.Track,
     verbose: int,
 ) -> RenderResult:
-    if vocals:
-        vocals.unsolo()
-        vocals.unmute()
+    for vocal in vocals:
+        vocal.unsolo()
+        vocal.unmute()
     for track in project.tracks:
         track.unselect()
     for track in find_stems(project):
@@ -210,9 +211,7 @@ class Process:
         no output. For example, if a project does not have vocals, rendering an a
         capella or instrumental version are skipped.
         """
-        vocals = next(
-            (track for track in project.tracks if track.name == "Vocals"), None
-        )
+        vocals = [track for track in project.tracks if track.name == "Vocals"]
 
         if vocal_loudness_worth is None:
             vocal_loudness_worth = float(
@@ -225,7 +224,7 @@ class Process:
             results.append(
                 (
                     SongVersion.MAIN,
-                    lambda: _render_main(project, vocals, verbose),
+                    lambda: _render_main(project, *vocals, verbose=verbose),
                     self._add_task(project, SongVersion.MAIN),
                 )
             )
@@ -239,13 +238,13 @@ class Process:
                     lambda: _render_version_with_muted_tracks(
                         SongVersion.INSTRUMENTAL,
                         project,
-                        [
+                        *[
                             track
-                            for track in [vocals, *find_vox_tracks_to_mute(project)]
+                            for track in [*vocals, *find_vox_tracks_to_mute(project)]
                             if track
                         ],
-                        vocal_loudness_worth,
-                        verbose,
+                        vocal_loudness_worth=vocal_loudness_worth,
+                        verbose=verbose,
                     ),
                     self._add_task(project, SongVersion.INSTRUMENTAL),
                 )
@@ -265,9 +264,9 @@ class Process:
                     lambda: _render_version_with_muted_tracks(
                         SongVersion.INSTRUMENTAL_DJ,
                         project,
-                        [vocals],
-                        vocal_loudness_worth,
-                        verbose,
+                        *vocals,
+                        vocal_loudness_worth=vocal_loudness_worth,
+                        verbose=verbose,
                     ),
                     self._add_task(project, SongVersion.INSTRUMENTAL_DJ),
                 )
@@ -277,7 +276,11 @@ class Process:
             results.append(
                 (
                     SongVersion.ACAPPELLA,
-                    lambda: _render_a_cappella(project, vocal_loudness_worth, verbose),
+                    lambda: _render_a_cappella(
+                        project,
+                        vocal_loudness_worth=vocal_loudness_worth,
+                        verbose=verbose,
+                    ),
                     self._add_task(project, SongVersion.ACAPPELLA),
                 )
             )
@@ -286,7 +289,7 @@ class Process:
             results.append(
                 (
                     SongVersion.STEMS,
-                    lambda: _render_stems(project, vocals, verbose),
+                    lambda: _render_stems(project, *vocals, verbose=verbose),
                     self._add_task(project, SongVersion.STEMS),
                 )
             )
@@ -343,7 +346,9 @@ class Process:
         before_stats = summary_stats_for_file(out_fil) if out_fil.is_file() else {}
         out = await render()
         after_stats = (
-            summary_stats_for_file(out_fil, verbose) if out_fil.is_file() else {}
+            summary_stats_for_file(out_fil, verbose=verbose)
+            if out_fil.is_file()
+            else {}
         )
 
         self.console.print(f"[b default]{name}[/b default]")
