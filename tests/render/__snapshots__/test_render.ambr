@@ -3311,6 +3311,32 @@
         }),
       ),
     ]),
+    'inside_reaper': _CallList([
+      _Call(
+        '',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        '().__enter__',
+        tuple(
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        '().__exit__',
+        tuple(
+          None,
+          None,
+          None,
+        ),
+        dict({
+        }),
+      ),
+    ]),
     'project': _CallList([
       _Call(
         'metadata.get',

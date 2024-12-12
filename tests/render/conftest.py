@@ -60,6 +60,7 @@ class RenderMocks:
 
     duration_delta: mock.Mock
     get_int_config_var: mock.Mock
+    inside_reaper: mock.Mock
     project: mock.Mock
     set_int_config_var: mock.Mock
     upload: mock.Mock
@@ -96,6 +97,7 @@ def render_mocks(
             "music.render.process.RenderResult.duration_delta",
             new_callable=mock.PropertyMock,
         ) as mock_duration_delta,
+        mock.patch("reapy.inside_reaper") as mock_inside_reaper,
         mock.patch(
             "reapy.reascript_api.SNM_GetIntConfigVar", create=True
         ) as mock_get_int_config_var,
@@ -147,6 +149,7 @@ def render_mocks(
         yield RenderMocks(
             duration_delta=mock_duration_delta,
             get_int_config_var=mock_get_int_config_var,
+            inside_reaper=mock_inside_reaper,
             project=project,
             set_int_config_var=mock_set_int_config_var,
             upload=mock_upload,

@@ -103,25 +103,26 @@ def adjust_render_settings(
         )
 
     custom_time_bounds = 0
-    startpos = min(
-        (
-            item.position
-            for track in project.tracks
-            if not _is_muted(track)
-            for item in track.items
-        ),
-        default=0.0,
-    )
-    endpos = max(
-        (
-            item.position + item.length
-            for track in project.tracks
-            if not _is_muted(track)
-            for item in track.items
-            if not item.get_info_value("B_MUTE_ACTUAL")
-        ),
-        default=0.0,
-    )
+    with reapy.inside_reaper():
+        startpos = min(
+            (
+                item.position
+                for track in project.tracks
+                if not _is_muted(track)
+                for item in track.items
+            ),
+            default=0.0,
+        )
+        endpos = max(
+            (
+                item.position + item.length
+                for track in project.tracks
+                if not _is_muted(track)
+                for item in track.items
+                if not item.get_info_value("B_MUTE_ACTUAL")
+            ),
+            default=0.0,
+        )
 
     with (
         render_settings_ctx,
