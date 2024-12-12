@@ -15,18 +15,18 @@
       '',
       tuple(
         'TMP_PATH_HERE/path/to/Album Title Here/01 - Song Title Here.wav',
-        0,
       ),
       dict({
+        'verbose': 0,
       }),
     ),
     _Call(
       '',
       tuple(
         'TMP_PATH_HERE/path/to/Album Title Here/02 - Song Title Here.wav',
-        0,
       ),
       dict({
+        'verbose': 0,
       }),
     ),
   ])
@@ -58,18 +58,18 @@
       '',
       tuple(
         'TMP_PATH_HERE/path/to/Song Title Here/Song Title Here.wav',
-        0,
       ),
       dict({
+        'verbose': 0,
       }),
     ),
     _Call(
       '',
       tuple(
         'TMP_PATH_HERE/path/to/Song Title Here/Song Title Here (A Cappella).wav',
-        0,
       ),
       dict({
+        'verbose': 0,
       }),
     ),
   ])
