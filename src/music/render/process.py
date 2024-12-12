@@ -302,7 +302,9 @@ class Process:
 
             yield (
                 version,
-                await self._print_stats_for_render(project, version, verbose, render),
+                await self._print_stats_for_render(
+                    project, version, render, verbose=verbose
+                ),
             )
 
             self.progress.update(task, advance=1)
@@ -333,8 +335,9 @@ class Process:
         self,
         project: ExtendedProject,
         version: SongVersion,
-        verbose: int,
         render: Callable[[], Awaitable[RenderResult]],
+        *,
+        verbose: int,
     ) -> RenderResult:
         """Collect and print before and after summary statistics for the given project version render.
 
