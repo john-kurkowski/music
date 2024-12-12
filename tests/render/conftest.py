@@ -16,11 +16,19 @@ with warnings.catch_warnings():
 import pytest
 
 
-def Item(position: float, length: float) -> mock.Mock:  # noqa: N802
+def Item(position: float, length: float, is_muted: bool) -> mock.Mock:  # noqa: N802
     """Mock reapy's Item class."""
     rv = mock.create_autospec(reapy.core.Item)
     rv.position = position
     rv.length = length
+
+    def get_info_value(param_name: str) -> Any:
+        if param_name == "B_MUTE_ACTUAL":
+            return is_muted
+        return mock.DEFAULT
+
+    rv.get_info_value.side_effect = get_info_value
+
     return cast(mock.Mock, rv)
 
 
@@ -37,7 +45,10 @@ def Track(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: 
     rv = mock.create_autospec(reapy.core.Track)
     rv.name = name
     rv.params = params
-    rv.items = [Item(float(i * i), (i * i) + 1.5) for i in range(1, 4)]
+    rv.items = [
+        Item(float(i * i), (i * i) + 1.5, is_muted)
+        for i, is_muted in [(1, False), (2, False), (3, False), (4, True)]
+    ]
     rv.is_muted = False
     rv.parent_track = None
     return cast(mock.Mock, rv)

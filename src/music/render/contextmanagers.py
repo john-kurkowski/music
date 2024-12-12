@@ -78,9 +78,9 @@ def adjust_render_settings(
 ) -> Iterator[None]:
     """Set various `project` render settings according to `version`, then restore the original values.
 
-    This sets the render start and end to contain all unmuted media items.
-    Different song versions may therefore have different starts and ends and
-    durations. This is more flexible than a human remembering to set fixed,
+    This sets the render start and end times to contain all unmuted media
+    items. Different song versions may therefore have different starts and ends
+    and durations. This is more flexible than a human remembering to set fixed,
     custom times in the Reaper GUI, per song version.
 
     When rendering the stems version, this function sets additional settings.
@@ -118,6 +118,7 @@ def adjust_render_settings(
             for track in project.tracks
             if not _is_muted(track)
             for item in track.items
+            if not item.get_info_value("B_MUTE_ACTUAL")
         ),
         default=0.0,
     )
