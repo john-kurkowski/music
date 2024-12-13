@@ -7,15 +7,48 @@ import subprocess
 from functools import cached_property
 from pathlib import Path
 
+from music.__codegen__ import stats
+from music.util import ExtendedProject, SongVersion
 
-class RenderResult:
+
+class ExistingRenderResult:
     """Summary statistics of an audio render.
 
     Rounds times to the nearest second. Microseconds are irrelevant for human DAW operators.
     """
 
-    def __init__(self, fil: Path, render_delta: datetime.timedelta):
+    def __init__(self, project: ExtendedProject, version: SongVersion):
         """Initialize."""
+        self.project = project
+        self.version = version
+        self.fil = version.path_for_project_dir(Path(project.path))
+
+    @property
+    def name(self) -> str:
+        """Name of the project."""
+        return self.version.name_for_project_dir(Path(self.project.path))
+
+    @cached_property
+    def summary_stats(self) -> dict[str, float | str]:
+        """Statistics for the given audio file, like LUFS-I and LRA."""
+        return summary_stats_for_file(self.fil) if self.fil.is_file() else {}
+
+
+class RenderResult(ExistingRenderResult):
+    """Summary statistics of an audio render.
+
+    Rounds times to the nearest second. Microseconds are irrelevant for human DAW operators.
+    """
+
+    def __init__(
+        self,
+        project: ExtendedProject,
+        version: SongVersion,
+        fil: Path,
+        render_delta: datetime.timedelta,
+    ):
+        """Override. Initialize."""
+        super().__init__(project, version)
         self.fil = fil
         self.render_delta = datetime.timedelta(seconds=round(render_delta.seconds))
 
@@ -48,3 +81,26 @@ class RenderResult:
         return (
             (self.duration_delta / self.render_delta) if self.render_delta else math.inf
         )
+
+
+def summary_stats_for_file(fil: Path, *, verbose: int = 0) -> dict[str, float | str]:
+    """Print statistics for the given audio file, like LUFS-I and LRA."""
+    cmd = _cmd_for_stats(fil)
+    proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
+    proc_output = proc.stderr
+    return stats.parse_summary_stats(proc_output)
+
+
+def _cmd_for_stats(fil: Path) -> list[str | Path]:
+    return [
+        "ffmpeg",
+        "-i",
+        fil,
+        "-filter:a",
+        ",".join(("volumedetect", "ebur128=framelog=verbose")),
+        "-hide_banner",
+        "-nostats",
+        "-f",
+        "null",
+        "/dev/null",
+    ]

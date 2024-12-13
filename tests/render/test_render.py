@@ -24,12 +24,14 @@ def test_render_result_render_speedup(
     duration=23.209501
     [/FORMAT]
     """
+    project = mock.Mock(path="some/path")
+    version = mock.Mock()
 
     some_file = tmp_path / "foo.wav"
     some_file.touch()
 
-    obj1 = RenderResult(some_file, datetime.timedelta(seconds=4.5))
-    obj2 = RenderResult(some_file, datetime.timedelta(seconds=0.1))
+    obj1 = RenderResult(project, version, some_file, datetime.timedelta(seconds=4.5))
+    obj2 = RenderResult(project, version, some_file, datetime.timedelta(seconds=0.1))
 
     assert obj1.render_speedup == 5.75
     assert obj2.render_speedup == math.inf

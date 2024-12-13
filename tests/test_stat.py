@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from music.stat.command import main as stat
 
 
-@mock.patch("music.render.process.summary_stats_for_file")
+@mock.patch("music.render.result.summary_stats_for_file")
 def test_main_files(
     mock_stats_for_file: mock.Mock, snapshot: SnapshotAssertion, tmp_path: Path
 ) -> None:
@@ -35,7 +35,7 @@ def test_main_files(
     assert mock_stats_for_file.mock_calls == snapshot
 
 
-@mock.patch("music.render.process.summary_stats_for_file")
+@mock.patch("music.render.result.summary_stats_for_file")
 @mock.patch("music.util.ExtendedProject", autospec=True)
 def test_main_no_args(
     mock_project: mock.Mock,

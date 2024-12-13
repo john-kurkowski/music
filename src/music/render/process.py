@@ -20,7 +20,6 @@ import rich.console
 import rich.progress
 import rich.table
 
-from music.__codegen__ import stats
 from music.util import (
     ExtendedProject,
     SongVersion,
@@ -36,31 +35,8 @@ from .contextmanagers import (
     mute_tracks,
     toggle_fx_for_tracks,
 )
-from .result import RenderResult
+from .result import ExistingRenderResult, RenderResult
 from .tracks import find_acappella_tracks_to_mute, find_stems, find_vox_tracks_to_mute
-
-
-def summary_stats_for_file(fil: Path, *, verbose: int = 0) -> dict[str, float | str]:
-    """Print statistics for the given audio file, like LUFS-I and LRA."""
-    cmd = _cmd_for_stats(fil)
-    proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
-    proc_output = proc.stderr
-    return stats.parse_summary_stats(proc_output)
-
-
-def _cmd_for_stats(fil: Path) -> list[str | Path]:
-    return [
-        "ffmpeg",
-        "-i",
-        fil,
-        "-filter:a",
-        ",".join(("volumedetect", "ebur128=framelog=verbose")),
-        "-hide_banner",
-        "-nostats",
-        "-f",
-        "null",
-        "/dev/null",
-    ]
 
 
 async def render_version(
@@ -98,7 +74,9 @@ async def render_version(
     rm_rf(out_fil)
     shutil.move(tmp_fil, out_fil)
 
-    return RenderResult(out_fil, datetime.timedelta(seconds=time_end - time_start))
+    return RenderResult(
+        project, version, out_fil, datetime.timedelta(seconds=time_end - time_start)
+    )
 
 
 def trim_silence(fil: Path) -> None:
@@ -303,7 +281,7 @@ class Process:
             yield (
                 version,
                 await self._print_stats_for_render(
-                    project, version, render, verbose=verbose
+                    ExistingRenderResult(project, version), render, verbose=verbose
                 ),
             )
 
@@ -333,8 +311,7 @@ class Process:
 
     async def _print_stats_for_render(
         self,
-        project: ExtendedProject,
-        version: SongVersion,
+        existing_render: ExistingRenderResult,
         render: Callable[[], Awaitable[RenderResult]],
         *,
         verbose: int,
@@ -343,18 +320,11 @@ class Process:
 
         Returns the rendered file, after pretty printing itsprogress and metadata.
         """
-        name = version.name_for_project_dir(Path(project.path))
-        out_fil = version.path_for_project_dir(Path(project.path))
-
-        before_stats = summary_stats_for_file(out_fil) if out_fil.is_file() else {}
+        before_stats = existing_render.summary_stats
         out = await render()
-        after_stats = (
-            summary_stats_for_file(out_fil, verbose=verbose)
-            if out_fil.is_file()
-            else {}
-        )
+        after_stats = out.summary_stats
 
-        self.console.print(f"[b default]{name}[/b default]")
+        self.console.print(f"[b default]{out.name}[/b default]")
         self.console.print(f"[default dim italic]{out.fil}[/default dim italic]")
 
         table = rich.table.Table(
