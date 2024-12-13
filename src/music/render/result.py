@@ -46,11 +46,19 @@ class RenderResult(ExistingRenderResult):
         version: SongVersion,
         fil: Path,
         render_delta: datetime.timedelta,
+        *,
+        eager: bool = False,
     ):
         """Override. Initialize."""
         super().__init__(project, version)
         self.fil = fil
         self.render_delta = datetime.timedelta(seconds=round(render_delta.seconds))
+
+        if eager:
+            # Trigger computation eagerly. For example, the input file might be
+            # temporary and not exist later.
+            self.duration_delta  # noqa: B018
+            self.summary_stats  # noqa: B018
 
     @cached_property
     def duration_delta(self) -> datetime.timedelta:

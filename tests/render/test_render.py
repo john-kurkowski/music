@@ -112,6 +112,25 @@ def test_main_default_versions(
     assert subprocess_with_output.mock_calls == snapshot
 
 
+def test_main_default_versions_dry_run(
+    render_mocks: RenderMocks,
+    snapshot: SnapshotAssertion,
+    subprocess_with_output: mock.Mock,
+) -> None:
+    """Test main dry run, with default versions."""
+    result = CliRunner(mix_stderr=False).invoke(
+        render, ["--dry-run"], catch_exceptions=False
+    )
+
+    assert not result.exception
+    assert result.stdout == snapshot
+    assert not result.stderr
+
+    assert render_mocks.project.mock_calls == snapshot
+    assert subprocess_with_output.mock_calls
+    assert subprocess_with_output.mock_calls == snapshot
+
+
 def test_main_instrumental_versions_only_main_vocals(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,

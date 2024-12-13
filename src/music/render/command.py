@@ -52,6 +52,15 @@ UploadResult = asyncio.Task[None]
     ),
 )
 @click.option(
+    "--dry-run",
+    default=False,
+    help=(
+        "Whether to actually write changes to disk or upload, while still"
+        " performing the render."
+    ),
+    is_flag=True,
+)
+@click.option(
     "--include-main",
     default=None,
     flag_value=SongVersion.MAIN,
@@ -144,6 +153,7 @@ UploadResult = asyncio.Task[None]
 async def main(
     project_dirs: list[Path],
     additional_headers: str,
+    dry_run: bool,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_instrumental_dj: SongVersion | None,
@@ -191,6 +201,7 @@ async def main(
 
     command = _Command(
         parsed_additional_headers,
+        dry_run,
         oauth_token,
         upload,
         upload_existing,
@@ -208,6 +219,7 @@ class _Command:
     """Wrap parsed command line arguments."""
 
     additional_headers: dict[str, str]
+    dry_run: bool
     oauth_token: str
     upload: bool
     upload_existing: bool
@@ -255,7 +267,7 @@ class _Command:
         renders = []
         uploads = []
 
-        if self.upload_existing:
+        if self.upload_existing and not self.dry_run:
             uploads.append(
                 asyncio.create_task(
                     self.upload_process.process(
@@ -270,12 +282,13 @@ class _Command:
         async for _, render in self.render_process.process(
             project,
             *self.versions,
+            dry_run=self.dry_run,
             verbose=0,
             vocal_loudness_worth=self.vocal_loudness_worth,
         ):
             renders.append(render)
 
-            if self.upload and render.fil.is_file():
+            if self.upload and render.fil.is_file() and not self.dry_run:
                 uploads.append(
                     asyncio.create_task(
                         self.upload_process.process(
