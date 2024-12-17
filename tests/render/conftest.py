@@ -6,7 +6,7 @@ import itertools
 import warnings
 from collections.abc import Collection, Iterator
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 from unittest import mock
 
 with warnings.catch_warnings():
@@ -18,7 +18,7 @@ import pytest
 
 def Item(position: float, length: float, is_muted: bool) -> mock.Mock:  # noqa: N802
     """Mock reapy's Item class."""
-    rv = mock.create_autospec(reapy.core.Item)
+    rv = mock.Mock()
     rv.position = position
     rv.length = length
 
@@ -29,20 +29,20 @@ def Item(position: float, length: float, is_muted: bool) -> mock.Mock:  # noqa: 
 
     rv.get_info_value.side_effect = get_info_value
 
-    return cast(mock.Mock, rv)
+    return rv
 
 
 def Fx(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: N802
     """Mock reapy's Fx class."""
-    rv = mock.create_autospec(reapy.core.FX)
+    rv = mock.Mock()
     rv.name = name
     rv.params = params
-    return cast(mock.Mock, rv)
+    return rv
 
 
 def Track(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: N802
     """Mock reapy's Track class."""
-    rv = mock.create_autospec(reapy.core.Track)
+    rv = mock.Mock()
     rv.name = name
     rv.params = params
     rv.items = [
@@ -51,7 +51,7 @@ def Track(name: str, params: Collection[mock.Mock] = ()) -> mock.Mock:  # noqa: 
     ]
     rv.is_muted = False
     rv.parent_track = None
-    return cast(mock.Mock, rv)
+    return rv
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -159,12 +159,12 @@ def render_mocks(
 @pytest.fixture
 def master_track() -> mock.Mock:
     """Mock the master track of a project, with the typical FX I use."""
-    threshold = mock.create_autospec(reapy.core.FXParam)
+    threshold = mock.Mock()
     threshold.name = "Threshold"
     threshold.normalized = -42.0
     threshold.functions = {"SetParamNormalized": mock.Mock()}
     threshold.index = 0
-    threshold.parent_list = mock.create_autospec(reapy.core.FXParamsList)
+    threshold.parent_list = mock.Mock()
 
     rv = Track("Master Track")
     rv.fxs = [
