@@ -59,10 +59,8 @@ def snapshot(
             return "CLIENT_SESSION_HERE"
         elif isinstance(data, AsyncIterable):
             return "ASYNC_ITERABLE_HERE"
-        elif isinstance(data, Path) or isinstance(data, io.IOBase):
-            return str(data).replace(tmp_path_str, "TMP_PATH_HERE")
-        elif isinstance(data, str):
-            without_tmp_id = tmp_id_re.sub(r"\g<ext>", data)
+        elif isinstance(data, Path | io.IOBase | str):
+            without_tmp_id = tmp_id_re.sub(r"\g<ext>", str(data))
             without_path = without_tmp_id.replace(tmp_path_str, "TMP_PATH_HERE")
             return without_path
         return data
