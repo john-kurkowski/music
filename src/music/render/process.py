@@ -40,7 +40,7 @@ from .tracks import find_acappella_tracks_to_mute, find_stems, find_vox_tracks_t
 
 
 async def render_version(
-    project: ExtendedProject, version: SongVersion
+    project: ExtendedProject, version: SongVersion, *, dry_run: bool
 ) -> RenderResult:
     """Trigger Reaper to render the current project audio. Returns the output file.
 
@@ -71,12 +71,22 @@ async def render_version(
     else:
         tmp_fil = out_fil.with_stem(in_name)
 
-    rm_rf(out_fil)
-    shutil.move(tmp_fil, out_fil)
-
-    return RenderResult(
-        project, version, out_fil, datetime.timedelta(seconds=time_end - time_start)
+    final_fil = tmp_fil if dry_run else out_fil
+    result = RenderResult(
+        project,
+        version,
+        final_fil,
+        datetime.timedelta(seconds=time_end - time_start),
+        eager=dry_run,
     )
+
+    if dry_run:
+        rm_rf(tmp_fil)
+    else:
+        rm_rf(final_fil)
+        shutil.move(tmp_fil, final_fil)
+
+    return result
 
 
 def trim_silence(fil: Path) -> None:
@@ -113,18 +123,19 @@ def trim_silence(fil: Path) -> None:
 
 
 async def _render_main(
-    project: ExtendedProject, *vocals: reapy.core.Track, verbose: int
+    project: ExtendedProject, *vocals: reapy.core.Track, dry_run: bool, verbose: int
 ) -> RenderResult:
     for vocal in vocals:
         vocal.unsolo()
         vocal.unmute()
-    return await render_version(project, SongVersion.MAIN)
+    return await render_version(project, SongVersion.MAIN, dry_run=dry_run)
 
 
 async def _render_version_with_muted_tracks(
     version: Literal[SongVersion.INSTRUMENTAL, SongVersion.INSTRUMENTAL_DJ],
     project: ExtendedProject,
     *tracks_to_mute: reapy.core.Track,
+    dry_run: bool,
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
@@ -132,12 +143,13 @@ async def _render_version_with_muted_tracks(
         adjust_master_limiter_threshold(project, vocal_loudness_worth),
         mute_tracks(tracks_to_mute),
     ):
-        return await render_version(project, version)
+        return await render_version(project, version, dry_run=dry_run)
 
 
 async def _render_a_cappella(
     project: ExtendedProject,
     *,
+    dry_run: bool,
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
@@ -147,7 +159,7 @@ async def _render_a_cappella(
         adjust_master_limiter_threshold(project, vocal_loudness_worth),
         mute_tracks(tracks_to_mute),
     ):
-        out = await render_version(project, SongVersion.ACAPPELLA)
+        out = await render_version(project, SongVersion.ACAPPELLA, dry_run=dry_run)
 
     trim_silence(out.fil)
     return out
@@ -156,6 +168,7 @@ async def _render_a_cappella(
 async def _render_stems(
     project: ExtendedProject,
     *vocals: reapy.core.Track,
+    dry_run: bool,
     verbose: int,
 ) -> RenderResult:
     for vocal in vocals:
@@ -166,7 +179,7 @@ async def _render_stems(
     for track in find_stems(project):
         track.select()
     with toggle_fx_for_tracks([project.master_track], is_enabled=False):
-        return await render_version(project, SongVersion.STEMS)
+        return await render_version(project, SongVersion.STEMS, dry_run=dry_run)
 
 
 class Process:
@@ -180,6 +193,7 @@ class Process:
         self,
         project: ExtendedProject,
         *versions: SongVersion,
+        dry_run: bool,
         verbose: int,
         vocal_loudness_worth: float | None,
     ) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
@@ -202,7 +216,9 @@ class Process:
             results.append(
                 (
                     SongVersion.MAIN,
-                    lambda: _render_main(project, *vocals, verbose=verbose),
+                    lambda: _render_main(
+                        project, *vocals, dry_run=dry_run, verbose=verbose
+                    ),
                     self._add_task(project, SongVersion.MAIN),
                 )
             )
@@ -221,6 +237,7 @@ class Process:
                             for track in [*vocals, *find_vox_tracks_to_mute(project)]
                             if track
                         ],
+                        dry_run=dry_run,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
@@ -243,6 +260,7 @@ class Process:
                         SongVersion.INSTRUMENTAL_DJ,
                         project,
                         *vocals,
+                        dry_run=dry_run,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
@@ -256,6 +274,7 @@ class Process:
                     SongVersion.ACAPPELLA,
                     lambda: _render_a_cappella(
                         project,
+                        dry_run=dry_run,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
@@ -267,7 +286,9 @@ class Process:
             results.append(
                 (
                     SongVersion.STEMS,
-                    lambda: _render_stems(project, *vocals, verbose=verbose),
+                    lambda: _render_stems(
+                        project, *vocals, dry_run=dry_run, verbose=verbose
+                    ),
                     self._add_task(project, SongVersion.STEMS),
                 )
             )
