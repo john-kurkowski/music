@@ -251,6 +251,7 @@ def test_main_mocked_calls(
     result = CliRunner(mix_stderr=False).invoke(
         render,
         [
+            "--exit",
             "--include-main",
             "--upload",
             "--upload-existing",

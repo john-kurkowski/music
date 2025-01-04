@@ -61,6 +61,13 @@ UploadResult = asyncio.Task[None]
     is_flag=True,
 )
 @click.option(
+    "--exit",
+    "exit_",
+    default=False,
+    help="Exit the DAW after all renders are successful.",
+    is_flag=True,
+)
+@click.option(
     "--include-main",
     default=None,
     flag_value=SongVersion.MAIN,
@@ -154,6 +161,7 @@ async def main(
     project_dirs: list[Path],
     additional_headers: str,
     dry_run: bool,
+    exit_: bool,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_instrumental_dj: SongVersion | None,
@@ -202,6 +210,7 @@ async def main(
     command = _Command(
         parsed_additional_headers,
         dry_run,
+        exit_,
         oauth_token,
         upload,
         upload_existing,
@@ -220,6 +229,7 @@ class _Command:
 
     additional_headers: dict[str, str]
     dry_run: bool
+    exit_: bool
     oauth_token: str
     upload: bool
     upload_existing: bool
@@ -232,7 +242,10 @@ class _Command:
     ) -> None:
         """Initialize properties not provided by the caller."""
         self.console = rich.console.Console(width=_CONSOLE_WIDTH)
-        self.render_process = music.render.process.Process(self.console)
+        self.console_err = rich.console.Console(stderr=True, style="bold red")
+        self.render_process = music.render.process.Process(
+            self.console, self.console_err
+        )
         self.upload_process = music.upload.process.Process(self.console)
 
     async def __call__(self) -> tuple[list[RenderResult], list[BaseException | None]]:
@@ -252,6 +265,7 @@ class _Command:
                 ):
                     renders.extend(renders_)
                     uploads.extend(uploads_)
+
                 return renders, await asyncio.gather(*uploads, return_exceptions=True)
 
     async def _render_project(
@@ -283,6 +297,7 @@ class _Command:
             project,
             *self.versions,
             dry_run=self.dry_run,
+            exit_=self.exit_,
             verbose=0,
             vocal_loudness_worth=self.vocal_loudness_worth,
         ):

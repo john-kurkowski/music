@@ -200,19 +200,21 @@ def subprocess() -> Iterator[mock.Mock]:
 def subprocess_with_output(
     subprocess: mock.Mock, tmp_path: Path
 ) -> Iterator[mock.Mock]:
-    """Stub subprocess.run and simulate subprocesses writing output files."""
+    """Stub subprocess.run to simulate subprocesses."""
 
-    def write_out_file(*args: list[str | Path], **kwargs: Any) -> mock.Mock:
+    def mock_subprocess(*args: list[str | Path], **kwargs: Any) -> mock.Mock:
         rv = mock.Mock()
         cmd_args = args[0]
 
-        if cmd_args[0] == "ffmpeg":
+        if cmd_args[0] == "ffmpeg":  # write out file
             rv.stderr = ""
 
             out_fil = Path(cmd_args[-1])
             out_fil.touch()
+        elif str(cmd_args[0]).endswith("REAPER"):  # "exit" reaper
+            rv.stdout = "Mock exited REAPER verbosely ✅"
 
         return rv
 
-    subprocess.side_effect = write_out_file
+    subprocess.side_effect = mock_subprocess
     yield subprocess

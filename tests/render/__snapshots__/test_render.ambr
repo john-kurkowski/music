@@ -3767,7 +3767,10 @@
       ✓ Rendering "Stub Song Title (feat. Stub Artist)" 0:00:00
   
     ''',
-    '',
+    '''
+      Mock exited REAPER verbosely ✅
+  
+    ''',
     dict({
       'duration_delta': _CallList([
       ]),

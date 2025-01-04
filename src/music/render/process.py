@@ -185,15 +185,19 @@ async def _render_stems(
 class Process:
     """Encapsulate the state of rendering a Reaper project."""
 
-    def __init__(self, console: rich.console.Console) -> None:
+    def __init__(
+        self, console: rich.console.Console, console_err: rich.console.Console
+    ) -> None:
         """Initialize."""
         self.console = console
+        self.console_err = console_err
 
-    async def process(
+    async def process(  # noqa: C901
         self,
         project: ExtendedProject,
         *versions: SongVersion,
         dry_run: bool,
+        exit_: bool,
         verbose: int,
         vocal_loudness_worth: float | None,
     ) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
@@ -312,6 +316,9 @@ class Process:
             # Render causes a project to have unsaved changes, no matter what. Save the user a step.
             project.save()
 
+        if exit_:
+            self._exit_daw()
+
     @cached_property
     def progress(self) -> rich.progress.Progress:
         """Rich progress bar."""
@@ -329,6 +336,20 @@ class Process:
             start=False,
             total=1,
         )
+
+    def _exit_daw(self) -> None:
+        process = subprocess.run(
+            [
+                "/Applications/REAPER.app/Contents/MacOS/REAPER",
+                "-close:exit:nosave",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+
+        if process.returncode:
+            self.console_err.print(process.stdout)
 
     async def _print_stats_for_render(
         self,
