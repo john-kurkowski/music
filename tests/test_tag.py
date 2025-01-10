@@ -24,8 +24,9 @@ def test_main(
         tag, [str(some_path)], catch_exceptions=False
     )
 
-    assert not result.stderr
-    assert not result.exception
-    assert result.stdout == snapshot
-
-    assert mock_subprocess.mock_calls == snapshot
+    assert (
+        result.stderr,
+        result.exception,
+        result.stdout,
+        mock_subprocess.mock_calls,
+    ) == snapshot

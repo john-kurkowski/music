@@ -28,11 +28,12 @@ def test_main_files(
         stat, [str(path) for path in some_paths], catch_exceptions=False
     )
 
-    assert not result.stderr
-    assert not result.exception
-    assert result.stdout == snapshot
-
-    assert mock_stats_for_file.mock_calls == snapshot
+    assert (
+        result.stderr,
+        result.exception,
+        result.stdout,
+        mock_stats_for_file.mock_calls,
+    ) == snapshot
 
 
 @mock.patch("music.render.result.summary_stats_for_file")
@@ -61,9 +62,10 @@ def test_main_no_args(
 
     result = CliRunner(mix_stderr=False).invoke(stat, catch_exceptions=False)
 
-    assert not result.stderr
-    assert not result.exception
-    assert result.stdout == snapshot
-
-    assert mock_project.mock_calls == snapshot
-    assert mock_stats_for_file.mock_calls == snapshot
+    assert (
+        result.stderr,
+        result.exception,
+        result.stdout,
+        mock_project.mock_calls,
+        mock_stats_for_file.mock_calls,
+    ) == snapshot

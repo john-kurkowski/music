@@ -1,76 +1,78 @@
 # serializer version: 1
 # name: test_main_files
-  '''
-  TMP_PATH_HERE/path/to/Album Title Here/01 - Song Title Here.wav
-  some            : stat                            
+  tuple(
+    '',
+    None,
+    '''
+      TMP_PATH_HERE/path/to/Album Title Here/01 - Song Title Here.wav
+      some            : stat                            
+      
+      TMP_PATH_HERE/path/to/Album Title Here/02 - Song Title Here.wav
+      some            : stat                            
   
-  TMP_PATH_HERE/path/to/Album Title Here/02 - Song Title Here.wav
-  some            : stat                            
-  
-  '''
-# ---
-# name: test_main_files.1
-  _CallList([
-    _Call(
-      '',
-      tuple(
-        'TMP_PATH_HERE/path/to/Album Title Here/01 - Song Title Here.wav',
+    ''',
+    _CallList([
+      _Call(
+        '',
+        tuple(
+          'TMP_PATH_HERE/path/to/Album Title Here/01 - Song Title Here.wav',
+        ),
+        dict({
+          'verbose': 0,
+        }),
       ),
-      dict({
-        'verbose': 0,
-      }),
-    ),
-    _Call(
-      '',
-      tuple(
-        'TMP_PATH_HERE/path/to/Album Title Here/02 - Song Title Here.wav',
+      _Call(
+        '',
+        tuple(
+          'TMP_PATH_HERE/path/to/Album Title Here/02 - Song Title Here.wav',
+        ),
+        dict({
+          'verbose': 0,
+        }),
       ),
-      dict({
-        'verbose': 0,
-      }),
-    ),
-  ])
+    ]),
+  )
 # ---
 # name: test_main_no_args
-  '''
-  TMP_PATH_HERE/path/to/Song Title Here/Song Title Here.wav
-  some            : stat                            
+  tuple(
+    '',
+    None,
+    '''
+      TMP_PATH_HERE/path/to/Song Title Here/Song Title Here.wav
+      some            : stat                            
+      
+      TMP_PATH_HERE/path/to/Song Title Here/Song Title Here (A Cappella).wav
+      some            : stat                            
   
-  TMP_PATH_HERE/path/to/Song Title Here/Song Title Here (A Cappella).wav
-  some            : stat                            
-  
-  '''
-# ---
-# name: test_main_no_args.1
-  _CallList([
-    _Call(
-      '',
-      tuple(
+    ''',
+    _CallList([
+      _Call(
+        '',
+        tuple(
+        ),
+        dict({
+        }),
       ),
-      dict({
-      }),
-    ),
-  ])
-# ---
-# name: test_main_no_args.2
-  _CallList([
-    _Call(
-      '',
-      tuple(
-        'TMP_PATH_HERE/path/to/Song Title Here/Song Title Here.wav',
+    ]),
+    _CallList([
+      _Call(
+        '',
+        tuple(
+          'TMP_PATH_HERE/path/to/Song Title Here/Song Title Here.wav',
+        ),
+        dict({
+          'verbose': 0,
+        }),
       ),
-      dict({
-        'verbose': 0,
-      }),
-    ),
-    _Call(
-      '',
-      tuple(
-        'TMP_PATH_HERE/path/to/Song Title Here/Song Title Here (A Cappella).wav',
+      _Call(
+        '',
+        tuple(
+          'TMP_PATH_HERE/path/to/Song Title Here/Song Title Here (A Cappella).wav',
+        ),
+        dict({
+          'verbose': 0,
+        }),
       ),
-      dict({
-        'verbose': 0,
-      }),
-    ),
-  ])
+    ]),
+  )
 # ---

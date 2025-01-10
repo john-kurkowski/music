@@ -53,9 +53,7 @@ def test_main_tracks_not_found(
             catch_exceptions=False,
         )
 
-    assert exc_info.value == snapshot
-
-    assert requests_mocks.mock_calls == snapshot
+    assert (exc_info.value, requests_mocks.mock_calls) == snapshot
 
 
 def test_main_tracks_newer(
@@ -119,11 +117,12 @@ def test_main_tracks_newer(
             catch_exceptions=False,
         )
 
-    assert not result.exception
-    assert result.stdout == snapshot
-    assert not result.stderr
-
-    assert requests_mocks.mock_calls == snapshot
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        requests_mocks.mock_calls,
+    ) == snapshot
 
 
 def test_main_success(
@@ -195,8 +194,9 @@ def test_main_success(
         catch_exceptions=False,
     )
 
-    assert not result.exception
-    assert result.stdout == snapshot
-    assert not result.stderr
-
-    assert requests_mocks.mock_calls == snapshot
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        requests_mocks.mock_calls,
+    ) == snapshot

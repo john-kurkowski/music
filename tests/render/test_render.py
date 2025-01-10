@@ -69,11 +69,12 @@ def test_main_noop(render_mocks: RenderMocks, snapshot: SnapshotAssertion) -> No
         catch_exceptions=False,
     )
 
-    assert result.exit_code == 2
-    assert not result.stdout
-    assert result.stderr == snapshot
-
-    assert render_mocks.project.mock_calls == snapshot
+    assert (
+        result.exit_code,
+        result.stdout,
+        result.stderr,
+        render_mocks.project.mock_calls,
+    ) == snapshot
 
 
 def test_main_main_version(
@@ -86,13 +87,13 @@ def test_main_main_version(
         render, ["--include-main"], catch_exceptions=False
     )
 
-    assert not result.exception
-    assert result.stdout == snapshot
-    assert not result.stderr
-
-    assert render_mocks.project.mock_calls == snapshot
-    assert subprocess_with_output.mock_calls
-    assert subprocess_with_output.mock_calls == snapshot
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        render_mocks.project.mock_calls,
+        subprocess_with_output.mock_calls,
+    ) == snapshot
 
 
 def test_main_default_versions(
@@ -103,13 +104,13 @@ def test_main_default_versions(
     """Test main with default versions."""
     result = CliRunner(mix_stderr=False).invoke(render, [], catch_exceptions=False)
 
-    assert not result.exception
-    assert result.stdout == snapshot
-    assert not result.stderr
-
-    assert render_mocks.project.mock_calls == snapshot
-    assert subprocess_with_output.mock_calls
-    assert subprocess_with_output.mock_calls == snapshot
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        render_mocks.project.mock_calls,
+        subprocess_with_output.mock_calls,
+    ) == snapshot
 
 
 def test_main_default_versions_dry_run(
@@ -122,13 +123,13 @@ def test_main_default_versions_dry_run(
         render, ["--dry-run"], catch_exceptions=False
     )
 
-    assert not result.exception
-    assert result.stdout == snapshot
-    assert not result.stderr
-
-    assert render_mocks.project.mock_calls == snapshot
-    assert subprocess_with_output.mock_calls
-    assert subprocess_with_output.mock_calls == snapshot
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        render_mocks.project.mock_calls,
+        subprocess_with_output.mock_calls,
+    ) == snapshot
 
 
 def test_main_instrumental_versions_only_main_vocals(
@@ -153,13 +154,13 @@ def test_main_instrumental_versions_only_main_vocals(
         catch_exceptions=False,
     )
 
-    assert not result.exception
-    assert result.stdout == snapshot
-    assert not result.stderr
-
-    assert render_mocks.project.mock_calls == snapshot
-    assert subprocess_with_output.mock_calls
-    assert subprocess_with_output.mock_calls == snapshot
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        render_mocks.project.mock_calls,
+        subprocess_with_output.mock_calls,
+    ) == snapshot
 
 
 def test_main_all_versions(
@@ -216,13 +217,13 @@ def test_main_filenames_all_versions(
         catch_exceptions=False,
     )
 
-    assert not result.exception
-    assert result.stdout == snapshot
-    assert not result.stderr
-
-    assert render_mocks.project.mock_calls == snapshot
-    assert subprocess_with_output.mock_calls
-    assert subprocess_with_output.mock_calls == snapshot
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        render_mocks.project.mock_calls,
+        subprocess_with_output.mock_calls,
+    ) == snapshot
 
 
 def test_main_mocked_calls(
@@ -258,8 +259,9 @@ def test_main_mocked_calls(
         catch_exceptions=False,
     )
 
-    assert not result.exception
-    assert result.stdout == snapshot
-    assert not result.stderr
-
-    assert render_mocks.mock_calls == snapshot
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        render_mocks.mock_calls,
+    ) == snapshot
