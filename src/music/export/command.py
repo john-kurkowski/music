@@ -25,7 +25,7 @@ def main(dst_dir: Path, files: list[Path]) -> None:
     dst_dir.mkdir(exist_ok=True)
 
     for i, src in enumerate(files):
-        dst = dst_dir / f"{i+1:02d} - {src.with_suffix('.wav').name}"
+        dst = dst_dir / f"{i + 1:02d} - {src.with_suffix('.wav').name}"
         if dst.exists() and src.stat().st_mtime < dst.stat().st_mtime:
             continue
 
