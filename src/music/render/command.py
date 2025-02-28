@@ -3,8 +3,9 @@
 import asyncio
 import dataclasses
 import email
+import itertools
 import warnings
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Iterator
 from pathlib import Path
 
 import aiohttp
@@ -187,13 +188,11 @@ async def main(
 
     parsed_additional_headers = {**email.message_from_string(additional_headers)}
 
-    projects = (
+    projects = _validate_global_render_settings(
         (music.util.ExtendedProject.get_or_open(path) for path in project_dirs)
         if project_dirs
-        else [music.util.ExtendedProject()]
+        else iter((music.util.ExtendedProject(),))
     )
-
-    _validate_reaper()
 
     versions = {
         version
@@ -234,7 +233,7 @@ class _Command:
     upload: bool
     upload_existing: bool
     vocal_loudness_worth: float | None
-    projects: Iterable[music.util.ExtendedProject]
+    projects: Iterator[music.util.ExtendedProject]
     versions: Collection[SongVersion]
 
     def __post_init__(
@@ -350,7 +349,19 @@ def _report(renders: list[RenderResult], uploads: list[None | BaseException]) ->
         raise click.exceptions.Exit(2)
 
 
-def _validate_reaper() -> None:
+def _validate_global_render_settings(
+    projects: Iterator[music.util.ExtendedProject],
+) -> Iterator[music.util.ExtendedProject]:
+    """Validate global render settings.
+
+    Raises if any settings would mess up a render.
+
+    Peeks at the first project in the input, triggering it to load if it is not
+    already. If the DAW is not loaded, the validation cannot be performed at
+    all.
+    """
+    project_ensuring_reaper_loaded = next(projects)
+
     offlineinact = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
         "offlineinact", SWS_ERROR_SENTINEL
     )
@@ -361,3 +372,5 @@ def _validate_reaper() -> None:
             err=True,
         )
         raise click.exceptions.Exit(2)
+
+    return itertools.chain((project_ensuring_reaper_loaded,), projects)
