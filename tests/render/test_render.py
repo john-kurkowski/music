@@ -40,13 +40,12 @@ def test_render_result_render_speedup(
     assert subprocess.mock_calls == snapshot
 
 
-@mock.patch("reapy.reascript_api.SNM_GetIntConfigVar", create=True)
 def test_main_reaper_not_configured(
-    mock_get_int_config_var: mock.Mock,
     render_mocks: RenderMocks,
 ) -> None:
     """Test command handling when Reaper is not configured correctly for render."""
-    mock_get_int_config_var.return_value = 1
+    render_mocks.get_int_config_var.reset_mock(return_value=True, side_effect=True)
+    render_mocks.get_int_config_var.return_value = 1
     result = CliRunner().invoke(render, catch_exceptions=False)
     assert result.exit_code == 2
     assert "media items offline" in result.output
