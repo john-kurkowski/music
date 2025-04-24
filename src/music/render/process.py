@@ -305,7 +305,7 @@ class Process:
 
             yield (
                 version,
-                await self._print_stats_for_render(
+                await self._render_and_print_stats(
                     ExistingRenderResult(project, version), render, verbose=verbose
                 ),
             )
@@ -351,16 +351,16 @@ class Process:
         if process.returncode:
             self.console_err.print(process.stdout)
 
-    async def _print_stats_for_render(
+    async def _render_and_print_stats(
         self,
         existing_render: ExistingRenderResult,
         render: Callable[[], Awaitable[RenderResult]],
         *,
         verbose: int,
     ) -> RenderResult:
-        """Collect and print before and after summary statistics for the given project version render.
+        """Collect before statistics, execute the given render, and print a before and after summary.
 
-        Returns the rendered file, after pretty printing itsprogress and metadata.
+        Returns the rendered file.
         """
         before_stats = existing_render.summary_stats
         out = await render()
