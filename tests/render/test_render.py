@@ -189,6 +189,38 @@ def test_main_all_versions(
     assert subprocess_with_output.mock_calls == snapshot
 
 
+def test_main_mixed_errors(
+    render_mocks: RenderMocks,
+    snapshot: SnapshotAssertion,
+    subprocess_with_output: mock.Mock,
+) -> None:
+    """Test main with some versions succeeding and some failing."""
+    # TODO: how to pass through first 2 renders, only failing on the 3rd?
+    render_mocks.project.render.side_effect = [
+        None,
+        None,
+        RuntimeError("some error"),
+    ]
+
+    result = CliRunner(mix_stderr=False).invoke(
+        render,
+        [
+            "--include-main",
+            "--include-instrumental",
+            "--include-acappella",
+        ],
+        catch_exceptions=False,
+    )
+
+    assert not result.exception
+    assert result.stdout == snapshot
+    assert not result.stderr
+
+    assert render_mocks.project.mock_calls == snapshot
+    assert subprocess_with_output.mock_calls
+    assert subprocess_with_output.mock_calls == snapshot
+
+
 def test_main_filenames_all_versions(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
