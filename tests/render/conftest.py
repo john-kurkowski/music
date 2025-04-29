@@ -6,7 +6,7 @@ import itertools
 import warnings
 from collections.abc import Collection, Iterator
 from pathlib import Path
-from typing import Any
+from typing import Any, Awaitable, Callable
 from unittest import mock
 
 with warnings.catch_warnings():
@@ -62,6 +62,7 @@ class RenderMocks:
     get_int_config_var: mock.Mock
     inside_reaper: mock.Mock
     project: mock.Mock
+    render_fake_file: Callable[[], Awaitable[None]]
     set_int_config_var: mock.Mock
     upload: mock.Mock
 
@@ -151,6 +152,7 @@ def render_mocks(
             get_int_config_var=mock_get_int_config_var,
             inside_reaper=mock_inside_reaper,
             project=project,
+            render_fake_file=render_fake_file,
             set_int_config_var=mock_set_int_config_var,
             upload=mock_upload,
         )

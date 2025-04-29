@@ -194,13 +194,16 @@ def test_main_mixed_errors(
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
 ) -> None:
-    """Test main with some versions succeeding and some failing."""
-    # TODO: how to pass through first 2 renders, only failing on the 3rd?
-    render_mocks.project.render.side_effect = [
-        None,
-        None,
-        RuntimeError("some error"),
-    ]
+    """Test main with the first 2 versions succeeding and the last 1 failing."""
+
+    async def render_fake_file() -> None:
+        if render_fake_file.call_count < 2:
+            return await render_mocks.render_fake_file()
+
+        raise RuntimeError("some error")
+
+    render_fake_file.call_count = 0
+    render_mocks.project.render.side_effect = render_fake_file
 
     result = CliRunner(mix_stderr=False).invoke(
         render,
