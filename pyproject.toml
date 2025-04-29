@@ -31,6 +31,7 @@ testing = [
     "pytest-asyncio",
     "pytest-cov",
     "pytest-socket",
+    "python-lsp-server",
     "ruff",
     "syrupy",
     "types-aiofiles",
