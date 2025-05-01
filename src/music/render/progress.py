@@ -12,7 +12,7 @@ class Progress:
 
     * Hardcode columns
     * Customize the success and failure indicators of individual tasks
-        * Set a runtime property on `rich.progress.Task`, `status`, to coordinate with `_SpinnerColumn`, below
+        * Monkeypatch a runtime property `status` on `rich.progress.Task` to coordinate with `_SpinnerColumn`, below
     * Simplify the "amount" of progress to use `rich.progress.Progress`
         * The Reaper API does not expose render progress, so to use `rich.progress.Progress`, it's only 0 or 1
     """
@@ -55,7 +55,10 @@ class Progress:
 
 
 class _SpinnerColumn(rich.progress.SpinnerColumn):
-    """Vary the "finished" text per task by providing our own text."""
+    """Vary the "finished" text per task by providing our own text.
+
+    Read the monkeypatched property `status` on `rich.progress.Task` to coordinate with `Progress`, above.
+    """
 
     @override
     def render(self, task: rich.progress.Task) -> rich.console.RenderableType:
@@ -65,7 +68,7 @@ class _SpinnerColumn(rich.progress.SpinnerColumn):
             status = ""
         if status == "success":
             return "[green]✓[/green]"
-        elif status:
+        elif status == "failed":
             return "[red]✗[/red]"
 
         return super().render(task)
