@@ -195,14 +195,17 @@ def test_main_mixed_errors(
     subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with the first 2 versions succeeding and the last 1 failing."""
+    call_count = 0
 
     async def render_fake_file() -> None:
-        if render_fake_file.call_count < 2:
+        nonlocal call_count
+        call_count += 1
+
+        if call_count < 3:
             return await render_mocks.render_fake_file()
 
         raise RuntimeError("some error")
 
-    render_fake_file.call_count = 0
     render_mocks.project.render.side_effect = render_fake_file
 
     result = CliRunner(mix_stderr=False).invoke(
