@@ -4,9 +4,9 @@ import dataclasses
 import datetime
 import itertools
 import warnings
-from collections.abc import Collection, Iterator
+from collections.abc import Awaitable, Callable, Collection, Iterator
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import Any
 from unittest import mock
 
 with warnings.catch_warnings():
