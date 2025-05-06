@@ -110,6 +110,7 @@ def adjust_render_settings(
                 for track in project.tracks
                 if not _is_muted(track)
                 for item in track.items
+                if not item.get_info_value("B_MUTE_ACTUAL")
             ),
             default=0.0,
         )
