@@ -3,6 +3,7 @@
 import datetime
 import math
 from pathlib import Path
+from typing import Any
 from unittest import mock
 
 from click.testing import CliRunner
@@ -181,6 +182,44 @@ def test_main_all_versions(
     )
 
     assert not result.exception
+    assert result.stdout == snapshot
+    assert not result.stderr
+
+    assert render_mocks.project.mock_calls == snapshot
+    assert subprocess_with_output.mock_calls
+    assert subprocess_with_output.mock_calls == snapshot
+
+
+def test_main_mixed_errors(
+    render_mocks: RenderMocks,
+    snapshot: SnapshotAssertion,
+    subprocess_with_output: mock.Mock,
+) -> None:
+    """Test main with the first 2 versions succeeding and the last 1 failing."""
+    original_render = render_mocks.project.render.side_effect
+    render_count = 0
+
+    async def render_with_error(*args: Any, **kwargs: Any) -> Any:
+        nonlocal render_count
+        render_count += 1
+        if render_count >= 3:
+            raise RuntimeError("some error")
+
+        return await original_render(*args, **kwargs)
+
+    render_mocks.project.render.side_effect = render_with_error
+
+    result = CliRunner(mix_stderr=False).invoke(
+        render,
+        [
+            "--include-main",
+            "--include-instrumental",
+            "--include-acappella",
+        ],
+        catch_exceptions=True,
+    )
+
+    assert result.exception == snapshot
     assert result.stdout == snapshot
     assert not result.stderr
 

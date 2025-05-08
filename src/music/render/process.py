@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import warnings
 from collections.abc import AsyncIterator, Awaitable, Callable
-from functools import cached_property
 from pathlib import Path
 from timeit import default_timer as timer
 from typing import Literal
@@ -35,6 +34,7 @@ from .contextmanagers import (
     mute_tracks,
     toggle_fx_for_tracks,
 )
+from .progress import Progress
 from .result import ExistingRenderResult, RenderResult
 from .tracks import find_acappella_tracks_to_mute, find_stems, find_vox_tracks_to_mute
 
@@ -191,6 +191,7 @@ class Process:
         """Initialize."""
         self.console = console
         self.console_err = console_err
+        self.progress = Progress()
 
     async def process(  # noqa: C901
         self,
@@ -303,14 +304,17 @@ class Process:
 
             self.progress.start_task(task)
 
-            yield (
-                version,
-                await self._render_and_print_stats(
+            try:
+                result = await self._render_and_print_stats(
                     ExistingRenderResult(project, version), render, verbose=verbose
-                ),
-            )
+                )
+            except Exception:
+                self.progress.fail_task(task)
+                raise
 
-            self.progress.update(task, advance=1)
+            self.progress.succeed_task(task)
+
+            yield (version, result)
 
         if len(results):
             # Render causes a project to have unsaved changes, no matter what. Save the user a step.
@@ -319,22 +323,11 @@ class Process:
         if exit_:
             self._exit_daw()
 
-    @cached_property
-    def progress(self) -> rich.progress.Progress:
-        """Rich progress bar."""
-        return rich.progress.Progress(
-            rich.progress.SpinnerColumn(finished_text="[green]✓[/green]"),
-            rich.progress.TextColumn("{task.description}"),
-            rich.progress.TimeElapsedColumn(),
-        )
-
     def _add_task(
         self, project: ExtendedProject, version: SongVersion
     ) -> rich.progress.TaskID:
         return self.progress.add_task(
             f'Rendering "{version.name_for_project_dir(Path(project.path))}"',
-            start=False,
-            total=1,
         )
 
     def _exit_daw(self) -> None:
