@@ -195,18 +195,16 @@ def test_main_mixed_errors(
     subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with the first 2 versions succeeding and the last 1 failing."""
-    call_count = 0
+    override_render_fake_file = mock.Mock()
 
-    async def render_fake_file() -> None:
-        nonlocal call_count
-        call_count += 1
+    async def render_fake_file_sometimes() -> None:
+        if override_render_fake_file.call_count >= 3:
+            raise RuntimeError("some error")
 
-        if call_count < 3:
-            return await render_mocks.render_fake_file()
+        return await render_mocks.render_fake_file()
 
-        raise RuntimeError("some error")
-
-    render_mocks.project.render.side_effect = render_fake_file
+    render_mocks.project.render = override_render_fake_file
+    render_mocks.project.render.side_effect = render_fake_file_sometimes
 
     result = CliRunner(mix_stderr=False).invoke(
         render,
@@ -215,10 +213,10 @@ def test_main_mixed_errors(
             "--include-instrumental",
             "--include-acappella",
         ],
-        catch_exceptions=False,
+        catch_exceptions=True,
     )
 
-    assert not result.exception
+    assert result.exception
     assert result.stdout == snapshot
     assert not result.stderr
 
