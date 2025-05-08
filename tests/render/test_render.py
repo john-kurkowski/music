@@ -3,6 +3,7 @@
 import datetime
 import math
 from pathlib import Path
+from typing import Any
 from unittest import mock
 
 from click.testing import CliRunner
@@ -195,16 +196,18 @@ def test_main_mixed_errors(
     subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with the first 2 versions succeeding and the last 1 failing."""
-    override_render_fake_file = mock.Mock()
+    original_render = render_mocks.project.render.side_effect
+    render_count = 0
 
-    async def render_fake_file_sometimes() -> None:
-        if override_render_fake_file.call_count >= 3:
+    async def render_with_error(*args: Any, **kwargs: Any) -> Any:
+        nonlocal render_count
+        render_count += 1
+        if render_count >= 3:
             raise RuntimeError("some error")
 
-        return await render_mocks.render_fake_file()
+        return await original_render(*args, **kwargs)
 
-    render_mocks.project.render = override_render_fake_file
-    render_mocks.project.render.side_effect = render_fake_file_sometimes
+    render_mocks.project.render.side_effect = render_with_error
 
     result = CliRunner(mix_stderr=False).invoke(
         render,
