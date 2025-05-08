@@ -219,7 +219,7 @@ def test_main_mixed_errors(
         catch_exceptions=True,
     )
 
-    assert result.exception
+    assert result.exception == snapshot
     assert result.stdout == snapshot
     assert not result.stderr
 

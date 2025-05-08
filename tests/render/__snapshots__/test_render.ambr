@@ -3751,6 +3751,9 @@
   )
 # ---
 # name: test_main_mixed_errors
+  RuntimeError('some error')
+# ---
+# name: test_main_mixed_errors.1
   '''
   Stub Song Title (feat. Stub Artist)
   TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav
@@ -3780,7 +3783,7 @@
   
   '''
 # ---
-# name: test_main_mixed_errors.1
+# name: test_main_mixed_errors.2
   _CallList([
     _Call(
       'metadata.get',
@@ -4133,7 +4136,7 @@
     ),
   ])
 # ---
-# name: test_main_mixed_errors.2
+# name: test_main_mixed_errors.3
   _CallList([
     _Call(
       '',
