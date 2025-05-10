@@ -13,6 +13,8 @@ import rich.box
 import rich.console
 import rich.progress
 
+from .progress import Progress
+
 USER_ID = 41506
 
 # Seemingly the minimal metadata of the original track to be sent in an update
@@ -47,11 +49,13 @@ class Process:
         oauth_token: str,
         additional_headers: dict[str, Any],
         files: list[Path],
-    ) -> None:
+    ) -> int:
         """Upload the given audio files to SoundCloud.
 
         Matches the files to SoundCloud tracks by exact filename. then uploads them
         to SoundCloud sequentially.
+
+        Returns the first non-zero exit code encountered, or zero if all uploads succeeded.
         """
         headers = {
             "Accept": "application/json",
@@ -77,27 +81,18 @@ class Process:
             for track in (await tracks_resp.json())["collection"]
             if track["title"] in files_by_stem
         }
-        missing_tracks = sorted(set(files_by_stem).difference(tracks_by_title.keys()))
-        if missing_tracks:
-            raise KeyError(
-                f"Tracks to upload not found in SoundCloud: {missing_tracks}"
-            )
-
-        tracks_by_file = {}
-        for stem, fil in files_by_stem.items():
-            track = tracks_by_title[stem]
-
-            if not _is_track_older_than_file(track, fil):
-                self.console.print(f'[yellow]Skipping already uploaded "{fil.name}"')
-                continue
-
-            tracks_by_file[fil] = track
 
         async with asyncio.TaskGroup() as processes:
-            for fil, track in tracks_by_file.items():
+            tasks = [
                 processes.create_task(
-                    self._upload_one_file_to_track(client, headers, fil, track)
+                    self._upload_one_file_to_track(
+                        client, headers, tracks_by_title, fil
+                    )
                 )
+                for fil in files
+            ]
+
+        return next((status for task in tasks if (status := task.result())), 0)
 
     @cached_property
     def progress(self) -> rich.console.Group:
@@ -107,16 +102,9 @@ class Process:
         )
 
     @cached_property
-    def progress_upload(self) -> rich.progress.Progress:
+    def progress_upload(self) -> Progress:
         """Progress bar for uploads."""
-        return rich.progress.Progress(
-            rich.progress.SpinnerColumn(finished_text="[green]✓[/green]"),
-            rich.progress.TextColumn("{task.description}"),
-            rich.progress.TimeElapsedColumn(),
-            rich.progress.BarColumn(),
-            rich.progress.DownloadColumn(),
-            console=self.console,
-        )
+        return Progress(self.console)
 
     @cached_property
     def progress_transcode(self) -> rich.progress.Progress:
@@ -137,30 +125,45 @@ class Process:
         self,
         client: aiohttp.ClientSession,
         headers: dict[str, str],
+        tracks_by_title: dict[str, dict[str, Any]],
         fil: Path,
-        track: dict[str, Any],
-    ) -> None:
+    ) -> int:
         """Perform the API requests for the given audio file to become the new version of the existing SoundCloud track.
 
+        0. Validate the local file.
         1. Request an AWS S3 upload URL.
         2. Upload the audio file there.
         3. Request transcoding of the uploaded audio file.
         4. Poll for transcoding to finish.
         5. Confirm the transcoded file is what we want as the new file. Send the
            minimal metadata of the original track.
+
+        Returns a system exit code.
         """
         task = self.progress_upload.add_task(
-            f'[bold green]Uploading "{fil.name}"', start=False, total=fil.stat().st_size
+            f'Uploading "{fil.name}"', total=fil.stat().st_size
         )
+
+        track = tracks_by_title.get(fil.stem)
+        if not track:
+            self.progress_upload.fail_task(task, "not found in SoundCloud")
+            return 2
+        elif not _is_track_older_than_file(track, fil):
+            self.progress_upload.skip_task(task, "already uploaded")
+            return 0
 
         async with _CONCURRENCY:
             self.progress_upload.start_task(task)
 
-            upload = await self._prepare_upload(client, headers, fil)
-            await self._upload(client, task, fil, upload)
+            try:
+                upload = await self._prepare_upload(client, headers, fil)
+                await self._upload(client, task, fil, upload)
+            except Exception as ex:
+                self.progress_upload.fail_task(task, str(ex))
+                raise
 
             task = self.progress_transcode.add_task(
-                f'[bold green]Transcoding "{fil.name}"', total=1
+                f'Transcoding "{fil.name}"', total=1
             )
 
             await self._transcode(client, headers, upload)
@@ -176,6 +179,8 @@ class Process:
             track["title"],
             f"[link={track['permalink_url']}]{track['permalink_url']}[/link]",
         )
+
+        return 0
 
     async def _confirm_upload(
         self,
@@ -257,7 +262,7 @@ class Process:
         resp = await client.put(
             upload["url"],
             data=_file_reader(
-                lambda steps: self.progress_upload.update(task, advance=steps), fil
+                lambda steps: self.progress_upload.advance(task, steps), fil
             ),
             headers=upload["headers"],
             timeout=aiohttp.ClientTimeout(total=60 * 10),

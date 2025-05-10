@@ -1,6 +1,6 @@
 """Custom `rich.progress.Progress`."""
 
-from typing import override
+from typing import cast, override
 
 import rich.console
 import rich.progress
@@ -13,8 +13,6 @@ class Progress:
     * Hardcode columns
     * Customize the success and failure indicators of individual tasks
         * Monkeypatch a runtime property `status` on `rich.progress.Task` to coordinate with `_SpinnerColumn`, below
-    * Simplify the "amount" of progress to use `rich.progress.Progress`
-        * The Reaper API does not expose render progress, so to use `rich.progress.Progress`, it's only 0 or 1
     """
 
     def __init__(self, console: rich.console.Console) -> None:
@@ -24,6 +22,8 @@ class Progress:
             _SpinnerColumn(),
             rich.progress.TextColumn("{task.description}"),
             rich.progress.TimeElapsedColumn(),
+            rich.progress.BarColumn(),
+            rich.progress.DownloadColumn(),
             console=self.console,
         )
 
@@ -31,29 +31,44 @@ class Progress:
         """Make the progress bar renderable."""
         return self._progress.__rich__()
 
-    def add_task(self, description: str) -> rich.progress.TaskID:
+    def add_task(self, description: str, total: int) -> rich.progress.TaskID:
         """Add a task to the progress bar."""
-        return self._progress.add_task(description, start=False, total=1)
+        return self._progress.add_task(description, start=False, total=total)
 
-    def fail_task(self, task_id: rich.progress.TaskID) -> None:
+    def advance(self, task_id: rich.progress.TaskID, steps: int) -> None:
+        """Advance task by a number of steps."""
+        with self._progress._lock:
+            self._progress.advance(task_id, advance=steps)
+            task = self._progress._tasks[task_id]
+            remaining = cast(float, task.remaining)  # this class always sets a total
+            if remaining <= 0:
+                task.status = "success"  # type: ignore[attr-defined]
+
+    def fail_task(self, task_id: rich.progress.TaskID, reason: str) -> None:
         """Finish a task, marking it failed."""
         with self._progress._lock:
             task = self._progress._tasks[task_id]
             task.status = "failed"  # type: ignore[attr-defined]
+            self._progress.update(
+                task_id,
+                description=f"[red]{task.description} ({reason})",
+            )
+            self._progress.stop_task(task_id)
 
-        self._progress.update(task_id, advance=1)
+    def skip_task(self, task_id: rich.progress.TaskID, reason: str) -> None:
+        """Finish a task, marking it skipped."""
+        with self._progress._lock:
+            task = self._progress._tasks[task_id]
+            task.status = "skipped"  # type: ignore[attr-defined]
+            self._progress.update(
+                task_id,
+                description=f"[yellow]{task.description} ({reason})",
+            )
+            self._progress.stop_task(task_id)
 
     def start_task(self, task_id: rich.progress.TaskID) -> None:
         """Start a task."""
         self._progress.start_task(task_id)
-
-    def succeed_task(self, task_id: rich.progress.TaskID) -> None:
-        """Finish a task, marking it succeeded."""
-        with self._progress._lock:
-            task = self._progress._tasks[task_id]
-            task.status = "success"  # type: ignore[attr-defined]
-
-        self._progress.update(task_id, advance=1)
 
 
 class _SpinnerColumn(rich.progress.SpinnerColumn):
@@ -70,6 +85,8 @@ class _SpinnerColumn(rich.progress.SpinnerColumn):
             status = ""
         if status == "success":
             return "[green]✓[/green]"
+        elif status == "skipped":
+            return "[yellow]⚠[/yellow]"
         elif status == "failed":
             return "[red]✗[/red]"
 

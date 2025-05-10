@@ -46,14 +46,18 @@ def test_main_tracks_not_found(
     requests_mocks: RequestsMocks, snapshot: SnapshotAssertion, some_paths: list[Path]
 ) -> None:
     """Test main when tracks are not found/matched in the upstream database."""
-    with pytest.raises(KeyError) as exc_info:
-        CliRunner(mix_stderr=False).invoke(
-            upload,
-            [str(path.parent.resolve()) for path in some_paths],
-            catch_exceptions=False,
-        )
+    result = CliRunner(mix_stderr=False).invoke(
+        upload,
+        [str(path.parent.resolve()) for path in some_paths],
+        catch_exceptions=False,
+    )
 
-    assert (exc_info.value, requests_mocks.mock_calls) == snapshot
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        requests_mocks.mock_calls,
+    ) == snapshot
 
 
 def test_main_tracks_newer(
@@ -80,6 +84,7 @@ def test_main_tracks_newer(
             return mock.Mock(
                 st_mode=ST_MODE_IS_FILE,
                 st_mtime=datetime.datetime.fromisoformat(old_timestamp).timestamp(),
+                st_size=1_234_567,
             )
 
         return original_stat(self, *args, **kwargs)

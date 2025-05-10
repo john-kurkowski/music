@@ -207,8 +207,10 @@
   tuple(
     None,
     '''
-      Skipping already uploaded "some project.wav"
-      Skipping already uploaded "another project.wav"
+      ⚠ Uploading "some project.wav" (already uploaded)    0:00:00           0.0/1.2  
+                                                                             MB       
+      ⚠ Uploading "another project.wav" (already uploaded) 0:00:00           0.0/1.2  
+                                                                             MB       
   
     ''',
     '',
@@ -242,7 +244,15 @@
 # ---
 # name: test_main_tracks_not_found
   tuple(
-    KeyError("Tracks to upload not found in SoundCloud: ['another project', 'some project']"),
+    SystemExit(2),
+    '''
+      ✗ Uploading "some project.wav" (not found in SoundCloud)    0:00:…       0/29   
+                                                                               bytes  
+      ✗ Uploading "another project.wav" (not found in SoundCloud) 0:00:…       0/32   
+                                                                               bytes  
+  
+    ''',
+    '',
     dict({
       'get': _CallList([
         _Call(

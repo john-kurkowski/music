@@ -146,6 +146,8 @@ def render_mocks(
 
         mock_get_int_config_var.side_effect = get_int_config_var
 
+        mock_upload.return_value = 0
+
         yield RenderMocks(
             duration_delta=mock_duration_delta,
             get_int_config_var=mock_get_int_config_var,
