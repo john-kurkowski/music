@@ -49,11 +49,13 @@ class Process:
         oauth_token: str,
         additional_headers: dict[str, Any],
         files: list[Path],
-    ) -> None:
+    ) -> int:
         """Upload the given audio files to SoundCloud.
 
         Matches the files to SoundCloud tracks by exact filename. then uploads them
         to SoundCloud sequentially.
+
+        Returns the first non-zero exit code encountered, or zero if all uploads succeeded.
         """
         headers = {
             "Accept": "application/json",
@@ -80,19 +82,17 @@ class Process:
             if track["title"] in files_by_stem
         }
 
-        tracks_by_file = {}
-        for stem, fil in files_by_stem.items():
-            track = tracks_by_title[stem]
-
-            tracks_by_file[fil] = track
-
         async with asyncio.TaskGroup() as processes:
-            for fil, track in tracks_by_file.items():
+            tasks = [
                 processes.create_task(
                     self._upload_one_file_to_track(
-                        client, headers, tracks_by_title, fil, track
+                        client, headers, tracks_by_title, fil
                     )
                 )
+                for fil in files
+            ]
+
+        return next((status for task in tasks if (status := task.result())), 0)
 
     @cached_property
     def progress(self) -> rich.console.Group:
@@ -127,33 +127,40 @@ class Process:
         headers: dict[str, str],
         tracks_by_title: dict[str, dict[str, Any]],
         fil: Path,
-        track: dict[str, Any],
-    ) -> None:
+    ) -> int:
         """Perform the API requests for the given audio file to become the new version of the existing SoundCloud track.
 
+        0. Validate the local file.
         1. Request an AWS S3 upload URL.
         2. Upload the audio file there.
         3. Request transcoding of the uploaded audio file.
         4. Poll for transcoding to finish.
         5. Confirm the transcoded file is what we want as the new file. Send the
            minimal metadata of the original track.
+
+        Returns a system exit code.
         """
         task = self.progress_upload.add_task(
             f'Uploading "{fil.name}"', total=fil.stat().st_size
         )
 
-        if fil.stem not in tracks_by_title:
+        track = tracks_by_title.get(fil.stem)
+        if not track:
             self.progress_upload.fail_task(task, "not found in SoundCloud")
-            return
+            return 2
         elif not _is_track_older_than_file(track, fil):
             self.progress_upload.skip_task(task, "already uploaded")
-            return
+            return 0
 
         async with _CONCURRENCY:
             self.progress_upload.start_task(task)
 
-            upload = await self._prepare_upload(client, headers, fil)
-            await self._upload(client, task, fil, upload)
+            try:
+                upload = await self._prepare_upload(client, headers, fil)
+                await self._upload(client, task, fil, upload)
+            except Exception as ex:
+                self.progress_upload.fail_task(task, str(ex))
+                raise
 
             task = self.progress_transcode.add_task(
                 f'Transcoding "{fil.name}"', total=1
@@ -172,6 +179,8 @@ class Process:
             track["title"],
             f"[link={track['permalink_url']}]{track['permalink_url']}[/link]",
         )
+
+        return 0
 
     async def _confirm_upload(
         self,

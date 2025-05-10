@@ -33,7 +33,7 @@ from .result import RenderResult
 # Test-only property. Set to a large number to avoid text wrapping in the console.
 _CONSOLE_WIDTH: int | None = None
 
-UploadResult = asyncio.Task[None]
+UploadResult = asyncio.Task[int]
 
 
 @click.command("render")
@@ -247,7 +247,7 @@ class _Command:
         )
         self.upload_process = music.upload.process.Process(self.console)
 
-    async def __call__(self) -> tuple[list[RenderResult], list[BaseException | None]]:
+    async def __call__(self) -> tuple[list[RenderResult], list[int | BaseException]]:
         """Render all given projects."""
         progress_group = rich.console.Group(
             self.render_process.progress, self.upload_process.progress
@@ -332,21 +332,26 @@ def _existing_render_fils(
     ]
 
 
-def _report(renders: list[RenderResult], uploads: list[None | BaseException]) -> None:
+def _report(renders: list[RenderResult], uploads: list[int | BaseException]) -> None:
     has_error = False
+    status = 0
 
-    upload_exceptions = [e for e in uploads if isinstance(e, BaseException)]
-    if upload_exceptions:
-        has_error = True
-        for e in upload_exceptions:
-            click.echo(e, err=True)
+    for upload in uploads:
+        if isinstance(upload, BaseException):
+            has_error = True
+            status = 1
+            click.echo(upload, err=True)
+        elif upload and not status:
+            has_error = True
+            status = upload
 
     if not renders:
         has_error = True
+        status = 2
         click.echo("Error: nothing to render", err=True)
 
     if has_error:
-        raise click.exceptions.Exit(2)
+        raise click.exceptions.Exit(status)
 
 
 def _validate_global_render_settings(
