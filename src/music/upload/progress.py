@@ -1,6 +1,6 @@
 """Custom `rich.progress.Progress`."""
 
-from typing import override
+from typing import cast, override
 
 import rich.console
 import rich.progress
@@ -37,7 +37,12 @@ class Progress:
 
     def advance(self, task_id: rich.progress.TaskID, steps: int) -> None:
         """Advance task by a number of steps."""
-        self._progress.advance(task_id, advance=steps)
+        with self._progress._lock:
+            self._progress.advance(task_id, advance=steps)
+            task = self._progress._tasks[task_id]
+            remaining = cast(float, task.remaining)  # this class always sets a total
+            if remaining <= 0:
+                task.status = "success"  # type: ignore[attr-defined]
 
     def fail_task(self, task_id: rich.progress.TaskID, reason: str) -> None:
         """Finish a task, marking it failed."""
@@ -46,7 +51,6 @@ class Progress:
             task.status = "failed"  # type: ignore[attr-defined]
             self._progress.update(
                 task_id,
-                completed=True,
                 description=f"[red]{task.description} ({reason})",
             )
             self._progress.stop_task(task_id)
@@ -58,7 +62,6 @@ class Progress:
             task.status = "skipped"  # type: ignore[attr-defined]
             self._progress.update(
                 task_id,
-                completed=True,
                 description=f"[yellow]{task.description} ({reason})",
             )
             self._progress.stop_task(task_id)
