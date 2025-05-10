@@ -156,7 +156,7 @@ class Process:
             await self._upload(client, task, fil, upload)
 
             task = self.progress_transcode.add_task(
-                f'[bold green]Transcoding "{fil.name}"', total=1
+                f'Transcoding "{fil.name}"', total=1
             )
 
             await self._transcode(client, headers, upload)
