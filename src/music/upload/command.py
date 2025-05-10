@@ -1,7 +1,6 @@
 """Upload command."""
 
 import email
-import sys
 from pathlib import Path
 
 import aiohttp
@@ -143,4 +142,5 @@ async def main(
                 client, oauth_token, parsed_additional_headers, files
             )
 
-    sys.exit(status)
+    if status:
+        raise click.exceptions.Exit(status)
