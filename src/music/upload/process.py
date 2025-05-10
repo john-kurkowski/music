@@ -13,6 +13,8 @@ import rich.box
 import rich.console
 import rich.progress
 
+from .progress import Progress
+
 USER_ID = 41506
 
 # Seemingly the minimal metadata of the original track to be sent in an update
@@ -77,26 +79,19 @@ class Process:
             for track in (await tracks_resp.json())["collection"]
             if track["title"] in files_by_stem
         }
-        missing_tracks = sorted(set(files_by_stem).difference(tracks_by_title.keys()))
-        if missing_tracks:
-            raise KeyError(
-                f"Tracks to upload not found in SoundCloud: {missing_tracks}"
-            )
 
         tracks_by_file = {}
         for stem, fil in files_by_stem.items():
             track = tracks_by_title[stem]
-
-            if not _is_track_older_than_file(track, fil):
-                self.console.print(f'[yellow]Skipping already uploaded "{fil.name}"')
-                continue
 
             tracks_by_file[fil] = track
 
         async with asyncio.TaskGroup() as processes:
             for fil, track in tracks_by_file.items():
                 processes.create_task(
-                    self._upload_one_file_to_track(client, headers, fil, track)
+                    self._upload_one_file_to_track(
+                        client, headers, tracks_by_title, fil, track
+                    )
                 )
 
     @cached_property
@@ -107,16 +102,9 @@ class Process:
         )
 
     @cached_property
-    def progress_upload(self) -> rich.progress.Progress:
+    def progress_upload(self) -> Progress:
         """Progress bar for uploads."""
-        return rich.progress.Progress(
-            rich.progress.SpinnerColumn(finished_text="[green]✓[/green]"),
-            rich.progress.TextColumn("{task.description}"),
-            rich.progress.TimeElapsedColumn(),
-            rich.progress.BarColumn(),
-            rich.progress.DownloadColumn(),
-            console=self.console,
-        )
+        return Progress(self.console)
 
     @cached_property
     def progress_transcode(self) -> rich.progress.Progress:
@@ -137,6 +125,7 @@ class Process:
         self,
         client: aiohttp.ClientSession,
         headers: dict[str, str],
+        tracks_by_title: dict[str, dict[str, Any]],
         fil: Path,
         track: dict[str, Any],
     ) -> None:
@@ -150,8 +139,15 @@ class Process:
            minimal metadata of the original track.
         """
         task = self.progress_upload.add_task(
-            f'[bold green]Uploading "{fil.name}"', start=False, total=fil.stat().st_size
+            f'Uploading "{fil.name}"', total=fil.stat().st_size
         )
+
+        if fil.stem not in tracks_by_title:
+            self.progress_upload.fail_task(task, "not found in SoundCloud")
+            return
+        elif not _is_track_older_than_file(track, fil):
+            self.progress_upload.skip_task(task, "already uploaded")
+            return
 
         async with _CONCURRENCY:
             self.progress_upload.start_task(task)
@@ -257,7 +253,7 @@ class Process:
         resp = await client.put(
             upload["url"],
             data=_file_reader(
-                lambda steps: self.progress_upload.update(task, advance=steps), fil
+                lambda steps: self.progress_upload.advance(task, steps), fil
             ),
             headers=upload["headers"],
             timeout=aiohttp.ClientTimeout(total=60 * 10),

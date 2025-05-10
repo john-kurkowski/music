@@ -191,7 +191,7 @@ class Process:
         """Initialize."""
         self.console = console
         self.console_err = console_err
-        self.progress = Progress()
+        self.progress = Progress(self.console)
 
     async def process(  # noqa: C901
         self,
