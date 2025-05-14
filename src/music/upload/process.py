@@ -12,6 +12,7 @@ import aiohttp
 import rich.box
 import rich.console
 import rich.progress
+import rich.table
 
 from .progress import Progress
 

@@ -4,7 +4,7 @@ import os
 import subprocess
 from pathlib import Path
 
-import openai
+import openai.types.chat
 
 from music.render.result import _cmd_for_stats
 

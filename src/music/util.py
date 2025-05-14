@@ -15,7 +15,7 @@ import aiohttp
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
-    import reapy
+    import reapy.config
 
 T = TypeVar("T")
 

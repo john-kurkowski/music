@@ -10,7 +10,7 @@ from unittest import mock
 
 import aiohttp
 import pytest
-import syrupy
+import syrupy.types
 from syrupy.assertion import SnapshotAssertion
 
 

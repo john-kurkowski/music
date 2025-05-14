@@ -18,7 +18,7 @@ from .consts import (
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
-    import reapy
+    import reapy.errors
 
 
 T = TypeVar("T")
@@ -104,6 +104,7 @@ def adjust_render_settings(
 
     custom_time_bounds = 0
 
+    starts_ends: list[tuple[float, float]] = []
     with reapy.inside_reaper():
         items = [
             item
@@ -115,11 +116,11 @@ def adjust_render_settings(
         starts_ends = [(item.position, item.position + item.length) for item in items]
 
     startpos = min(
-        (start for (start, end) in starts_ends),
+        (start for (start, _) in starts_ends),
         default=0.0,
     )
     endpos = max(
-        (end for (start, end) in starts_ends),
+        (end for (_, end) in starts_ends),
         default=0.0,
     )
 

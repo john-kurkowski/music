@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 
-import music.render.process
+import music.render.result
 import music.util
 from music.util import SongVersion
 
