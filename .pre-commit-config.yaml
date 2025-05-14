@@ -7,6 +7,14 @@ repos:
         entry: mypy src tests
         language: system
         pass_filenames: false
+-   repo: local
+    hooks:
+    -   id: pyright
+        name: pyright
+        entry: uv run pyright
+        language: system
+        pass_filenames: false
+        types: [python]
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.4  # key required by pre-commit, but ignored in practice, because we use the "system" version of the tool, set in pyproject.toml
     hooks:

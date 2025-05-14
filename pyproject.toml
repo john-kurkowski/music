@@ -27,6 +27,7 @@ dependencies = [
 testing = [
     "mypy",
     "pre-commit",
+    "pyright",
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
