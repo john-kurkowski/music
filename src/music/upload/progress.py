@@ -51,7 +51,7 @@ class Progress:
             task.status = "failed"  # type: ignore[attr-defined]
             self._progress.update(
                 task_id,
-                description=f"[red]{task.description} ({reason})",
+                description=f"{task.description} [red]({reason})",
             )
             self._progress.stop_task(task_id)
 
@@ -62,7 +62,7 @@ class Progress:
             task.status = "skipped"  # type: ignore[attr-defined]
             self._progress.update(
                 task_id,
-                description=f"[yellow]{task.description} ({reason})",
+                description=f"{task.description} [yellow]({reason})",
             )
             self._progress.stop_task(task_id)
 
