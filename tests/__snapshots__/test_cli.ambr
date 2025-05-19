@@ -1,8 +1,6 @@
 # serializer version: 1
 # name: test_help
   tuple(
-    '',
-    None,
     '''
       Usage: music [OPTIONS] COMMAND [ARGS]...
       
@@ -21,5 +19,7 @@
         upload   Upload PROJECT_DIRS renders.
   
     ''',
+    SystemExit(2),
+    '',
   )
 # ---

@@ -47,7 +47,7 @@ def test_main_reaper_not_configured(
     """Test command handling when Reaper is not configured correctly for render."""
     render_mocks.get_int_config_var.reset_mock(return_value=True, side_effect=True)
     render_mocks.get_int_config_var.return_value = 1
-    result = CliRunner().invoke(render, catch_exceptions=False)
+    result = CliRunner(catch_exceptions=False).invoke(render)
     assert result.exit_code == 2
     assert "media items offline" in result.output
 
@@ -63,10 +63,9 @@ def test_main_noop(render_mocks: RenderMocks, snapshot: SnapshotAssertion) -> No
         if t.name != "Vocals" and "(vox)" not in t.name.lower()
     ]
 
-    result = CliRunner(mix_stderr=False).invoke(
+    result = CliRunner(catch_exceptions=False).invoke(
         render,
         ["--include-instrumental", "--include-instrumental-dj", "--include-acappella"],
-        catch_exceptions=False,
     )
 
     assert (
@@ -83,8 +82,9 @@ def test_main_main_version(
     subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with main version."""
-    result = CliRunner(mix_stderr=False).invoke(
-        render, ["--include-main"], catch_exceptions=False
+    result = CliRunner(catch_exceptions=False).invoke(
+        render,
+        ["--include-main"],
     )
 
     assert (
@@ -102,7 +102,7 @@ def test_main_default_versions(
     subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with default versions."""
-    result = CliRunner(mix_stderr=False).invoke(render, [], catch_exceptions=False)
+    result = CliRunner(catch_exceptions=False).invoke(render, [])
 
     assert (
         result.exception,
@@ -119,8 +119,9 @@ def test_main_default_versions_dry_run(
     subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main dry run, with default versions."""
-    result = CliRunner(mix_stderr=False).invoke(
-        render, ["--dry-run"], catch_exceptions=False
+    result = CliRunner(catch_exceptions=False).invoke(
+        render,
+        ["--dry-run"],
     )
 
     assert (
@@ -148,10 +149,9 @@ def test_main_instrumental_versions_only_main_vocals(
         t for t in render_mocks.project.tracks if "(vox)" not in t.name.lower()
     ]
 
-    result = CliRunner(mix_stderr=False).invoke(
+    result = CliRunner(catch_exceptions=False).invoke(
         render,
         ["--include-instrumental", "--include-instrumental-dj"],
-        catch_exceptions=False,
     )
 
     assert (
@@ -169,7 +169,7 @@ def test_main_all_versions(
     subprocess_with_output: mock.Mock,
 ) -> None:
     """Test main with all versions."""
-    result = CliRunner(mix_stderr=False).invoke(
+    result = CliRunner(catch_exceptions=False).invoke(
         render,
         [
             "--include-main",
@@ -178,7 +178,6 @@ def test_main_all_versions(
             "--include-acappella",
             "--include-stems",
         ],
-        catch_exceptions=False,
     )
 
     assert not result.exception
@@ -209,14 +208,13 @@ def test_main_mixed_errors(
 
     render_mocks.project.render.side_effect = render_with_error
 
-    result = CliRunner(mix_stderr=False).invoke(
+    result = CliRunner(catch_exceptions=True).invoke(
         render,
         [
             "--include-main",
             "--include-instrumental",
             "--include-acappella",
         ],
-        catch_exceptions=True,
     )
 
     assert result.exception == snapshot
@@ -242,7 +240,7 @@ def test_main_filenames_all_versions(
     for path in some_paths:
         path.mkdir(parents=True)
 
-    result = CliRunner(mix_stderr=False).invoke(
+    result = CliRunner(catch_exceptions=False).invoke(
         render,
         [
             "--include-main",
@@ -252,7 +250,6 @@ def test_main_filenames_all_versions(
             "--include-stems",
             *[str(path.resolve()) for path in some_paths],
         ],
-        catch_exceptions=False,
     )
 
     assert (
@@ -286,7 +283,7 @@ def test_main_mocked_calls(
     )
     some_unspecified_file.touch()
 
-    result = CliRunner(mix_stderr=False).invoke(
+    result = CliRunner(catch_exceptions=False).invoke(
         render,
         [
             "--exit",
@@ -295,7 +292,6 @@ def test_main_mocked_calls(
             "--upload-existing",
             *[str(path.resolve()) for path in some_paths],
         ],
-        catch_exceptions=False,
     )
 
     assert (

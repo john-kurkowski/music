@@ -17,7 +17,7 @@ classifiers = [
 dependencies = [
     "aiofiles",
     "aiohttp",
-    "click<8.2.0",
+    "click",
     "openai",
     "python-reapy",
     "rich",

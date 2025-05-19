@@ -35,10 +35,9 @@ def some_paths(tmp_path: Path) -> list[Path]:
 def test_main_no_network_calls(some_paths: list[Path]) -> None:
     """Test that main network calls are blocked."""
     with pytest.raises(pytest_socket.SocketBlockedError):
-        CliRunner(mix_stderr=False).invoke(
+        CliRunner(catch_exceptions=False).invoke(
             upload,
             [str(path.parent.resolve()) for path in some_paths],
-            catch_exceptions=False,
         )
 
 
@@ -46,10 +45,9 @@ def test_main_tracks_not_found(
     requests_mocks: RequestsMocks, snapshot: SnapshotAssertion, some_paths: list[Path]
 ) -> None:
     """Test main when tracks are not found/matched in the upstream database."""
-    result = CliRunner(mix_stderr=False).invoke(
+    result = CliRunner(catch_exceptions=False).invoke(
         upload,
         [str(path.parent.resolve()) for path in some_paths],
-        catch_exceptions=False,
     )
 
     assert (
@@ -116,10 +114,9 @@ def test_main_tracks_newer(
 
     requests_mocks.get.side_effect = mock_get
     with mock.patch.object(Path, "stat", autospec=True, side_effect=mock_stat):
-        result = CliRunner(mix_stderr=False).invoke(
+        result = CliRunner(catch_exceptions=False).invoke(
             upload,
             [str(path.parent.resolve()) for path in some_paths],
-            catch_exceptions=False,
         )
 
     assert (
@@ -193,10 +190,9 @@ def test_main_success(
     requests_mocks.get.side_effect = mock_get
     requests_mocks.post.side_effect = mock_post
 
-    result = CliRunner(mix_stderr=False).invoke(
+    result = CliRunner(catch_exceptions=False).invoke(
         upload,
         [str(path.parent.resolve()) for path in some_paths],
-        catch_exceptions=False,
     )
 
     assert (

@@ -24,8 +24,8 @@ def test_main_files(
         path.parent.mkdir(parents=True, exist_ok=True)
         path.touch()
 
-    result = CliRunner(mix_stderr=False).invoke(
-        stat, [str(path) for path in some_paths], catch_exceptions=False
+    result = CliRunner(catch_exceptions=False).invoke(
+        stat, [str(path) for path in some_paths]
     )
 
     assert (
@@ -60,7 +60,7 @@ def test_main_no_args(
         path.parent.mkdir(parents=True, exist_ok=True)
         path.touch()
 
-    result = CliRunner(mix_stderr=False).invoke(stat, catch_exceptions=False)
+    result = CliRunner(catch_exceptions=False).invoke(stat)
 
     assert (
         result.stderr,

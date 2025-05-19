@@ -8,6 +8,6 @@ from music.__main__ import cli
 
 def test_help(snapshot: SnapshotAssertion) -> None:
     """Test help message lists available commands."""
-    result = CliRunner(mix_stderr=False).invoke(cli, catch_exceptions=False)
+    result = CliRunner(catch_exceptions=False).invoke(cli)
 
     assert (result.stderr, result.exception, result.stdout) == snapshot

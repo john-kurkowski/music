@@ -20,9 +20,7 @@ def test_main(
     some_path.parent.mkdir(parents=True, exist_ok=True)
     some_path.touch()
 
-    result = CliRunner(mix_stderr=False).invoke(
-        tag, [str(some_path)], catch_exceptions=False
-    )
+    result = CliRunner(catch_exceptions=False).invoke(tag, [str(some_path)])
 
     assert (
         result.stderr,
