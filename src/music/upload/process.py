@@ -13,7 +13,9 @@ import rich.box
 import rich.console
 import rich.progress
 
-from .progress import Progress
+from music.render.progress import IndeterminateProgress
+
+from .progress import DeterminateProgress
 
 USER_ID = 41506
 
@@ -102,19 +104,14 @@ class Process:
         )
 
     @cached_property
-    def progress_upload(self) -> Progress:
+    def progress_upload(self) -> DeterminateProgress:
         """Progress bar for uploads."""
-        return Progress(self.console)
+        return DeterminateProgress(self.console)
 
     @cached_property
-    def progress_transcode(self) -> rich.progress.Progress:
+    def progress_transcode(self) -> IndeterminateProgress:
         """Progress bar for transcodes."""
-        return rich.progress.Progress(
-            rich.progress.SpinnerColumn(finished_text="[green]✓[/green]"),
-            rich.progress.TextColumn("{task.description}"),
-            rich.progress.TimeElapsedColumn(),
-            console=self.console,
-        )
+        return IndeterminateProgress(self.console)
 
     @cached_property
     def results_table(self) -> rich.table.Table:
@@ -162,14 +159,17 @@ class Process:
                 self.progress_upload.fail_task(task, str(ex))
                 raise
 
-            task = self.progress_transcode.add_task(
-                f'Transcoding "{fil.name}"', total=1
-            )
+            task = self.progress_transcode.add_task(f'Transcoding "{fil.name}"')
+            self.progress_transcode.start_task(task)
 
-            await self._transcode(client, headers, upload)
-            await self._confirm_upload(client, headers, track, fil, upload)
-
-        self.progress_transcode.update(task, advance=1)
+            try:
+                await self._transcode(client, headers, upload)
+                await self._confirm_upload(client, headers, track, fil, upload)
+            except Exception as ex:
+                self.progress_transcode.fail_task(task, str(ex))
+                raise
+            finally:
+                self.progress_transcode.succeed_task(task)
 
         if not self.results_table.columns:
             self.results_table.add_column("Title", header_style="bold blue")

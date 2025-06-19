@@ -7,7 +7,7 @@ import rich.progress
 import rich.table
 
 
-class Progress:
+class DeterminateProgress:
     """Wrap `rich.progress.Progress` with just the methods needed for this subdirectory.
 
     * Hardcode columns
