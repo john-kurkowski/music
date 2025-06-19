@@ -203,6 +203,7 @@ class Process:
                     **track_metadata_to_update,
                     "replacing_original_filename": fil.name,
                     "replacing_uid": upload["uid"],
+                    "snippet_presets": {"start_seconds": 0, "end_seconds": 20},
                 },
             },
         )

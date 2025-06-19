@@ -160,6 +160,10 @@
               'track': dict({
                 'replacing_original_filename': 'some project.wav',
                 'replacing_uid': 'stub-uid',
+                'snippet_presets': dict({
+                  'end_seconds': 20,
+                  'start_seconds': 0,
+                }),
                 'title': 'some project',
               }),
             }),
@@ -194,6 +198,10 @@
               'track': dict({
                 'replacing_original_filename': 'another project.wav',
                 'replacing_uid': 'stub-uid',
+                'snippet_presets': dict({
+                  'end_seconds': 20,
+                  'start_seconds': 0,
+                }),
                 'title': 'another project',
               }),
             }),
