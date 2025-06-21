@@ -118,7 +118,7 @@ class ExtendedProject(reapy.core.Project):
         async with aiohttp.ClientSession() as client:
             resp = await client.get(
                 f"http://localhost:{port}/_/{RENDER_CMD_ID}",
-                timeout=aiohttp.ClientTimeout(total=60 * 30),
+                timeout=aiohttp.ClientTimeout(total=60 * 60),
             )
             resp.raise_for_status()
 
