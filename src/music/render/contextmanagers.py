@@ -196,9 +196,11 @@ def mute_tracks(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
     """Mute all tracks in the given collection, then unmute them."""
     for track in tracks:
         track.mute()
-    yield
-    for track in tracks:
-        track.unmute()
+    try:
+        yield
+    finally:
+        for track in tracks:
+            track.unmute()
 
 
 @contextlib.contextmanager
@@ -214,9 +216,12 @@ def toggle_fx_for_tracks(
     ]
     for fx in fxs:
         fx.is_enabled = is_enabled
-    yield
-    for fx in fxs:
-        fx.is_enabled = not is_enabled
+
+    try:
+        yield
+    finally:
+        for fx in fxs:
+            fx.is_enabled = not is_enabled
 
 
 def _is_muted(track: reapy.core.Track) -> bool:
