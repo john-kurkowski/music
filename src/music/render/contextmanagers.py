@@ -204,6 +204,36 @@ def mute_tracks(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
 
 
 @contextlib.contextmanager
+def select_tracks_only(
+    project: ExtendedProject, tracks: Collection[reapy.core.Track]
+) -> Iterator[None]:
+    """Select only the tracks in the given collection, unselecting all other tracks, then restore track selection."""
+    tracks_to_select = {track.id: track for track in tracks}
+
+    with reapy.inside_reaper():
+        original_selection = {track.id: track.is_selected for track in project.tracks}
+
+        for track in project.tracks:
+            should_be_selected = track.id in tracks_to_select
+            if track.is_selected != should_be_selected:
+                if should_be_selected:
+                    track.select()
+                else:
+                    track.unselect()
+
+    try:
+        yield
+    finally:
+        with reapy.inside_reaper():
+            for track in project.tracks:
+                if track.is_selected != original_selection[track.id]:
+                    if original_selection[track.id]:
+                        track.select()
+                    else:
+                        track.unselect()
+
+
+@contextlib.contextmanager
 def toggle_fx_for_tracks(
     tracks: Collection[reapy.core.Track], is_enabled: bool
 ) -> Iterator[None]:

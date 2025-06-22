@@ -32,6 +32,7 @@ from .contextmanagers import (
     adjust_render_settings,
     avoid_fx_tails,
     mute_tracks,
+    select_tracks_only,
     toggle_fx_for_tracks,
 )
 from .progress import Progress
@@ -174,11 +175,10 @@ async def _render_stems(
     for vocal in vocals:
         vocal.unsolo()
         vocal.unmute()
-    for track in project.tracks:
-        track.unselect()
-    for track in find_stems(project):
-        track.select()
-    with toggle_fx_for_tracks([project.master_track], is_enabled=False):
+    with (
+        select_tracks_only(project, find_stems(project)),
+        toggle_fx_for_tracks([project.master_track], is_enabled=False),
+    ):
         return await render_version(project, SongVersion.STEMS, dry_run=dry_run)
 
 
