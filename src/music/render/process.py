@@ -6,9 +6,10 @@ import shutil
 import subprocess
 import warnings
 from collections.abc import AsyncIterator, Awaitable, Callable
+from functools import partial
 from pathlib import Path
 from timeit import default_timer as timer
-from typing import Literal
+from typing import Literal, cast
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -25,12 +26,17 @@ from music.util import (
     rm_rf,
 )
 
-from .consts import VOCAL_LOUDNESS_WORTH
+from .consts import (
+    MONO_TRACKS_TO_MONO_FILES,
+    SELECTED_TRACKS_VIA_MASTER,
+    VOCAL_LOUDNESS_WORTH,
+)
 from .contextmanagers import (
     adjust_master_limiter_threshold,
+    adjust_render_bounds,
     adjust_render_pattern,
-    adjust_render_settings,
     avoid_fx_tails,
+    get_set_restore,
     mute_tracks,
     select_tracks_only,
     toggle_fx_for_tracks,
@@ -59,7 +65,7 @@ async def render_version(
 
     with (
         avoid_fx_tails(project),
-        adjust_render_settings(project, version),
+        adjust_render_bounds(project),
         adjust_render_pattern(project, Path(in_name).joinpath(*version.pattern)),
     ):
         time_start = timer()
@@ -172,12 +178,52 @@ async def _render_stems(
     dry_run: bool,
     verbose: int,
 ) -> RenderResult:
+    """Set the `project` FX, track selection, and render settings for stems, render, then restore original settings.
+
+    While there are several Reaper render presets for stems, the best one I've
+    found for my conventions is "selected tracks via master": select all
+    relevant tracks and process them through the "master" track.
+
+    * Tracks are rendered through their parent, ancestor tracks, ascending all
+      the way through the literal master track.
+      * This function additionally disables FX on the master track. Its
+        mastered render output is already available by requesting the main
+        version of the song, rather than stems.
+      * Combining all this function's output files would roughly recreate the
+        master mix, albeit with some redundant sounds depending on sends and
+        folder structure (and sans the master FX, per the previous point).
+    * Tracks are also rendered with their sends.
+    * Tracks that are just sends are also rendered with all their inputs.
+      * These stems are often redundant, but
+        * they catch tracks that disabled master send.
+        * otherwise might be a handy reference, the diff providing the input's
+          original dry signal.
+
+    A disadvantage of "selected tracks via master" is, there is no stem
+    containing a track's dry signal if any of its ancestors has FX. A
+    workaround could be to select only tracks with some ancestor with FX
+    (besides master), and perform a 2nd render with the setting "selected
+    tracks (stems)". The files would need a different name pattern and to be
+    manually merged with the folder structure of the first render, vs.
+    overwriting the entire folder. Then there would be both dry and
+    parent-and-send-included stems available.
+
+    As a slight time and space efficiency, keep mono files in mono.
+    """
     for vocal in vocals:
         vocal.unsolo()
         vocal.unmute()
+
+    render_settings = MONO_TRACKS_TO_MONO_FILES | SELECTED_TRACKS_VIA_MASTER
+
     with (
         select_tracks_only(project, find_stems(project)),
         toggle_fx_for_tracks([project.master_track], is_enabled=False),
+        get_set_restore(
+            partial(project.get_info_value, "RENDER_SETTINGS"),
+            partial(project.set_info_value, "RENDER_SETTINGS"),
+            cast(float, render_settings),
+        ),
     ):
         return await render_version(project, SongVersion.STEMS, dry_run=dry_run)
 

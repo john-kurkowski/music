@@ -7,12 +7,10 @@ from functools import partial
 from pathlib import Path
 from typing import TypeVar, cast
 
-from music.util import ExtendedProject, SongVersion, set_param_value
+from music.util import ExtendedProject, set_param_value
 
 from .consts import (
     LIMITER_RANGE,
-    MONO_TRACKS_TO_MONO_FILES,
-    SELECTED_TRACKS_VIA_MASTER,
     SWS_ERROR_SENTINEL,
 )
 from .tracks import is_muted
@@ -74,35 +72,14 @@ def adjust_render_pattern(
 
 
 @contextlib.contextmanager
-def adjust_render_settings(
-    project: ExtendedProject, version: SongVersion
-) -> Iterator[None]:
-    """Set various `project` render settings according to `version`, then restore the original values.
+def adjust_render_bounds(project: ExtendedProject) -> Iterator[None]:
+    """Set `project` render bounds, then restore the original values.
 
     This sets the render start and end times to contain all unmuted media
     items. Different song versions may therefore have different starts and ends
     and durations. This is more flexible than a human remembering to set fixed,
     custom times in the Reaper GUI, per song version.
-
-    When rendering the stems version, this function sets additional settings.
-    While there are several Reaper render presets for stems, the best one I've
-    found for my conventions is selecting tracks (elsewhere in this folder) and
-    processing them through the master track. As a slight time and space
-    efficiency, keep mono files in mono.
     """
-    render_settings_ctx: contextlib.AbstractContextManager[None] = (
-        contextlib.nullcontext()
-    )
-
-    if version == SongVersion.STEMS:
-        render_settings = MONO_TRACKS_TO_MONO_FILES | SELECTED_TRACKS_VIA_MASTER
-
-        render_settings_ctx = get_set_restore(
-            partial(project.get_info_value, "RENDER_SETTINGS"),
-            partial(project.set_info_value, "RENDER_SETTINGS"),
-            cast(float, render_settings),
-        )
-
     custom_time_bounds = 0
 
     with reapy.inside_reaper():
@@ -125,7 +102,6 @@ def adjust_render_settings(
     )
 
     with (
-        render_settings_ctx,
         get_set_restore(
             partial(project.get_info_value, "RENDER_BOUNDSFLAG"),
             partial(project.set_info_value, "RENDER_BOUNDSFLAG"),
