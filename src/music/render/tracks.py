@@ -28,7 +28,7 @@ def find_acappella_tracks_to_mute(
     return [
         track
         for track in project.tracks
-        if not track.is_muted and bool(track.items) and not is_vocal(track)
+        if not is_muted(track) and bool(track.items) and not is_vocal(track)
     ]
 
 
@@ -43,7 +43,7 @@ def find_vox_tracks_to_mute(
     return [
         track
         for track in project.tracks
-        if not track.is_muted and "(vox)" in track.name.lower()
+        if not is_muted(track) and "(vox)" in track.name.lower()
     ]
 
 
@@ -57,5 +57,13 @@ def find_stems(project: reapy.core.Project) -> list[reapy.core.Track]:
     return [
         track
         for track in project.tracks
-        if not track.is_muted and (bool(track.items) or bool(len(track.fxs)))
+        if not is_muted(track) and (bool(track.items) or bool(len(track.fxs)))
     ]
+
+
+def is_muted(track: reapy.core.Track) -> bool:
+    """Check whether a track is muted more robustly than `reapy.core.Track.is_muted`."""
+    return track.is_muted or any(
+        parent_track.is_muted
+        for parent_track in recurse_property("parent_track", track)
+    )

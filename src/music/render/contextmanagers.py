@@ -7,7 +7,7 @@ from functools import partial
 from pathlib import Path
 from typing import TypeVar, cast
 
-from music.util import ExtendedProject, SongVersion, recurse_property, set_param_value
+from music.util import ExtendedProject, SongVersion, set_param_value
 
 from .consts import (
     LIMITER_RANGE,
@@ -15,6 +15,7 @@ from .consts import (
     SELECTED_TRACKS_VIA_MASTER,
     SWS_ERROR_SENTINEL,
 )
+from .tracks import is_muted
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -108,7 +109,7 @@ def adjust_render_settings(
         items = [
             item
             for track in project.tracks
-            if not _is_muted(track)
+            if not is_muted(track)
             for item in track.items
             if not item.get_info_value("B_MUTE_ACTUAL")
         ]
@@ -252,10 +253,3 @@ def toggle_fx_for_tracks(
     finally:
         for fx in fxs:
             fx.is_enabled = not is_enabled
-
-
-def _is_muted(track: reapy.core.Track) -> bool:
-    return track.is_muted or any(
-        parent_track.is_muted
-        for parent_track in recurse_property("parent_track", track)
-    )
