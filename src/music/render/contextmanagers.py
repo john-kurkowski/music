@@ -83,21 +83,20 @@ def adjust_render_bounds(project: ExtendedProject) -> Iterator[None]:
     custom_time_bounds = 0
 
     with reapy.inside_reaper():
-        items = [
-            item
-            for track in project.tracks
-            if not is_muted(track)
-            for item in track.items
-            if not item.get_info_value("B_MUTE_ACTUAL")
-        ]
-        starts_ends = [(item.position, item.position + item.length) for item in items]
+        items = sorted(
+            (
+                item
+                for track in project.tracks
+                if not is_muted(track)
+                for item in track.items
+                if not item.get_info_value("B_MUTE_ACTUAL")
+            ),
+            key=lambda item: item.position,
+        )
 
-    startpos = min(
-        (start for (start, end) in starts_ends),
-        default=0.0,
-    )
+    startpos = items[0].position if items else 0.0
     endpos = max(
-        (end for (start, end) in starts_ends),
+        (item.position + item.length for item in items),
         default=0.0,
     )
 
