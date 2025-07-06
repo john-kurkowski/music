@@ -33,8 +33,6 @@ from .result import RenderResult
 # Test-only property. Set to a large number to avoid text wrapping in the console.
 _CONSOLE_WIDTH: int | None = None
 
-UploadResult = asyncio.Task[int]
-
 
 @click.command("render")
 @music.util.coro
@@ -247,7 +245,9 @@ class _Command:
         )
         self.upload_process = music.upload.process.Process(self.console)
 
-    async def __call__(self) -> tuple[list[RenderResult], list[int | BaseException]]:
+    async def __call__(
+        self,
+    ) -> tuple[list[RenderResult], list[music.upload.process.Track | BaseException]]:
         """Render all given projects."""
         progress_group = rich.console.Group(
             self.render_process.progress, self.upload_process.progress
@@ -265,11 +265,20 @@ class _Command:
                     renders.extend(renders_)
                     uploads.extend(uploads_)
 
-                return renders, await asyncio.gather(*uploads, return_exceptions=True)
+                flattened_uploads = [
+                    upload
+                    for result in await asyncio.gather(*uploads)
+                    for upload in result
+                ]
+
+                return renders, flattened_uploads
 
     async def _render_project(
         self, client: aiohttp.ClientSession, project: music.util.ExtendedProject
-    ) -> tuple[list[RenderResult], list[UploadResult]]:
+    ) -> tuple[
+        list[RenderResult],
+        list[asyncio.Task[list[music.upload.process.Track | BaseException]]],
+    ]:
         """Render a single project.
 
         Eagerly uploads existing renders, then synchronously renders versions,
@@ -332,7 +341,10 @@ def _existing_render_fils(
     ]
 
 
-def _report(renders: list[RenderResult], uploads: list[int | BaseException]) -> None:
+def _report(
+    renders: list[RenderResult],
+    uploads: list[music.upload.process.Track | BaseException],
+) -> None:
     has_error = False
     status = 0
 
@@ -341,9 +353,6 @@ def _report(renders: list[RenderResult], uploads: list[int | BaseException]) -> 
             has_error = True
             status = 1
             click.echo(upload, err=True)
-        elif upload and not status:
-            has_error = True
-            status = upload
 
     if not renders:
         has_error = True

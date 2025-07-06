@@ -260,7 +260,11 @@
                                                                                bytes  
   
     ''',
-    '',
+    '''
+      not found in SoundCloud: TMP_PATH_HERE/path/to/some project/some project.wav
+      not found in SoundCloud: TMP_PATH_HERE/path/to/another project/another project.wav
+  
+    ''',
     dict({
       'get': _CallList([
         _Call(
@@ -291,13 +295,16 @@
 # ---
 # name: test_main_transcode_failure
   tuple(
-    ExceptionGroup('unhandled errors in a TaskGroup', [ClientResponseError(RequestInfo(url=URL('https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding'), method='GET', headers=<CIMultiDictProxy()>, real_url=URL('https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding')), (), status=422, message='Unprocessable Entity (with body "Transcoding failed: Invalid audio format")')]),
+    SystemExit(2),
     '''
       ⠋ Uploading "some project.wav" 0:00:00                                0/29 bytes
       Transcoding "some project.wav" (422, message='Unprocessable Entity (with body … 
   
     ''',
-    '',
+    '''
+      422, message='Unprocessable Entity (with body "Transcoding failed: Invalid audio format")', url='https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding'
+  
+    ''',
     dict({
       'get': _CallList([
         _Call(
