@@ -6,8 +6,11 @@ from pathlib import Path
 from typing import Any
 from unittest import mock
 
+import aiohttp
+import multidict
 import pytest
 import pytest_socket  # type: ignore[import-untyped]
+import yarl
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
@@ -132,7 +135,7 @@ def test_main_success(
 ) -> None:
     """Test main with multiple files succeeds.
 
-    Stubs enough of responses for the sequence of API requests to complete.
+    Stubs enough of responses for the sequence of API requests to complete (in success).
     """
     new_timestamp = "2021-10-01T00:00:00Z"
 
@@ -193,6 +196,92 @@ def test_main_success(
     result = CliRunner(catch_exceptions=False).invoke(
         upload,
         [str(path.parent.resolve()) for path in some_paths],
+    )
+
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        requests_mocks.mock_calls,
+    ) == snapshot
+
+
+def test_main_transcode_failure(
+    requests_mocks: RequestsMocks, snapshot: SnapshotAssertion, some_paths: list[Path]
+) -> None:
+    """Test main with transcode failure shows error in progress indicator.
+
+    Stubs enough of responses for the sequence of API requests to complete (in failure).
+    """
+    new_timestamp = "2021-10-01T00:00:00Z"
+
+    def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
+        if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
+            return mock.Mock(
+                json=mock.AsyncMock(
+                    return_value={
+                        "collection": [
+                            {
+                                "id": 1,
+                                "last_modified": new_timestamp,
+                                "title": "some project",
+                                "permalink_url": "https://soundcloud.com/1",
+                            },
+                        ]
+                    }
+                )
+            )
+        elif re.search(
+            r"^https://api-v2.soundcloud.com/uploads/.*/track-transcoding", url
+        ):
+            # Simulate transcode failure with an HTTP error
+            request_info = aiohttp.RequestInfo(
+                url=yarl.URL(url),
+                method="GET",
+                headers=multidict.CIMultiDictProxy(multidict.CIMultiDict()),
+                real_url=yarl.URL(url),
+            )
+
+            error_response = mock.Mock()
+            error_response.ok = False
+            error_response.status = 422
+            error_response.text = mock.AsyncMock(
+                return_value="Transcoding failed: Invalid audio format"
+            )
+            error_response.raise_for_status = mock.Mock(
+                side_effect=aiohttp.ClientResponseError(
+                    request_info=request_info,
+                    history=(),
+                    status=422,
+                    message="Unprocessable Entity",
+                )
+            )
+            return error_response
+
+        return mock.Mock()
+
+    def mock_post(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
+        if re.search(
+            r"^https://api-v2.soundcloud.com/uploads/track-upload-policy", url
+        ):
+            return mock.Mock(
+                json=mock.AsyncMock(
+                    return_value={
+                        "headers": {"some-uploader-id": "some-uploader-value"},
+                        "url": "https://some-url",
+                        "uid": "stub-uid",
+                    }
+                )
+            )
+
+        return mock.Mock()
+
+    requests_mocks.get.side_effect = mock_get
+    requests_mocks.post.side_effect = mock_post
+
+    result = CliRunner(catch_exceptions=True).invoke(
+        upload,
+        [str(some_paths[0].parent.resolve())],
     )
 
     assert (

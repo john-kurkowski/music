@@ -13,9 +13,13 @@ import rich.box
 import rich.console
 import rich.progress
 
-from .progress import Progress
+from music.render.progress import IndeterminateProgress
+
+from .progress import DeterminateProgress
 
 USER_ID = 41506
+
+Track = dict[str, Any]
 
 # Seemingly the minimal metadata of the original track to be sent in an update
 # (although the browser version sends all possible fields in the update dialog,
@@ -49,7 +53,7 @@ class Process:
         oauth_token: str,
         additional_headers: dict[str, Any],
         files: list[Path],
-    ) -> int:
+    ) -> list[Track | BaseException]:
         """Upload the given audio files to SoundCloud.
 
         Matches the files to SoundCloud tracks by exact filename. then uploads them
@@ -82,17 +86,14 @@ class Process:
             if track["title"] in files_by_stem
         }
 
-        async with asyncio.TaskGroup() as processes:
-            tasks = [
-                processes.create_task(
-                    self._upload_one_file_to_track(
-                        client, headers, tracks_by_title, fil
-                    )
-                )
-                for fil in files
-            ]
+        tasks = [
+            asyncio.create_task(
+                self._upload_one_file_to_track(client, headers, tracks_by_title, fil)
+            )
+            for fil in files
+        ]
 
-        return next((status for task in tasks if (status := task.result())), 0)
+        return await asyncio.gather(*tasks, return_exceptions=True)
 
     @cached_property
     def progress(self) -> rich.console.Group:
@@ -102,19 +103,14 @@ class Process:
         )
 
     @cached_property
-    def progress_upload(self) -> Progress:
+    def progress_upload(self) -> DeterminateProgress:
         """Progress bar for uploads."""
-        return Progress(self.console)
+        return DeterminateProgress(self.console)
 
     @cached_property
-    def progress_transcode(self) -> rich.progress.Progress:
+    def progress_transcode(self) -> IndeterminateProgress:
         """Progress bar for transcodes."""
-        return rich.progress.Progress(
-            rich.progress.SpinnerColumn(finished_text="[green]✓[/green]"),
-            rich.progress.TextColumn("{task.description}"),
-            rich.progress.TimeElapsedColumn(),
-            console=self.console,
-        )
+        return IndeterminateProgress(self.console)
 
     @cached_property
     def results_table(self) -> rich.table.Table:
@@ -125,9 +121,9 @@ class Process:
         self,
         client: aiohttp.ClientSession,
         headers: dict[str, str],
-        tracks_by_title: dict[str, dict[str, Any]],
+        tracks_by_title: dict[str, Track],
         fil: Path,
-    ) -> int:
+    ) -> Track:
         """Perform the API requests for the given audio file to become the new version of the existing SoundCloud track.
 
         0. Validate the local file.
@@ -138,7 +134,8 @@ class Process:
         5. Confirm the transcoded file is what we want as the new file. Send the
            minimal metadata of the original track.
 
-        Returns a system exit code.
+        Returns the track metadata if the upload is successful, otherwise
+        raises an exception.
         """
         task = self.progress_upload.add_task(
             f'Uploading "{fil.name}"', total=fil.stat().st_size
@@ -147,10 +144,10 @@ class Process:
         track = tracks_by_title.get(fil.stem)
         if not track:
             self.progress_upload.fail_task(task, "not found in SoundCloud")
-            return 2
+            raise ValueError(f"not found in SoundCloud: {fil}")
         elif not _is_track_older_than_file(track, fil):
             self.progress_upload.skip_task(task, "already uploaded")
-            return 0
+            return track
 
         async with _CONCURRENCY:
             self.progress_upload.start_task(task)
@@ -162,14 +159,17 @@ class Process:
                 self.progress_upload.fail_task(task, str(ex))
                 raise
 
-            task = self.progress_transcode.add_task(
-                f'Transcoding "{fil.name}"', total=1
-            )
+            task = self.progress_transcode.add_task(f'Transcoding "{fil.name}"')
+            self.progress_transcode.start_task(task)
 
-            await self._transcode(client, headers, upload)
-            await self._confirm_upload(client, headers, track, fil, upload)
-
-        self.progress_transcode.update(task, advance=1)
+            try:
+                await self._transcode(client, headers, upload)
+                await self._confirm_upload(client, headers, track, fil, upload)
+            except Exception as ex:
+                self.progress_transcode.fail_task(task, str(ex))
+                raise
+            finally:
+                self.progress_transcode.succeed_task(task)
 
         if not self.results_table.columns:
             self.results_table.add_column("Title", header_style="bold blue")
@@ -180,13 +180,13 @@ class Process:
             f"[link={track['permalink_url']}]{track['permalink_url']}[/link]",
         )
 
-        return 0
+        return track
 
     async def _confirm_upload(
         self,
         client: aiohttp.ClientSession,
         headers: dict[str, str],
-        track: dict[str, Any],
+        track: Track,
         fil: Path,
         upload: _PrepareUploadResponse,
     ) -> None:

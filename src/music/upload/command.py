@@ -138,9 +138,15 @@ async def main(
     process = UploadProcess(console)
     with rich.live.Live(process.progress, console=console, refresh_per_second=10):
         async with aiohttp.ClientSession() as client:
-            status = await process.process(
+            uploads = await process.process(
                 client, oauth_token, parsed_additional_headers, files
             )
 
-    if status:
-        raise click.exceptions.Exit(status)
+    has_error = False
+    for upload in uploads:
+        if isinstance(upload, BaseException):
+            has_error = True
+            click.echo(upload, err=True)
+
+    if has_error:
+        raise click.exceptions.Exit(2)

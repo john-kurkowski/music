@@ -7,7 +7,7 @@ import rich.progress
 import rich.table
 
 
-class Progress:
+class IndeterminateProgress:
     """Wrap `rich.progress.Progress` with just the methods needed for this subdirectory.
 
     * Hardcode columns
@@ -35,13 +35,16 @@ class Progress:
         """Add a task to the progress bar."""
         return self._progress.add_task(description, start=False, total=1)
 
-    def fail_task(self, task_id: rich.progress.TaskID) -> None:
+    def fail_task(self, task_id: rich.progress.TaskID, reason: str) -> None:
         """Finish a task, marking it failed."""
         with self._progress._lock:
             task = self._progress._tasks[task_id]
             task.status = "failed"  # type: ignore[attr-defined]
-
-        self._progress.update(task_id, advance=1)
+            self._progress.update(
+                task_id,
+                description=f"{task.description} [red]({reason})",
+            )
+            self._progress.stop_task(task_id)
 
     def start_task(self, task_id: rich.progress.TaskID) -> None:
         """Start a task."""

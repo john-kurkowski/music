@@ -41,7 +41,7 @@ from .contextmanagers import (
     select_tracks_only,
     toggle_fx_for_tracks,
 )
-from .progress import Progress
+from .progress import IndeterminateProgress
 from .result import ExistingRenderResult, RenderResult
 from .tracks import find_acappella_tracks_to_mute, find_stems, find_vox_tracks_to_mute
 
@@ -237,7 +237,7 @@ class Process:
         """Initialize."""
         self.console = console
         self.console_err = console_err
-        self.progress = Progress(self.console)
+        self.progress = IndeterminateProgress(self.console)
 
     async def process(  # noqa: C901
         self,
@@ -354,8 +354,8 @@ class Process:
                 result = await self._render_and_print_stats(
                     ExistingRenderResult(project, version), render, verbose=verbose
                 )
-            except Exception:
-                self.progress.fail_task(task)
+            except Exception as ex:
+                self.progress.fail_task(task, str(ex))
                 raise
 
             self.progress.succeed_task(task)

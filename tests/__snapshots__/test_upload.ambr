@@ -260,7 +260,11 @@
                                                                                bytes  
   
     ''',
-    '',
+    '''
+      not found in SoundCloud: TMP_PATH_HERE/path/to/some project/some project.wav
+      not found in SoundCloud: TMP_PATH_HERE/path/to/another project/another project.wav
+  
+    ''',
     dict({
       'get': _CallList([
         _Call(
@@ -285,6 +289,105 @@
       'post': _CallList([
       ]),
       'put': _CallList([
+      ]),
+    }),
+  )
+# ---
+# name: test_main_transcode_failure
+  tuple(
+    SystemExit(2),
+    '''
+      ⠋ Uploading "some project.wav" 0:00:00                                0/29 bytes
+      Transcoding "some project.wav" (422, message='Unprocessable Entity (with body … 
+  
+    ''',
+    '''
+      422, message='Unprocessable Entity (with body "Transcoding failed: Invalid audio format")', url='https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding'
+  
+    ''',
+    dict({
+      'get': _CallList([
+        _Call(
+          '',
+          tuple(
+            'https://api-v2.soundcloud.com/users/41506/tracks',
+          ),
+          dict({
+            'headers': dict({
+              'Accept': 'application/json',
+              'Authorization': 'OAuth stub-fake-token',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'X-Test-Additional-Header': '1',
+            }),
+            'params': dict({
+              'limit': 999,
+            }),
+            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+          }),
+        ),
+        _Call(
+          '',
+          tuple(
+            'https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding',
+          ),
+          dict({
+            'headers': dict({
+              'Accept': 'application/json',
+              'Authorization': 'OAuth stub-fake-token',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'X-Test-Additional-Header': '1',
+            }),
+          }),
+        ),
+      ]),
+      'post': _CallList([
+        _Call(
+          '',
+          tuple(
+            'https://api-v2.soundcloud.com/uploads/track-upload-policy',
+          ),
+          dict({
+            'headers': dict({
+              'Accept': 'application/json',
+              'Authorization': 'OAuth stub-fake-token',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'X-Test-Additional-Header': '1',
+            }),
+            'json': dict({
+              'filename': 'some project.wav',
+              'filesize': 29,
+            }),
+          }),
+        ),
+        _Call(
+          '',
+          tuple(
+            'https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding',
+          ),
+          dict({
+            'headers': dict({
+              'Accept': 'application/json',
+              'Authorization': 'OAuth stub-fake-token',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'X-Test-Additional-Header': '1',
+            }),
+          }),
+        ),
+      ]),
+      'put': _CallList([
+        _Call(
+          '',
+          tuple(
+            'https://some-url',
+          ),
+          dict({
+            'data': 'ASYNC_ITERABLE_HERE',
+            'headers': dict({
+              'some-uploader-id': 'some-uploader-value',
+            }),
+            'timeout': ClientTimeout(total=600, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+          }),
+        ),
       ]),
     }),
   )
