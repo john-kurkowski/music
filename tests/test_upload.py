@@ -7,8 +7,10 @@ from typing import Any
 from unittest import mock
 
 import aiohttp
+import multidict
 import pytest
 import pytest_socket  # type: ignore[import-untyped]
+import yarl
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
@@ -233,6 +235,13 @@ def test_main_transcode_failure(
             r"^https://api-v2.soundcloud.com/uploads/.*/track-transcoding", url
         ):
             # Simulate transcode failure with an HTTP error
+            request_info = aiohttp.RequestInfo(
+                url=yarl.URL(url),
+                method="GET",
+                headers=multidict.CIMultiDictProxy(multidict.CIMultiDict()),
+                real_url=yarl.URL(url),
+            )
+
             error_response = mock.Mock()
             error_response.ok = False
             error_response.status = 422
@@ -241,7 +250,7 @@ def test_main_transcode_failure(
             )
             error_response.raise_for_status = mock.Mock(
                 side_effect=aiohttp.ClientResponseError(
-                    request_info=mock.Mock(),
+                    request_info=request_info,
                     history=(),
                     status=422,
                     message="Unprocessable Entity",
