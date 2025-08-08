@@ -8,8 +8,8 @@ applicable mainly to me. However, the code may be a useful example for using
 
 ## Prerequisites
 
-1. A Python install _with framework_. For example, with
-   [pyenv](https://github.com/pyenv/pyenv):
+1. A Python install [_with framework_](#reaper-compatible-python). For example,
+   with [pyenv](https://github.com/pyenv/pyenv):
    ```zsh
    PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install <VERSION>
    ```
@@ -73,3 +73,20 @@ When using `breakpoint()`, you'll probably want to disable
 [rich](https://github.com/Textualize/rich) output, via the `TERM=dumb`
 environment variable. That will make the Python interactive debugger easier to
 see.
+
+## FAQ
+
+### Reaper-compatible Python
+
+Reaper's Python API uses embedded Python that requires framework bindings to
+communicate between the DAW and Python scripts. Some Python installations lack
+this by default, like when installing Python via mise, pyenv, or uv. If Reaper
+is set to these incompatible Python versions, any commands sent from this
+project will exit with a stacktrace and may crash Reaper.
+
+Running reapy's setup command from a compatible Python install will set the
+correct version in Reaper's preferences, without needing to use Reaper's GUI.
+
+From then on, technically, this project can use a different Python version, even
+one without framework, as long as you **don't re-run reapy's setup command**,
+which will reset Reaper's Python version.
