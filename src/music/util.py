@@ -9,7 +9,7 @@ import warnings
 from collections.abc import Callable, Iterator
 from functools import wraps
 from pathlib import Path
-from typing import Any, NoReturn, TypeVar, cast
+from typing import Any, NoReturn, cast
 
 import aiohttp
 
@@ -17,7 +17,6 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
     import reapy
 
-T = TypeVar("T")
 
 # File: Render project, using the most recent render settings, auto-close render dialog
 RENDER_CMD_ID = 42230
@@ -151,7 +150,7 @@ def coro(f: Callable[..., Any]) -> Callable[..., Any]:
     return wrapper
 
 
-def recurse_property(prop: str, obj: T | None) -> Iterator[T]:
+def recurse_property[T](prop: str, obj: T | None) -> Iterator[T]:
     """Recursively yield the given optional, recursive property, starting with the given object."""
     while obj is not None:
         yield obj
