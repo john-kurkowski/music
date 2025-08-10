@@ -18,13 +18,13 @@ applicable mainly to me. However, the code may be a useful example for using
 ## Install
 
 1.  ```zsh
-    pip install .
+    path/to/framework/enabled/python -m pip install .
     ```
 1.  Open Reaper
 1.  Configure Reaper for Python (per
     [reapy's README](https://github.com/RomeoDespres/reapy/blob/0.10.0/README.md#installation))
     ```zsh
-    python -c "import reapy; reapy.configure_reaper()"
+    path/to/framework/enabled/python -c "import reapy; reapy.configure_reaper()"
     ```
 1.  Restart Reaper
 
