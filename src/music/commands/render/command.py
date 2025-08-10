@@ -19,10 +19,11 @@ with warnings.catch_warnings():
     import reapy
 
 
-import music.render.process
-import music.upload.process
-import music.util
-from music.util import SongVersion
+import music.commands.render.process
+import music.commands.upload.process
+import music.utils
+from music.utils.project import ExtendedProject
+from music.utils.songversion import SongVersion
 
 from .consts import (
     SWS_ERROR_SENTINEL,
@@ -35,7 +36,7 @@ _CONSOLE_WIDTH: int | None = None
 
 
 @click.command("render")
-@music.util.coro
+@music.utils.coro
 @click.argument(
     "project_dirs",
     nargs=-1,
@@ -187,9 +188,9 @@ async def main(
     parsed_additional_headers = {**email.message_from_string(additional_headers)}
 
     projects = _validate_global_render_settings(
-        (music.util.ExtendedProject.get_or_open(path) for path in project_dirs)
+        (ExtendedProject.get_or_open(path) for path in project_dirs)
         if project_dirs
-        else iter((music.util.ExtendedProject(),))
+        else iter((ExtendedProject(),))
     )
 
     versions = {
@@ -231,7 +232,7 @@ class _Command:
     upload: bool
     upload_existing: bool
     vocal_loudness_worth: float | None
-    projects: Iterator[music.util.ExtendedProject]
+    projects: Iterator[ExtendedProject]
     versions: Collection[SongVersion]
 
     def __post_init__(
@@ -240,14 +241,16 @@ class _Command:
         """Initialize properties not provided by the caller."""
         self.console = rich.console.Console(width=_CONSOLE_WIDTH)
         self.console_err = rich.console.Console(stderr=True, style="bold red")
-        self.render_process = music.render.process.Process(
+        self.render_process = music.commands.render.process.Process(
             self.console, self.console_err
         )
-        self.upload_process = music.upload.process.Process(self.console)
+        self.upload_process = music.commands.upload.process.Process(self.console)
 
     async def __call__(
         self,
-    ) -> tuple[list[RenderResult], list[music.upload.process.Track | BaseException]]:
+    ) -> tuple[
+        list[RenderResult], list[music.commands.upload.process.Track | BaseException]
+    ]:
         """Render all given projects."""
         progress_group = rich.console.Group(
             self.render_process.progress, self.upload_process.progress
@@ -274,10 +277,10 @@ class _Command:
                 return renders, flattened_uploads
 
     async def _render_project(
-        self, client: aiohttp.ClientSession, project: music.util.ExtendedProject
+        self, client: aiohttp.ClientSession, project: ExtendedProject
     ) -> tuple[
         list[RenderResult],
-        list[asyncio.Task[list[music.upload.process.Track | BaseException]]],
+        list[asyncio.Task[list[music.commands.upload.process.Track | BaseException]]],
     ]:
         """Render a single project.
 
@@ -327,7 +330,7 @@ class _Command:
 
 
 def _existing_render_fils(
-    project: music.util.ExtendedProject, versions: Collection[SongVersion]
+    project: ExtendedProject, versions: Collection[SongVersion]
 ) -> list[Path]:
     """Return a project's existing render files to upload.
 
@@ -343,7 +346,7 @@ def _existing_render_fils(
 
 def _report(
     renders: list[RenderResult],
-    uploads: list[music.upload.process.Track | BaseException],
+    uploads: list[music.commands.upload.process.Track | BaseException],
 ) -> None:
     has_error = False
     status = 0
@@ -364,8 +367,8 @@ def _report(
 
 
 def _validate_global_render_settings(
-    projects: Iterator[music.util.ExtendedProject],
-) -> Iterator[music.util.ExtendedProject]:
+    projects: Iterator[ExtendedProject],
+) -> Iterator[ExtendedProject]:
     """Validate global render settings.
 
     Raises if any settings would mess up a render.

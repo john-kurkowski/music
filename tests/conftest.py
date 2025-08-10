@@ -49,7 +49,7 @@ def snapshot(
     * In the case of console output, ensure no text wrapping occurs, so the
       regular expression matches.
     """
-    monkeypatch.setattr("music.render.command._CONSOLE_WIDTH", 999)
+    monkeypatch.setattr("music.commands.render.command._CONSOLE_WIDTH", 999)
 
     tmp_path_str = str(tmp_path)
     tmp_id_re = re.compile(r"(?P<tmp_id>\s*\d+)(?P<ext>\.tmp)")

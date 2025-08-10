@@ -6,7 +6,7 @@ from unittest import mock
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
-from music.tag.command import main as tag
+from music.commands.tag.command import main as tag
 
 
 @mock.patch("subprocess.check_call")

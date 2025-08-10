@@ -6,9 +6,9 @@ from unittest import mock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-import music.util
+import music.utils.project
 
-from .conftest import RequestsMocks
+from ..conftest import RequestsMocks
 
 
 @mock.patch("reapy.core.Project.__init__")
@@ -16,9 +16,9 @@ def test_project_reaper_not_running(core_project: mock.Mock) -> None:
     """Test handling when Reaper is not running."""
     core_project.side_effect = AttributeError("module doesn't have reascript_api, yo")
     with pytest.raises(Exception, match="Reaper running"):
-        music.util.ExtendedProject()
+        music.utils.project.ExtendedProject()
     with pytest.raises(Exception, match="Reaper running"):
-        music.util.ExtendedProject.get_or_open(Path("some path"))
+        music.utils.project.ExtendedProject.get_or_open(Path("some path"))
 
 
 @mock.patch("reapy.core.Project.__init__")
@@ -32,7 +32,7 @@ def test_project_path(
     some_path = tmp_path / "path" / "to" / "some project"
     some_file = some_path / "some project.rpp"
     enum_projects.return_value = ("", "", some_path / some_file)
-    obj = music.util.ExtendedProject()
+    obj = music.utils.project.ExtendedProject()
     assert obj.path == str(some_path)
 
 
@@ -48,7 +48,7 @@ def test_project_open(
 ) -> None:
     """Test invoking Reaper to open a project."""
     some_path = tmp_path / "path" / "to" / "some project"
-    music.util.ExtendedProject.get_or_open(some_path)
+    music.utils.project.ExtendedProject.get_or_open(some_path)
     assert open_project.mock_calls == snapshot
 
 
@@ -58,5 +58,5 @@ async def test_project_render(
     open_project: mock.Mock, requests_mocks: RequestsMocks, snapshot: SnapshotAssertion
 ) -> None:
     """Test invoking Reaper to render a project."""
-    await music.util.ExtendedProject().render()
+    await music.utils.project.ExtendedProject().render()
     assert requests_mocks.mock_calls == snapshot

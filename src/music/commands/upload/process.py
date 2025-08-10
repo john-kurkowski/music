@@ -13,7 +13,7 @@ import rich.box
 import rich.console
 import rich.progress
 
-from music.render.progress import IndeterminateProgress
+from music.commands.render.progress import IndeterminateProgress
 
 from .progress import DeterminateProgress
 

@@ -8,14 +8,15 @@ import click
 import rich.console
 import rich.live
 
-import music.util
-from music.util import SongVersion
+import music.utils
+from music.utils.project import ExtendedProject
+from music.utils.songversion import SongVersion
 
 from .process import Process as UploadProcess
 
 
 @click.command("upload")
-@music.util.coro
+@music.utils.coro
 @click.argument(
     "project_dirs",
     nargs=-1,
@@ -106,7 +107,7 @@ async def main(
     parsed_additional_headers = {**email.message_from_string(additional_headers)}
 
     if not project_dirs:
-        project_dirs = [Path(music.util.ExtendedProject().path)]
+        project_dirs = [Path(ExtendedProject().path)]
 
     versions = {
         version

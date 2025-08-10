@@ -14,9 +14,11 @@ def cli() -> None:
     """Tasks for publishing my music."""
 
 
-for command_file in Path(__file__).parent.glob("*/command.py"):
+for command_file in Path(__file__).parent.glob("commands/*/command.py"):
     command_package = command_file.parent.name
-    command_module = importlib.import_module(f"music.{command_package}.command")
+    command_module = importlib.import_module(
+        f"music.commands.{command_package}.command"
+    )
     cli.add_command(command_module.main)
 
 

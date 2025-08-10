@@ -14,9 +14,9 @@ import yarl
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
-from music.upload.command import main as upload
+from music.commands.upload.command import main as upload
 
-from .conftest import RequestsMocks
+from ..conftest import RequestsMocks
 
 ST_MODE_IS_FILE = 33188
 

@@ -9,9 +9,9 @@ from unittest import mock
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
-from music.render.command import main as render
-from music.render.result import RenderResult
-from music.util import SongVersion
+from music.commands.render.command import main as render
+from music.commands.render.result import RenderResult
+from music.utils.songversion import SongVersion
 
 from .conftest import RenderMocks
 

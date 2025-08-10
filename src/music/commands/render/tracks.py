@@ -2,7 +2,7 @@
 
 import warnings
 
-from music.util import recurse_property
+from music.utils import recurse_property
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")

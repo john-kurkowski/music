@@ -20,11 +20,9 @@ import rich.console
 import rich.progress
 import rich.table
 
-from music.util import (
-    ExtendedProject,
-    SongVersion,
-    rm_rf,
-)
+from music.utils import rm_rf
+from music.utils.project import ExtendedProject
+from music.utils.songversion import SongVersion
 
 from .consts import (
     MONO_TRACKS_TO_MONO_FILES,

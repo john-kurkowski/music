@@ -7,8 +7,9 @@ import subprocess
 from functools import cached_property
 from pathlib import Path
 
-from music.__codegen__ import stats
-from music.util import ExtendedProject, SongVersion
+from music.commands.__codegen__ import stats
+from music.utils.project import ExtendedProject
+from music.utils.songversion import SongVersion
 
 
 class ExistingRenderResult:

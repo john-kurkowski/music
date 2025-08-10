@@ -4,9 +4,9 @@ from pathlib import Path
 
 import click
 
-import music.render.process
-import music.util
-from music.util import SongVersion
+import music.commands.render.process
+from music.utils.project import ExtendedProject
+from music.utils.songversion import SongVersion
 
 
 @click.command("stat")
@@ -25,7 +25,7 @@ def main(files_or_project_dirs: list[Path], verbose: int) -> None:
     the currently open project.
     """
     if not files_or_project_dirs:
-        files_or_project_dirs = [Path(music.util.ExtendedProject().path)]
+        files_or_project_dirs = [Path(ExtendedProject().path)]
 
     files_nested = [
         [fil] if fil.is_file() else _files_for_project_dir(fil)
@@ -38,7 +38,7 @@ def main(files_or_project_dirs: list[Path], verbose: int) -> None:
             print()
         if len(files) > 1:
             print(fil)
-        for k, v in music.render.result.summary_stats_for_file(
+        for k, v in music.commands.render.result.summary_stats_for_file(
             fil, verbose=verbose
         ).items():
             print(f"{k:<16}: {v:<32}")

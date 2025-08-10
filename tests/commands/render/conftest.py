@@ -90,11 +90,11 @@ def render_mocks(
     """
     with (
         mock.patch(
-            "music.__codegen__.stats.parse_summary_stats"
+            "music.commands.__codegen__.stats.parse_summary_stats"
         ) as mock_parse_summary_stats,
-        mock.patch("music.util.ExtendedProject") as mock_project_class,
+        mock.patch("music.utils.project.ExtendedProject") as mock_project_class,
         mock.patch(
-            "music.render.process.RenderResult.duration_delta",
+            "music.commands.render.process.RenderResult.duration_delta",
             new_callable=mock.PropertyMock,
         ) as mock_duration_delta,
         mock.patch("reapy.inside_reaper") as mock_inside_reaper,
@@ -104,7 +104,7 @@ def render_mocks(
         mock.patch(
             "reapy.reascript_api.SNM_SetIntConfigVar", create=True
         ) as mock_set_int_config_var,
-        mock.patch("music.upload.process.Process.process") as mock_upload,
+        mock.patch("music.commands.upload.process.Process.process") as mock_upload,
     ):
         project = mock_project_class.get_or_open.return_value = (
             mock_project_class.return_value

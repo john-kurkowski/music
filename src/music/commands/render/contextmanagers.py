@@ -7,7 +7,8 @@ from functools import partial
 from pathlib import Path
 from typing import TypeVar, cast
 
-from music.util import ExtendedProject, set_param_value
+from music.utils.fx import set_param_value
+from music.utils.project import ExtendedProject
 
 from .consts import (
     LIMITER_RANGE,
