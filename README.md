@@ -5,9 +5,9 @@ Python.
 
 This app demonstrates how to programmatically control Reaper, from checking and
 temporarily changing global settings, un/muting tracks, to triggering renders of
-tracks. While built for personal music publishing workflows and assumes certain
-Reaper project conventions, the app serves as an example of integrating with
-Reaper's Python API.
+tracks. While built for personal music publishing and assuming certain Reaper
+project conventions, the app serves as an example of integrating with Reaper's
+Python API.
 
 ## Usage
 
