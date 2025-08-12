@@ -22,7 +22,7 @@ with warnings.catch_warnings():
 import music.commands.render.process
 import music.commands.upload.process
 import music.utils
-from music.utils.project import ExtendedProject
+from music.utils import project
 from music.utils.songversion import SongVersion
 
 from .consts import (
@@ -188,9 +188,9 @@ async def main(
     parsed_additional_headers = {**email.message_from_string(additional_headers)}
 
     projects = _validate_global_render_settings(
-        (ExtendedProject.get_or_open(path) for path in project_dirs)
+        (project.ExtendedProject.get_or_open(path) for path in project_dirs)
         if project_dirs
-        else iter((ExtendedProject(),))
+        else iter((project.ExtendedProject(),))
     )
 
     versions = {
@@ -232,7 +232,7 @@ class _Command:
     upload: bool
     upload_existing: bool
     vocal_loudness_worth: float | None
-    projects: Iterator[ExtendedProject]
+    projects: Iterator[project.ExtendedProject]
     versions: Collection[SongVersion]
 
     def __post_init__(
@@ -277,7 +277,7 @@ class _Command:
                 return renders, flattened_uploads
 
     async def _render_project(
-        self, client: aiohttp.ClientSession, project: ExtendedProject
+        self, client: aiohttp.ClientSession, project: project.ExtendedProject
     ) -> tuple[
         list[RenderResult],
         list[asyncio.Task[list[music.commands.upload.process.Track | BaseException]]],
@@ -330,7 +330,7 @@ class _Command:
 
 
 def _existing_render_fils(
-    project: ExtendedProject, versions: Collection[SongVersion]
+    project: project.ExtendedProject, versions: Collection[SongVersion]
 ) -> list[Path]:
     """Return a project's existing render files to upload.
 
@@ -367,8 +367,8 @@ def _report(
 
 
 def _validate_global_render_settings(
-    projects: Iterator[ExtendedProject],
-) -> Iterator[ExtendedProject]:
+    projects: Iterator[project.ExtendedProject],
+) -> Iterator[project.ExtendedProject]:
     """Validate global render settings.
 
     Raises if any settings would mess up a render.

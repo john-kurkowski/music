@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 
 import music.commands.render.process
-from music.utils.project import ExtendedProject
+from music.utils import project
 from music.utils.songversion import SongVersion
 
 
@@ -25,7 +25,7 @@ def main(files_or_project_dirs: list[Path], verbose: int) -> None:
     the currently open project.
     """
     if not files_or_project_dirs:
-        files_or_project_dirs = [Path(ExtendedProject().path)]
+        files_or_project_dirs = [Path(project.ExtendedProject().path)]
 
     files_nested = [
         [fil] if fil.is_file() else _files_for_project_dir(fil)
