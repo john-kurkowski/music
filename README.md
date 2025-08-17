@@ -39,13 +39,13 @@ music upload
 Serially upload to a streaming service the renders of the given list of Reaper
 projects, defaulting to the currently open project.
 
-### Open
+### Path
 
 ```sh
-music open
+music path
 ```
 
-Reveal the current project folder.
+Print the path to the current project.
 
 ### Help
 
