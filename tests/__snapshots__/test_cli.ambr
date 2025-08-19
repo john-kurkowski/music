@@ -10,6 +10,7 @@
         --help  Show this message and exit.
       
       Commands:
+        analyze  Analyze projects for problems.
         codegen  Generate code for this package.
         export   Export the given FILES to the given DST_DIR directory.
         path     Print the path to the current project.
