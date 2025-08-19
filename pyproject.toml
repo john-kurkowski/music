@@ -21,6 +21,7 @@ dependencies = [
     "openai",
     "python-reapy",
     "rich",
+    "rpp",
 ]
 
 [project.optional-dependencies]

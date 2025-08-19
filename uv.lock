@@ -574,6 +574,7 @@ dependencies = [
     { name = "openai" },
     { name = "python-reapy" },
     { name = "rich" },
+    { name = "rpp" },
 ]
 
 [package.optional-dependencies]
@@ -605,6 +606,7 @@ requires-dist = [
     { name = "python-lsp-server", marker = "extra == 'testing'" },
     { name = "python-reapy" },
     { name = "rich" },
+    { name = "rpp" },
     { name = "ruff", marker = "extra == 'testing'" },
     { name = "syrupy", marker = "extra == 'testing'" },
     { name = "types-aiofiles", marker = "extra == 'testing'" },
@@ -723,6 +725,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3", size = 69412, upload-time = "2025-05-15T12:30:07.975Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746", size = 20538, upload-time = "2025-05-15T12:30:06.134Z" },
+]
+
+[[package]]
+name = "ply"
+version = "3.11"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e5/69/882ee5c9d017149285cab114ebeab373308ef0f874fcdac9beb90e0ac4da/ply-3.11.tar.gz", hash = "sha256:00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3", size = 159130, upload-time = "2018-02-15T19:01:31.097Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a3/58/35da89ee790598a0700ea49b2a66594140f44dec458c07e8e3d4979137fc/ply-3.11-py2.py3-none-any.whl", hash = "sha256:096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce", size = 49567, upload-time = "2018-02-15T19:01:27.172Z" },
 ]
 
 [[package]]
@@ -1012,6 +1023,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/fe/75/af448d8e52bf1d8fa6a9d089ca6c07ff4453d86c65c145d0a300bb073b9b/rich-14.1.0.tar.gz", hash = "sha256:e497a48b844b0320d45007cdebfeaeed8db2a4f4bcf49f15e455cfc4af11eaa8", size = 224441, upload-time = "2025-07-25T07:32:58.125Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e3/30/3c4d035596d3cf444529e0b2953ad0466f6049528a879d27534700580395/rich-14.1.0-py3-none-any.whl", hash = "sha256:536f5f1785986d6dbdea3c75205c473f970777b4a0d6c6dd1b696aa05a3fa04f", size = 243368, upload-time = "2025-07-25T07:32:56.73Z" },
+]
+
+[[package]]
+name = "rpp"
+version = "0.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "ply" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f6/36/6534b9c984718b3a26fcd42e6d21d6f3a6d95bddf014df0c8f2ba30555e0/rpp-0.5.tar.gz", hash = "sha256:2b8dfdcef4b2c51ed107e5acfac0c88c21aefc941c42072387bb894c607d3f58", size = 11044, upload-time = "2023-04-29T18:48:44.182Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/37/7338baf9c7b1b8a41cc8ae2cc88c8a6b92d8ef131c02e50232c60b291887/rpp-0.5-py3-none-any.whl", hash = "sha256:ccf54131ee1b5601225583572c38392673e798db35a3ab695d252d5167937d9a", size = 6421, upload-time = "2023-04-29T18:48:40.477Z" },
 ]
 
 [[package]]
