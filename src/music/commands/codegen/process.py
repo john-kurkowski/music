@@ -4,8 +4,6 @@ import os
 import subprocess
 from pathlib import Path
 
-import openai
-
 from music.commands.render.result import _cmd_for_stats
 
 
@@ -15,6 +13,8 @@ def main(example_audio_file: Path) -> None:
     ffmpeg's output is verbose and not easily parsed. A parser would be brittle
     to maintain by hand. Have AI write it for us.
     """
+    import openai
+
     openai.api_key = os.environ["OPENAI_API_KEY"]
 
     fn_name = "parse_summary_stats"
