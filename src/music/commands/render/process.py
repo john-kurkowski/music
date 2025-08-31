@@ -259,6 +259,15 @@ class Process:
                 project.metadata.get("vocal-loudness-worth", VOCAL_LOUDNESS_WORTH)
             )
 
+        _vox_tracks_to_mute = None
+
+        def vox_tracks_to_mute() -> list[reapy.core.Track]:
+            """Lazy load variable."""
+            nonlocal _vox_tracks_to_mute
+            if _vox_tracks_to_mute is None:
+                _vox_tracks_to_mute = find_vox_tracks_to_mute(project)
+            return _vox_tracks_to_mute
+
         results = []
 
         if SongVersion.MAIN in versions:
@@ -272,20 +281,14 @@ class Process:
                 )
             )
 
-        if SongVersion.INSTRUMENTAL in versions and (
-            vocals or find_vox_tracks_to_mute(project)
-        ):
+        if SongVersion.INSTRUMENTAL in versions and (vocals or vox_tracks_to_mute()):
             results.append(
                 (
                     SongVersion.INSTRUMENTAL,
                     lambda: _render_version_with_muted_tracks(
                         SongVersion.INSTRUMENTAL,
                         project,
-                        *[
-                            track
-                            for track in [*vocals, *find_vox_tracks_to_mute(project)]
-                            if track
-                        ],
+                        *[track for track in [*vocals, *vox_tracks_to_mute()] if track],
                         dry_run=dry_run,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
@@ -297,11 +300,7 @@ class Process:
         # SongVersion.INSTRUMENTAL_DJ only mutes the main vocal. However, if
         # there are no other vox tracks, the version is identical to
         # SongVersion.INSTRUMENTAL, and is skipped.
-        if (
-            SongVersion.INSTRUMENTAL_DJ in versions
-            and vocals
-            and find_vox_tracks_to_mute(project)
-        ):
+        if SongVersion.INSTRUMENTAL_DJ in versions and vocals and vox_tracks_to_mute():
             results.append(
                 (
                     SongVersion.INSTRUMENTAL_DJ,

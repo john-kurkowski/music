@@ -9,6 +9,7 @@ with warnings.catch_warnings():
     import reapy
 
 
+@reapy.inside_reaper()
 def find_acappella_tracks_to_mute(
     project: reapy.core.Project,
 ) -> list[reapy.core.Track]:
@@ -32,6 +33,7 @@ def find_acappella_tracks_to_mute(
     ]
 
 
+@reapy.inside_reaper()
 def find_vox_tracks_to_mute(
     project: reapy.core.Project,
 ) -> list[reapy.core.Track]:
@@ -47,6 +49,7 @@ def find_vox_tracks_to_mute(
     ]
 
 
+@reapy.inside_reaper()
 def find_stems(project: reapy.core.Project) -> list[reapy.core.Track]:
     """Find tracks to render as stems.
 
@@ -61,6 +64,7 @@ def find_stems(project: reapy.core.Project) -> list[reapy.core.Track]:
     ]
 
 
+@reapy.inside_reaper()
 def is_muted(track: reapy.core.Track) -> bool:
     """Check whether a track is muted more robustly than `reapy.core.Track.is_muted`."""
     return track.is_muted or any(

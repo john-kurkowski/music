@@ -95,11 +95,11 @@ def adjust_render_bounds(project: ExtendedProject) -> Iterator[None]:
             key=lambda item: item.position,
         )
 
-    startpos = items[0].position if items else 0.0
-    endpos = max(
-        (item.position + item.length for item in items),
-        default=0.0,
-    )
+        startpos = items[0].position if items else 0.0
+        endpos = max(
+            (item.position + item.length for item in items),
+            default=0.0,
+        )
 
     with (
         get_set_restore(

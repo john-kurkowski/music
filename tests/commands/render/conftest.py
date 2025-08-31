@@ -1,5 +1,6 @@
 """pytest conventional file, for render helpers."""
 
+import contextlib
 import dataclasses
 import datetime
 import itertools
@@ -60,7 +61,6 @@ class RenderMocks:
 
     duration_delta: mock.Mock
     get_int_config_var: mock.Mock
-    inside_reaper: mock.Mock
     project: mock.Mock
     set_int_config_var: mock.Mock
     upload: mock.Mock
@@ -71,6 +71,17 @@ class RenderMocks:
         return {
             k.name: getattr(self, k.name).mock_calls for k in dataclasses.fields(self)
         }
+
+
+@pytest.fixture(autouse=True, scope="session")
+def inside_reaper() -> Iterator[None]:
+    """Prevent Reaper connection during tests."""
+    with (
+        mock.patch("reapy.is_inside_reaper", return_value=True),
+        mock.patch("reapy.inside_reaper") as mock_inside_reaper,
+    ):
+        mock_inside_reaper.side_effect = contextlib.nullcontext
+        yield
 
 
 @pytest.fixture
@@ -97,7 +108,6 @@ def render_mocks(
             "music.commands.render.process.RenderResult.duration_delta",
             new_callable=mock.PropertyMock,
         ) as mock_duration_delta,
-        mock.patch("reapy.inside_reaper") as mock_inside_reaper,
         mock.patch(
             "reapy.reascript_api.SNM_GetIntConfigVar", create=True
         ) as mock_get_int_config_var,
@@ -151,7 +161,6 @@ def render_mocks(
         yield RenderMocks(
             duration_delta=mock_duration_delta,
             get_int_config_var=mock_get_int_config_var,
-            inside_reaper=mock_inside_reaper,
             project=project,
             set_int_config_var=mock_set_int_config_var,
             upload=mock_upload,
