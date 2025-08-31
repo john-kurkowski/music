@@ -1,6 +1,5 @@
 """pytest conventional file, for render helpers."""
 
-import contextlib
 import dataclasses
 import datetime
 import itertools
@@ -78,9 +77,7 @@ def inside_reaper() -> Iterator[None]:
     """Prevent Reaper connection during tests."""
     with (
         mock.patch("reapy.is_inside_reaper", return_value=True),
-        mock.patch("reapy.inside_reaper") as mock_inside_reaper,
     ):
-        mock_inside_reaper.side_effect = contextlib.nullcontext
         yield
 
 
