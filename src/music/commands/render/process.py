@@ -5,7 +5,7 @@ import random
 import shutil
 import subprocess
 import warnings
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable, Collection
 from functools import partial
 from pathlib import Path
 from timeit import default_timer as timer
@@ -42,6 +42,10 @@ from .contextmanagers import (
 from .progress import IndeterminateProgress
 from .result import ExistingRenderResult, RenderResult
 from .tracks import find_acappella_tracks_to_mute, find_stems, find_vox_tracks_to_mute
+
+RenderTask = tuple[
+    SongVersion, Callable[[], Awaitable[RenderResult]], rich.progress.TaskID
+]
 
 
 async def render_version(
@@ -237,7 +241,7 @@ class Process:
         self.console_err = console_err
         self.progress = IndeterminateProgress(self.console)
 
-    async def process(  # noqa: C901
+    async def process(
         self,
         project: ExtendedProject,
         *versions: SongVersion,
@@ -252,25 +256,62 @@ class Process:
         no output. For example, if a project does not have vocals, rendering an a
         capella or instrumental version are skipped.
         """
-        vocals = [track for track in project.tracks if track.name == "Vocals"]
+        render_tasks = self._build_render_tasks(
+            project,
+            *versions,
+            dry_run=dry_run,
+            verbose=verbose,
+            vocal_loudness_worth=self._get_vocal_loudness_worth(
+                project, vocal_loudness_worth
+            ),
+        )
 
-        if vocal_loudness_worth is None:
-            vocal_loudness_worth = float(
-                project.metadata.get("vocal-loudness-worth", VOCAL_LOUDNESS_WORTH)
-            )
+        for i, (version, render, task) in enumerate(render_tasks):
+            existing_render_result = ExistingRenderResult(project, version)
 
-        _vox_tracks_to_mute = None
+            self.progress.start_task(task)
 
-        def vox_tracks_to_mute() -> list[reapy.core.Track]:
-            """Lazy load variable."""
-            nonlocal _vox_tracks_to_mute
-            if _vox_tracks_to_mute is None:
-                _vox_tracks_to_mute = find_vox_tracks_to_mute(project)
-            return _vox_tracks_to_mute
+            try:
+                new_render_result = await self._render_and_print_stats(
+                    existing_render_result, render, i=i, verbose=verbose
+                )
+            except Exception as ex:
+                self.progress.fail_task(task, str(ex))
+                raise
 
-        results = []
+            self.progress.succeed_task(task)
 
-        if SongVersion.MAIN in versions:
+            yield (version, new_render_result)
+
+        if len(render_tasks):
+            # Render causes a project to have unsaved changes, no matter what. Save the user a step.
+            project.save()
+
+        if exit_:
+            self._exit_daw()
+
+    def _add_task(
+        self, project: ExtendedProject, version: SongVersion
+    ) -> rich.progress.TaskID:
+        return self.progress.add_task(
+            f'Rendering "{version.name_for_project_dir(Path(project.path))}"',
+        )
+
+    def _build_render_tasks(
+        self,
+        project: ExtendedProject,
+        *versions: SongVersion,
+        dry_run: bool,
+        verbose: int,
+        vocal_loudness_worth: float,
+    ) -> list[RenderTask]:
+        """Build list of render tasks based on requested versions and project content."""
+        vocals = self._get_vocals(project)
+        vox_tracks_to_mute = find_vox_tracks_to_mute(project)
+
+        results: list[RenderTask] = []
+
+        if self._should_render_main(versions):
             results.append(
                 (
                     SongVersion.MAIN,
@@ -281,14 +322,14 @@ class Process:
                 )
             )
 
-        if SongVersion.INSTRUMENTAL in versions and (vocals or vox_tracks_to_mute()):
+        if self._should_render_instrumental(versions, vocals, vox_tracks_to_mute):
             results.append(
                 (
                     SongVersion.INSTRUMENTAL,
                     lambda: _render_version_with_muted_tracks(
                         SongVersion.INSTRUMENTAL,
                         project,
-                        *[track for track in [*vocals, *vox_tracks_to_mute()] if track],
+                        *[track for track in [*vocals, *vox_tracks_to_mute] if track],
                         dry_run=dry_run,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
@@ -297,10 +338,7 @@ class Process:
                 )
             )
 
-        # SongVersion.INSTRUMENTAL_DJ only mutes the main vocal. However, if
-        # there are no other vox tracks, the version is identical to
-        # SongVersion.INSTRUMENTAL, and is skipped.
-        if SongVersion.INSTRUMENTAL_DJ in versions and vocals and vox_tracks_to_mute():
+        if self._should_render_instrumental_dj(versions, vocals, vox_tracks_to_mute):
             results.append(
                 (
                     SongVersion.INSTRUMENTAL_DJ,
@@ -316,7 +354,7 @@ class Process:
                 )
             )
 
-        if SongVersion.ACAPPELLA in versions and vocals:
+        if self._should_render_acappella(versions, vocals):
             results.append(
                 (
                     SongVersion.ACAPPELLA,
@@ -330,7 +368,7 @@ class Process:
                 )
             )
 
-        if SongVersion.STEMS in versions:
+        if self._should_render_stems(versions):
             results.append(
                 (
                     SongVersion.STEMS,
@@ -341,37 +379,7 @@ class Process:
                 )
             )
 
-        for i, (version, render, task) in enumerate(results):
-            if i > 0:
-                self.console.print()
-
-            self.progress.start_task(task)
-
-            try:
-                result = await self._render_and_print_stats(
-                    ExistingRenderResult(project, version), render, verbose=verbose
-                )
-            except Exception as ex:
-                self.progress.fail_task(task, str(ex))
-                raise
-
-            self.progress.succeed_task(task)
-
-            yield (version, result)
-
-        if len(results):
-            # Render causes a project to have unsaved changes, no matter what. Save the user a step.
-            project.save()
-
-        if exit_:
-            self._exit_daw()
-
-    def _add_task(
-        self, project: ExtendedProject, version: SongVersion
-    ) -> rich.progress.TaskID:
-        return self.progress.add_task(
-            f'Rendering "{version.name_for_project_dir(Path(project.path))}"',
-        )
+        return results
 
     def _exit_daw(self) -> None:
         process = subprocess.run(
@@ -387,17 +395,34 @@ class Process:
         if process.returncode:
             self.console_err.print(process.stdout)
 
+    def _get_vocals(self, project: ExtendedProject) -> list[reapy.core.Track]:
+        """Get vocal tracks from project."""
+        return [track for track in project.tracks if track.name == "Vocals"]
+
+    def _get_vocal_loudness_worth(
+        self, project: ExtendedProject, vocal_loudness_worth: float | None
+    ) -> float:
+        """Get vocal loudness worth with fallback to project metadata."""
+        if vocal_loudness_worth is not None:
+            return vocal_loudness_worth
+
+        return float(project.metadata.get("vocal-loudness-worth", VOCAL_LOUDNESS_WORTH))
+
     async def _render_and_print_stats(
         self,
         existing_render: ExistingRenderResult,
         render: Callable[[], Awaitable[RenderResult]],
         *,
+        i: int,
         verbose: int,
     ) -> RenderResult:
         """Collect before statistics, execute the given render, and print a before and after summary.
 
         Returns the rendered file.
         """
+        if i > 0:
+            self.console.print()
+
         before_stats = existing_render.summary_stats
         out = await render()
         after_stats = out.summary_stats
@@ -425,3 +450,40 @@ class Process:
         self.console.print(table)
 
         return out
+
+    def _should_render_acappella(
+        self, versions: Collection[SongVersion], vocals: list[reapy.core.Track]
+    ) -> bool:
+        return SongVersion.ACAPPELLA in versions and bool(vocals)
+
+    def _should_render_instrumental(
+        self,
+        versions: Collection[SongVersion],
+        vocals: list[reapy.core.Track],
+        vox_tracks: list[reapy.core.Track],
+    ) -> bool:
+        return SongVersion.INSTRUMENTAL in versions and bool(vocals or vox_tracks)
+
+    def _should_render_instrumental_dj(
+        self,
+        versions: Collection[SongVersion],
+        vocals: list[reapy.core.Track],
+        vox_tracks: list[reapy.core.Track],
+    ) -> bool:
+        """Check whether to render the DJ instrumental version.
+
+        SongVersion.INSTRUMENTAL_DJ only mutes the main vocal. However, if
+        there are no other vox tracks, the version is identical to
+        SongVersion.INSTRUMENTAL, and is skipped.
+        """
+        return (
+            SongVersion.INSTRUMENTAL_DJ in versions
+            and bool(vocals)
+            and bool(vox_tracks)
+        )
+
+    def _should_render_main(self, versions: Collection[SongVersion]) -> bool:
+        return SongVersion.MAIN in versions
+
+    def _should_render_stems(self, versions: Collection[SongVersion]) -> bool:
+        return SongVersion.STEMS in versions
