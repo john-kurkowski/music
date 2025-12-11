@@ -382,10 +382,20 @@ class Process:
         return results
 
     def _exit_daw(self) -> None:
+        """Exit the running DAW app.
+
+        Reaper's CLI requires you close at least 1 project in order to exit the
+        app. To make the UX the same whether 1 or more projects are open, this
+        function closes _all_ projects.
+
+        TODO: is there a way to gracefully exit the DAW without closing any
+        projects? Maybe AppleScript? It's annoying to reopen projects on next
+        DAW launch.
+        """
         process = subprocess.run(
             [
                 "/Applications/REAPER.app/Contents/MacOS/REAPER",
-                "-close:exit:nosave",
+                "-closeall:exit:nosave",
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
