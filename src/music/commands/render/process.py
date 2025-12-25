@@ -186,20 +186,20 @@ async def _render_stems(
     found for my conventions is "selected tracks via master": select all
     relevant tracks and process them through the "master" track.
 
-    * Tracks are rendered through their parent, ancestor tracks, ascending all
-      the way through the literal master track.
+    * Tracks are rendered through their ancestor tracks, repeatedly ascending
+      all the way through the literal master track.
       * This function additionally disables FX on the master track. Its
         mastered render output is already available by requesting the main
         version of the song, rather than stems.
       * Combining all this function's output files would roughly recreate the
-        master mix, albeit with some redundant sounds depending on sends and
-        folder structure (and sans the master FX, per the previous point).
+        master mix (albeit with some redundant sounds depending on sends and
+        folder structure, and without the master FX, per the previous point).
     * Tracks are also rendered with their sends.
     * Tracks that are just sends are also rendered with all their inputs.
       * These stems are often redundant, but
         * they catch tracks that disabled master send.
         * otherwise might be a handy reference, the diff providing the input's
-          original dry signal.
+          original, dry signal.
 
     A disadvantage of "selected tracks via master" is, there is no stem
     containing a track's dry signal if any of its ancestors has FX. A
