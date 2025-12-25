@@ -65,10 +65,14 @@ class ExtendedProject(reapy.core.Project):
         """
         port = reapy.config.WEB_INTERFACE_PORT
 
+        timeout_for_complex_project_stems = aiohttp.ClientTimeout(
+            total=60 * 60  # 1 hour
+        )
+
         async with aiohttp.ClientSession() as client:
             resp = await client.get(
                 f"http://localhost:{port}/_/{RENDER_CMD_ID}",
-                timeout=aiohttp.ClientTimeout(total=60 * 60),
+                timeout=timeout_for_complex_project_stems,
             )
             resp.raise_for_status()
 
