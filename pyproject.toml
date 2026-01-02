@@ -19,7 +19,8 @@ dependencies = [
     "aiohttp",
     "click",
     "openai",
-    "python-reapy",
+    "psutil",
+    "python-reapy @ git+https://github.com/RomeoDespres/reapy.git@refs/pull/138/head",
     "rich",
 ]
 
@@ -76,3 +77,6 @@ addopts = [
   '--disable-socket',
   '--allow-unix-socket',
 ]
+
+[tool.uv.extra-build-dependencies]
+python-reapy = ["psutil"]
