@@ -62,18 +62,24 @@ music command-name-here --help  # list options for a specific command
    PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install <VERSION>
    ```
 1. [SWS Extension](https://www.sws-extension.org/)
+1. [uv](https://github.com/astral-sh/uv)
 
 ## Install
 
 1.  ```sh
-    path/to/framework/enabled/python -m pip install .
+    UV_PYTHON=path/to/framework/enabled/python uv pip install .
     ```
 1.  Open Reaper
 1.  Configure Reaper for Python (per
     [reapy's README](https://github.com/RomeoDespres/reapy/blob/0.10.0/README.md#installation))
+
     ```sh
     path/to/framework/enabled/python -c "import reapy; reapy.configure_reaper()"
     ```
+
+    - If successful, the command's output will be empty, except maybe a
+      _warning_ about being unable to reach REAPER's "distant" API.
+
 1.  Restart Reaper
 
 ## Contribute
@@ -81,7 +87,8 @@ music command-name-here --help  # list options for a specific command
 Install for local development:
 
 ```sh
-pip install --editable '.[testing]'
+uv sync --all-extras
+. ./venv/bin/activate  # or however you add your virtualenv to your PATH
 pre-commit install
 ```
 
