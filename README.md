@@ -115,6 +115,29 @@ output, via the `TERM` environment variable. For example:
 TERM=dumb music render
 ```
 
+### Troubleshooting
+
+#### Command hangs and/or infinite REAPER modal dialog error
+
+This can happen if this project's Python version gets out of sync with Reaper's.
+
+1. Exit the command with Ctrl-C. You might see unexpected versions of Python in
+   the stacktrace.
+1. Exit the modal dialog.
+1. In Reaper's reaper.ini, ensure the following values are your expected Python
+   version:
+   ```ini
+   pythonlibdll64=libpython3.14.dylib
+   pythonlibpath64=path/to/framework/enabled/python/lib/python3.14/config-3.14-darwin
+   reascript=1
+   ```
+1. In Reaper's reaper-extstate.ini and reaper-kb.ini, delete any lines
+   mentioning "reapy".
+1. Restart Reaper.
+1. Re-run this project's [install steps](#install) (again, with
+   [Reaper-compatible Python](#reaper-compatible-python), and restarting Reaper
+   at the end).
+
 ## FAQ
 
 ### Why Python with Reaper?
