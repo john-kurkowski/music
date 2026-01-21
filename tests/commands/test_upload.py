@@ -14,8 +14,8 @@ import yarl
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
-from music.commands.upload.command import main as upload
 from music.commands.upload import process as upload_process
+from music.commands.upload.command import main as upload
 
 from ..conftest import RequestsMocks
 
