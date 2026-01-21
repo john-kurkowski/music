@@ -30,7 +30,7 @@
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
-              'limit': 999,
+              'limit': 250,
             }),
             'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
           }),
@@ -211,6 +211,47 @@
     }),
   )
 # ---
+# name: test_main_tracks_limit_warning
+  tuple(
+    None,
+    '''
+      Warning: SoundCloud tracks response returned 250 tracks (limit 250); pagination 
+      may be required.
+      ⚠ Uploading "some project.wav" (already uploaded)    0:00:00           0.0/1.2  
+                                                                             MB       
+      ⚠ Uploading "another project.wav" (already uploaded) 0:00:00           0.0/1.2  
+                                                                             MB       
+  
+    ''',
+    '',
+    dict({
+      'get': _CallList([
+        _Call(
+          '',
+          tuple(
+            'https://api-v2.soundcloud.com/users/41506/tracks',
+          ),
+          dict({
+            'headers': dict({
+              'Accept': 'application/json',
+              'Authorization': 'OAuth stub-fake-token',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'X-Test-Additional-Header': '1',
+            }),
+            'params': dict({
+              'limit': 250,
+            }),
+            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+          }),
+        ),
+      ]),
+      'post': _CallList([
+      ]),
+      'put': _CallList([
+      ]),
+    }),
+  )
+# ---
 # name: test_main_tracks_newer
   tuple(
     None,
@@ -237,7 +278,7 @@
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
-              'limit': 999,
+              'limit': 250,
             }),
             'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
           }),
@@ -280,7 +321,7 @@
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
-              'limit': 999,
+              'limit': 250,
             }),
             'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
           }),
@@ -320,7 +361,7 @@
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
-              'limit': 999,
+              'limit': 250,
             }),
             'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
           }),

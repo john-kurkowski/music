@@ -15,6 +15,7 @@ from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
 from music.commands.upload.command import main as upload
+from music.commands.upload import process as upload_process
 
 from ..conftest import RequestsMocks
 
@@ -92,30 +93,91 @@ def test_main_tracks_newer(
 
     def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
         if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
-            return mock.Mock(
-                json=mock.AsyncMock(
-                    return_value={
-                        "collection": [
-                            {
-                                "id": 1,
-                                "last_modified": new_timestamp,
-                                "title": "some project",
-                                "permalink_url": "https://soundcloud.com/1",
-                            },
-                            {
-                                "id": 2,
-                                "last_modified": new_timestamp,
-                                "title": "another project",
-                                "permalink_url": "https://soundcloud.com/2",
-                            },
-                        ]
-                    }
-                )
-            )
+            tracks = [
+                {
+                    "id": 1,
+                    "last_modified": new_timestamp,
+                    "title": "some project",
+                    "permalink_url": "https://soundcloud.com/1",
+                },
+                {
+                    "id": 2,
+                    "last_modified": new_timestamp,
+                    "title": "another project",
+                    "permalink_url": "https://soundcloud.com/2",
+                },
+                *[
+                    {"title": f"extra track {idx}"}
+                    for idx in range(upload_process.TRACKS_FETCH_LIMIT - 3)
+                ],
+            ]
+            return mock.Mock(json=mock.AsyncMock(return_value={"collection": tracks}))
 
         return mock.Mock()
 
     requests_mocks.get.side_effect = mock_get
+    with mock.patch.object(Path, "stat", autospec=True, side_effect=mock_stat):
+        result = CliRunner(catch_exceptions=False).invoke(
+            upload,
+            [str(path.parent.resolve()) for path in some_paths],
+        )
+
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        requests_mocks.mock_calls,
+    ) == snapshot
+
+
+def test_main_tracks_limit_warning(
+    requests_mocks: RequestsMocks,
+    snapshot: SnapshotAssertion,
+    some_paths: list[Path],
+) -> None:
+    """Test main warns when the tracks response hits the API limit."""
+    old_timestamp = "2020-10-01T00:00:00Z"
+    new_timestamp = "2021-10-01T00:00:00Z"
+
+    original_stat = Path.stat
+
+    def mock_stat(self: Path, *args: Any, **kwargs: Any) -> Any:
+        """Mock `Path.stat()` to return a timestamp for some paths under test."""
+        if self in some_paths:
+            return mock.Mock(
+                st_mode=ST_MODE_IS_FILE,
+                st_mtime=datetime.datetime.fromisoformat(old_timestamp).timestamp(),
+                st_size=1_234_567,
+            )
+
+        return original_stat(self, *args, **kwargs)
+
+    def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
+        if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
+            tracks = [
+                {
+                    "id": 1,
+                    "last_modified": new_timestamp,
+                    "title": "some project",
+                    "permalink_url": "https://soundcloud.com/1",
+                },
+                {
+                    "id": 2,
+                    "last_modified": new_timestamp,
+                    "title": "another project",
+                    "permalink_url": "https://soundcloud.com/2",
+                },
+                *[
+                    {"title": f"extra track {idx}"}
+                    for idx in range(upload_process.TRACKS_FETCH_LIMIT - 2)
+                ],
+            ]
+            return mock.Mock(json=mock.AsyncMock(return_value={"collection": tracks}))
+
+        return mock.Mock()
+
+    requests_mocks.get.side_effect = mock_get
+
     with mock.patch.object(Path, "stat", autospec=True, side_effect=mock_stat):
         result = CliRunner(catch_exceptions=False).invoke(
             upload,

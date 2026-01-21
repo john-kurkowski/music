@@ -18,6 +18,7 @@ from music.commands.render.progress import IndeterminateProgress
 from .progress import DeterminateProgress
 
 USER_ID = 41506
+TRACKS_FETCH_LIMIT = 250
 
 Track = dict[str, Any]
 
@@ -74,15 +75,23 @@ class Process:
         tracks_resp = await client.get(
             f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
             headers=headers,
-            params={"limit": 999},
+            params={"limit": TRACKS_FETCH_LIMIT},
             timeout=aiohttp.ClientTimeout(total=10),
         )
         await _raise_for_status(tracks_resp)
 
         files_by_stem = {file.stem: file for file in files}
+        tracks_payload = await tracks_resp.json()
+        tracks_collection = tracks_payload["collection"]
+        if len(tracks_collection) >= TRACKS_FETCH_LIMIT:
+            self.console.print(
+                "Warning: SoundCloud tracks response returned"
+                f" {len(tracks_collection)} tracks (limit {TRACKS_FETCH_LIMIT});"
+                " pagination may be required."
+            )
         tracks_by_title = {
             track["title"]: track
-            for track in (await tracks_resp.json())["collection"]
+            for track in tracks_collection
             if track["title"] in files_by_stem
         }
 
