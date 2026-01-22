@@ -118,15 +118,23 @@ def render_mocks(
         )
 
         render_patterns = []
+        render_format2s = []
 
         def collect_render_patterns(key: str, value: str) -> None:
             if key == "RENDER_PATTERN":
                 render_patterns.append(value)
+            elif key == "RENDER_FORMAT2":
+                render_format2s.append(value)
 
         async def render_fake_file() -> None:
             path = Path(project.path) / f"{render_patterns[-1]}.wav"
             path.parent.mkdir(exist_ok=True, parents=True)
             path.touch()
+
+            has_render_format2 = len(render_patterns) == len(render_format2s)
+            if has_render_format2:
+                secondary_path = path.with_suffix(".mp3")
+                secondary_path.touch()
 
         path = tmp_path / "Stub Song Title (feat. Stub Artist)"
         path.mkdir()

@@ -83,8 +83,14 @@ async def render_version(
     out_fil = version.path_for_project_dir(Path(project.path))
     if version == SongVersion.STEMS:
         tmp_fil = out_fil.parent / in_name
+
+        tmp_secondary = None
+        final_secondary = None
     else:
         tmp_fil = out_fil.with_stem(in_name)
+
+        tmp_secondary = tmp_fil.with_suffix(".mp3")
+        final_secondary = out_fil.with_suffix(".mp3")
 
     final_fil = tmp_fil if dry_run else out_fil
 
@@ -101,9 +107,16 @@ async def render_version(
 
     if dry_run:
         rm_rf(tmp_fil)
+
+        if tmp_secondary:
+            rm_rf(tmp_secondary)
     else:
         rm_rf(final_fil)
         shutil.move(tmp_fil, final_fil)
+
+        if tmp_secondary and final_secondary:
+            rm_rf(final_secondary)
+            shutil.move(tmp_secondary, final_secondary)
 
     return result
 
@@ -142,11 +155,22 @@ def trim_silence(fil: Path) -> None:
 
 
 def _encode_archival_render_format() -> str:
-    """Encode maximum FLAC compression settings for Reaper's little-endian `RENDER_FORMAT` setting."""
+    """Encode maximum FLAC compression for Reaper's little-endian `RENDER_FORMAT` setting."""
     codec_tag = "flac"[::-1].encode("ascii")
     settings_flag = 0x10
     max_compression_level = 8
     payload = codec_tag + struct.pack("<II", settings_flag, max_compression_level)
+    return base64.b64encode(payload).decode("ascii")
+
+
+def _encode_shareable_render_format() -> str:
+    """Encode LAME VBR -V2 for Reaper's little-endian `RENDER_FORMAT` setting."""
+    codec_tag = "mp3l"[::-1].encode("ascii")
+    settings_blob = bytes.fromhex(
+        # LAME VBR -V2 (q=2) settings blob as stored by Reaper
+        "20000000000000000200000000000000060000004001000000000000"
+    )
+    payload = codec_tag + settings_blob
     return base64.b64encode(payload).decode("ascii")
 
 
@@ -156,7 +180,13 @@ async def _render_main(
     for vocal in vocals:
         vocal.unsolo()
         vocal.unmute()
-    return await render_version(project, SongVersion.MAIN, dry_run=dry_run)
+
+    with get_set_restore(
+        partial(project.get_info_string, "RENDER_FORMAT2"),
+        partial(project.set_info_string, "RENDER_FORMAT2"),
+        _encode_shareable_render_format(),
+    ):
+        return await render_version(project, SongVersion.MAIN, dry_run=dry_run)
 
 
 async def _render_version_with_muted_tracks(
@@ -170,6 +200,11 @@ async def _render_version_with_muted_tracks(
     with (
         adjust_master_limiter_threshold(project, vocal_loudness_worth),
         mute_tracks(tracks_to_mute),
+        get_set_restore(
+            partial(project.get_info_string, "RENDER_FORMAT2"),
+            partial(project.set_info_string, "RENDER_FORMAT2"),
+            _encode_shareable_render_format(),
+        ),
     ):
         return await render_version(project, version, dry_run=dry_run)
 
@@ -186,6 +221,11 @@ async def _render_a_cappella(
     with (
         adjust_master_limiter_threshold(project, vocal_loudness_worth),
         mute_tracks(tracks_to_mute),
+        get_set_restore(
+            partial(project.get_info_string, "RENDER_FORMAT2"),
+            partial(project.set_info_string, "RENDER_FORMAT2"),
+            _encode_shareable_render_format(),
+        ),
     ):
         return await render_version(
             project,
