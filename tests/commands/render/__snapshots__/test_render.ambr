@@ -541,6 +541,40 @@
       }),
     ),
     _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_FORMAT',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_FORMAT',
+        'Y2FsZhAAAAAIAAAA',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'get_info_string',
+      tuple(
+        'RENDER_FORMAT2',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_FORMAT2',
+        '',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
       'get_info_value',
       tuple(
         'RENDER_BOUNDSFLAG',
@@ -646,6 +680,24 @@
       'set_info_value',
       tuple(
         'RENDER_BOUNDSFLAG',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_FORMAT2',
+        'ASYNC_ITERABLE_HERE',
+      ),
+      dict({
+      }),
+    ),
+    _Call(
+      'set_info_string',
+      tuple(
+        'RENDER_FORMAT',
         'ASYNC_ITERABLE_HERE',
       ),
       dict({
@@ -2355,6 +2407,40 @@
         }),
       ),
       _Call(
+        'get_info_string',
+        tuple(
+          'RENDER_FORMAT',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_string',
+        tuple(
+          'RENDER_FORMAT',
+          'Y2FsZhAAAAAIAAAA',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'get_info_string',
+        tuple(
+          'RENDER_FORMAT2',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_string',
+        tuple(
+          'RENDER_FORMAT2',
+          '',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
         'get_info_value',
         tuple(
           'RENDER_BOUNDSFLAG',
@@ -2460,6 +2546,24 @@
         'set_info_value',
         tuple(
           'RENDER_BOUNDSFLAG',
+          'ASYNC_ITERABLE_HERE',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_string',
+        tuple(
+          'RENDER_FORMAT2',
+          'ASYNC_ITERABLE_HERE',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_string',
+        tuple(
+          'RENDER_FORMAT',
           'ASYNC_ITERABLE_HERE',
         ),
         dict({
@@ -2959,6 +3063,40 @@
         }),
       ),
       _Call(
+        'get_info_string',
+        tuple(
+          'RENDER_FORMAT',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_string',
+        tuple(
+          'RENDER_FORMAT',
+          'Y2FsZhAAAAAIAAAA',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'get_info_string',
+        tuple(
+          'RENDER_FORMAT2',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_string',
+        tuple(
+          'RENDER_FORMAT2',
+          '',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
         'get_info_value',
         tuple(
           'RENDER_BOUNDSFLAG',
@@ -3064,6 +3202,24 @@
         'set_info_value',
         tuple(
           'RENDER_BOUNDSFLAG',
+          'ASYNC_ITERABLE_HERE',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_string',
+        tuple(
+          'RENDER_FORMAT2',
+          'ASYNC_ITERABLE_HERE',
+        ),
+        dict({
+        }),
+      ),
+      _Call(
+        'set_info_string',
+        tuple(
+          'RENDER_FORMAT',
           'ASYNC_ITERABLE_HERE',
         ),
         dict({

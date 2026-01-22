@@ -1,8 +1,10 @@
 """Render processing class and functions to handle the possible versions of a song."""
 
+import base64
 import datetime
 import random
 import shutil
+import struct
 import subprocess
 import warnings
 from collections.abc import AsyncIterator, Awaitable, Callable, Collection
@@ -131,6 +133,15 @@ def trim_silence(fil: Path) -> None:
     shutil.move(tmp_fil, fil)
 
 
+def _encode_archival_render_format() -> str:
+    """Encode maximum FLAC compression settings for Reaper's little-endian `RENDER_FORMAT` setting."""
+    codec_tag = "flac"[::-1].encode("ascii")
+    settings_flag = 0x10
+    max_compression_level = 8
+    payload = codec_tag + struct.pack("<II", settings_flag, max_compression_level)
+    return base64.b64encode(payload).decode("ascii")
+
+
 async def _render_main(
     project: ExtendedProject, *vocals: reapy.core.Track, dry_run: bool, verbose: int
 ) -> RenderResult:
@@ -217,6 +228,8 @@ async def _render_stems(
         vocal.unmute()
 
     render_settings = MONO_TRACKS_TO_MONO_FILES | SELECTED_TRACKS_VIA_MASTER
+    render_format = _encode_archival_render_format()
+    render_format2 = ""
 
     with (
         select_tracks_only(project, find_stems(project)),
@@ -225,6 +238,16 @@ async def _render_stems(
             partial(project.get_info_value, "RENDER_SETTINGS"),
             partial(project.set_info_value, "RENDER_SETTINGS"),
             cast(float, render_settings),
+        ),
+        get_set_restore(
+            partial(project.get_info_string, "RENDER_FORMAT"),
+            partial(project.set_info_string, "RENDER_FORMAT"),
+            render_format,
+        ),
+        get_set_restore(
+            partial(project.get_info_string, "RENDER_FORMAT2"),
+            partial(project.set_info_string, "RENDER_FORMAT2"),
+            render_format2,
         ),
     ):
         return await render_version(project, SongVersion.STEMS, dry_run=dry_run)
