@@ -52,7 +52,9 @@ def test_main_reaper_not_configured(
     assert "media items offline" in result.output
 
 
-def test_main_noop(render_mocks: RenderMocks, snapshot: SnapshotAssertion) -> None:
+def test_main_noop(
+    render_mocks: RenderMocks, snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
     """Test a project with nothing to do.
 
     If a project has no vocals, it does not make sense to render its instrumental nor cappella.
@@ -73,6 +75,7 @@ def test_main_noop(render_mocks: RenderMocks, snapshot: SnapshotAssertion) -> No
         result.stdout,
         result.stderr,
         render_mocks.project.mock_calls,
+        _snapshot_tmp_path(tmp_path),
     ) == snapshot
 
 
@@ -80,6 +83,7 @@ def test_main_main_version(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
+    tmp_path: Path,
 ) -> None:
     """Test main with main version."""
     result = CliRunner(catch_exceptions=False).invoke(
@@ -93,6 +97,7 @@ def test_main_main_version(
         result.stderr,
         render_mocks.project.mock_calls,
         subprocess_with_output.mock_calls,
+        _snapshot_tmp_path(tmp_path),
     ) == snapshot
 
 
@@ -100,6 +105,7 @@ def test_main_default_versions(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
+    tmp_path: Path,
 ) -> None:
     """Test main with default versions."""
     result = CliRunner(catch_exceptions=False).invoke(render, [])
@@ -110,6 +116,7 @@ def test_main_default_versions(
         result.stderr,
         render_mocks.project.mock_calls,
         subprocess_with_output.mock_calls,
+        _snapshot_tmp_path(tmp_path),
     ) == snapshot
 
 
@@ -117,6 +124,7 @@ def test_main_default_versions_dry_run(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
+    tmp_path: Path,
 ) -> None:
     """Test main dry run, with default versions."""
     result = CliRunner(catch_exceptions=False).invoke(
@@ -130,6 +138,7 @@ def test_main_default_versions_dry_run(
         result.stderr,
         render_mocks.project.mock_calls,
         subprocess_with_output.mock_calls,
+        _snapshot_tmp_path(tmp_path),
     ) == snapshot
 
 
@@ -137,6 +146,7 @@ def test_main_instrumental_versions_only_main_vocals(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
+    tmp_path: Path,
 ) -> None:
     """Test main with 2 instrumental versions.
 
@@ -160,6 +170,7 @@ def test_main_instrumental_versions_only_main_vocals(
         result.stderr,
         render_mocks.project.mock_calls,
         subprocess_with_output.mock_calls,
+        _snapshot_tmp_path(tmp_path),
     ) == snapshot
 
 
@@ -167,6 +178,7 @@ def test_main_all_versions(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
+    tmp_path: Path,
 ) -> None:
     """Test main with all versions."""
     result = CliRunner(catch_exceptions=False).invoke(
@@ -188,11 +200,14 @@ def test_main_all_versions(
     assert subprocess_with_output.mock_calls
     assert subprocess_with_output.mock_calls == snapshot
 
+    assert _snapshot_tmp_path(tmp_path) == snapshot
+
 
 def test_main_mixed_errors(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
     subprocess_with_output: mock.Mock,
+    tmp_path: Path,
 ) -> None:
     """Test main with the first 2 versions succeeding and the last 1 failing."""
     original_render = render_mocks.project.render.side_effect
@@ -224,6 +239,8 @@ def test_main_mixed_errors(
     assert render_mocks.project.mock_calls == snapshot
     assert subprocess_with_output.mock_calls
     assert subprocess_with_output.mock_calls == snapshot
+
+    assert _snapshot_tmp_path(tmp_path) == snapshot
 
 
 def test_main_filenames_all_versions(
@@ -258,6 +275,7 @@ def test_main_filenames_all_versions(
         result.stderr,
         render_mocks.project.mock_calls,
         subprocess_with_output.mock_calls,
+        _snapshot_tmp_path(tmp_path),
     ) == snapshot
 
 
@@ -299,4 +317,9 @@ def test_main_mocked_calls(
         result.stdout,
         result.stderr,
         render_mocks.mock_calls,
+        _snapshot_tmp_path(tmp_path),
     ) == snapshot
+
+
+def _snapshot_tmp_path(tmp_path: Path) -> list[Path]:
+    return sorted(p for p in tmp_path.rglob("*") if p.is_file())

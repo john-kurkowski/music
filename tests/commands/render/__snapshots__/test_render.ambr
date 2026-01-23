@@ -831,6 +831,15 @@
     ),
   ])
 # ---
+# name: test_main_all_versions.3
+  list([
+    'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav',
+    'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (DJ Instrumental).wav',
+    'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+    'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Stems)/$folders $tracknumber - $track.wav',
+    'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
+  ])
+# ---
 # name: test_main_default_versions
   tuple(
     None,
@@ -1316,6 +1325,11 @@
           'text': True,
         }),
       ),
+    ]),
+    list([
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav',
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
     ]),
   )
 # ---
@@ -1804,6 +1818,9 @@
           'text': True,
         }),
       ),
+    ]),
+    list([
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).tmp.wav',
     ]),
   )
 # ---
@@ -3544,6 +3561,13 @@
         }),
       ),
     ]),
+    list([
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).wav',
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (DJ Instrumental).wav',
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Stems)/$folders $tracknumber - $track.wav',
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
+    ]),
   )
 # ---
 # name: test_main_instrumental_versions_only_main_vocals
@@ -3724,6 +3748,9 @@
         }),
       ),
     ]),
+    list([
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+    ]),
   )
 # ---
 # name: test_main_main_version
@@ -3903,6 +3930,9 @@
           'text': True,
         }),
       ),
+    ]),
+    list([
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
     ]),
   )
 # ---
@@ -4340,6 +4370,12 @@
     ),
   ])
 # ---
+# name: test_main_mixed_errors.4
+  list([
+    'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+    'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
+  ])
+# ---
 # name: test_main_mocked_calls
   tuple(
     None,
@@ -4600,6 +4636,10 @@
         ),
       ]),
     }),
+    list([
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+      'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
+    ]),
   )
 # ---
 # name: test_main_noop
@@ -4627,6 +4667,8 @@
         dict({
         }),
       ),
+    ]),
+    list([
     ]),
   )
 # ---
