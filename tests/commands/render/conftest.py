@@ -217,6 +217,10 @@ def subprocess_with_output(
         if cmd_args[0] == "ffmpeg":  # write out file
             rv.stderr = ""
 
+            in_file = Path(cmd_args[2])
+            if not in_file.exists():
+                raise FileNotFoundError(in_file)
+
             out_fil = Path(cmd_args[-1])
             out_fil.touch()
         elif str(cmd_args[0]).endswith("REAPER"):  # "exit" reaper
