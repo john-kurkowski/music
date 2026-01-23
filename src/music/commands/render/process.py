@@ -51,7 +51,11 @@ RenderTask = tuple[
 
 
 async def render_version(
-    project: ExtendedProject, version: SongVersion, *, dry_run: bool
+    project: ExtendedProject,
+    version: SongVersion,
+    *,
+    dry_run: bool,
+    postprocess: Callable[[Path], None] | None = None,
 ) -> RenderResult:
     """Trigger Reaper to render the current project audio. Returns the output file.
 
@@ -83,6 +87,10 @@ async def render_version(
         tmp_fil = out_fil.with_stem(in_name)
 
     final_fil = tmp_fil if dry_run else out_fil
+
+    if postprocess is not None:
+        postprocess(tmp_fil)
+
     result = RenderResult(
         project,
         version,
@@ -179,10 +187,12 @@ async def _render_a_cappella(
         adjust_master_limiter_threshold(project, vocal_loudness_worth),
         mute_tracks(tracks_to_mute),
     ):
-        out = await render_version(project, SongVersion.ACAPPELLA, dry_run=dry_run)
-
-    trim_silence(out.fil)
-    return out
+        return await render_version(
+            project,
+            SongVersion.ACAPPELLA,
+            dry_run=dry_run,
+            postprocess=trim_silence,
+        )
 
 
 async def _render_stems(
