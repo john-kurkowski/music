@@ -156,7 +156,7 @@ def avoid_fx_tails(project: ExtendedProject) -> Iterator[None]:
 
 
 @contextlib.contextmanager
-def get_set_restore(
+def get_set_restore[T](
     getter: Callable[[], T], setter: Callable[[T], None], during_value: T
 ) -> Iterator[None]:
     """Get the previous value from `getter`, set `during_value` with the `setter`, then restore the original value."""
