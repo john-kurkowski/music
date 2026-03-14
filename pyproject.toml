@@ -33,7 +33,6 @@ testing = [
     "pytest-socket",
     "python-lsp-server",
     "ruff",
-    "shellcheck-py",
     "syrupy",
     "types-aiofiles",
 ]

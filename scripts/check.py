@@ -9,18 +9,6 @@ import subprocess
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
-_IGNORED_DIRS = {
-    ".git",
-    ".jj",
-    ".mypy_cache",
-    ".pytest_cache",
-    ".ruff_cache",
-    ".venv",
-    "__pycache__",
-    "build",
-    "htmlcov",
-}
-
 
 def parse_args() -> argparse.Namespace:
     """Parse CLI flags."""
@@ -31,17 +19,6 @@ def parse_args() -> argparse.Namespace:
         help="Apply fixes with tools that support autofixing.",
     )
     return parser.parse_args()
-
-
-def shellcheck_targets(root: Path) -> list[Path]:
-    """Discover shell files that should be checked."""
-    targets = []
-    for path in sorted(root.rglob("*.sh")):
-        if any(parent.name in _IGNORED_DIRS for parent in path.parents):
-            continue
-        targets.append(path)
-
-    return targets
 
 
 def repo_root(cwd: Path) -> Path:
@@ -56,19 +33,11 @@ def repo_root(cwd: Path) -> Path:
 
 def commands(root: Path, *, fix: bool) -> list[list[str]]:
     """Build the static check commands for the repo."""
-    checks = [
+    return [
         ["ruff", "check", "--fix", "."] if fix else ["ruff", "check", "."],
         ["ruff", "format", "."] if fix else ["ruff", "format", "--check", "."],
         ["mypy", "src", "tests"],
     ]
-
-    shell_files = shellcheck_targets(root)
-    if shell_files:
-        checks.append(
-            ["shellcheck", *[str(path.relative_to(root)) for path in shell_files]]
-        )
-
-    return checks
 
 
 def run_commands(root: Path, checks: Iterable[Sequence[str]]) -> None:

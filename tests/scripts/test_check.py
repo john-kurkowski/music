@@ -4,34 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.check import commands, repo_root, shellcheck_targets
-
-
-def test_shellcheck_targets_include_scripts_dir(tmp_path: Path) -> None:
-    """Discover checked shell files while skipping tool caches."""
-    script = tmp_path / "scripts" / "check.sh"
-    script.parent.mkdir()
-    script.write_text("#!/usr/bin/env bash\n")
-
-    ignored_script = tmp_path / ".venv" / "bin" / "ignored.sh"
-    ignored_script.parent.mkdir(parents=True)
-    ignored_script.write_text("#!/usr/bin/env bash\n")
-
-    assert shellcheck_targets(tmp_path) == [script]
-
-
-def test_commands_include_shellcheck_when_shell_files_exist(tmp_path: Path) -> None:
-    """Run shellcheck as part of the static checks when needed."""
-    script = tmp_path / "scripts" / "check.sh"
-    script.parent.mkdir()
-    script.write_text("#!/usr/bin/env bash\n")
-
-    assert commands(tmp_path, fix=False) == [
-        ["ruff", "check", "."],
-        ["ruff", "format", "--check", "."],
-        ["mypy", "src", "tests"],
-        ["shellcheck", "scripts/check.sh"],
-    ]
+from scripts.check import commands, repo_root
 
 
 def test_commands_enable_autofix_when_requested(tmp_path: Path) -> None:
