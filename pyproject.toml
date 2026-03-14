@@ -27,19 +27,24 @@ dependencies = [
 [project.optional-dependencies]
 testing = [
     "mypy",
-    "pre-commit",
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
     "pytest-socket",
     "python-lsp-server",
     "ruff",
+    "shellcheck-py",
     "syrupy",
     "types-aiofiles",
 ]
 
 [project.scripts]
 music = "music.__main__:cli"
+check = "scripts.check:main"
+
+[tool.setuptools.packages.find]
+where = [".", "src"]
+include = ["music*", "scripts*"]
 
 [tool.mypy]
 strict = true

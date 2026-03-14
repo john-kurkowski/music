@@ -21,9 +21,9 @@ jobs:
       run: |
         python -m pip install --upgrade uv
         uv sync --all-extras
-    - name: Pre-commit checks
+    - name: Static checks
       run: |
-        uv run pre-commit run --all-files
+        uv run check
     - name: Tests
       run: |
         uv run pytest

@@ -88,21 +88,14 @@ Install for local development:
 
 ```sh
 uv sync --all-extras
-. ./venv/bin/activate  # or however you add your virtualenv to your PATH
-pre-commit install
 ```
 
 ### Tests
 
 ```sh
-pytest
-```
-
-Besides tests, checks are run on commit, after installing the pre-commit hook
-above, and on push. You can also run them manually.
-
-```sh
-pre-commit run --all-files
+uv run check        # static checks
+uv run check --fix  # apply autofixes, where supported
+uv run pytest       # test suite
 ```
 
 ### Debug
