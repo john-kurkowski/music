@@ -11,6 +11,8 @@ import rpp  # type: ignore[import-untyped]
 
 from music.utils import project
 
+_PLUGIN_TAGS = ("VST", "AU")
+
 
 @click.command("analyze")
 @click.argument(
@@ -67,23 +69,26 @@ def _iter_plugins(project_files: list[Path]) -> Iterator[str]:
 
 
 def iter_encoded_settings(project_fil: Path) -> Iterator[str]:
-    """Parse a Reaper project and return all VST settings encoded in base64."""
+    """Parse a Reaper project and return plugin settings encoded in base64."""
     parsed_project = _parse_project(project_fil)
 
-    vsts = parsed_project.findall(".//VST")
-    for vst in vsts:
+    plugins = (
+        plugin for tag in _PLUGIN_TAGS for plugin in parsed_project.findall(f".//{tag}")
+    )
+    for plugin in plugins:
         successful_decodes = (
-            decode for child in vst.children if (decode := b64_ascii(child))
+            decode for child in plugin.children if (decode := b64_ascii(child))
         )
         yield from successful_decodes
 
 
 def iter_vst_names(project_fil: Path) -> Iterator[str]:
-    """Parse a Reaper project and return all VST names."""
+    """Parse a Reaper project and return plugin names."""
     parsed_project = _parse_project(project_fil)
 
-    for vst in parsed_project.findall(".//VST"):
-        yield str(vst.attrib[0])
+    for tag in _PLUGIN_TAGS:
+        for plugin in parsed_project.findall(f".//{tag}"):
+            yield str(plugin.attrib[0])
 
 
 def _parse_project(project_fil: Path) -> rpp.Element:

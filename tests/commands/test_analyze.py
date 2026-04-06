@@ -24,6 +24,9 @@ def test_main_plugins_for_project_file(tmp_path: Path) -> None:
       <VST "VST3: Zebra2" "plugin" 0 "" 1234<
         dmFsaWQ=
       >
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        dmFsaWQ=
+      >
     >
   >
 >
@@ -41,6 +44,7 @@ def test_main_plugins_for_project_file(tmp_path: Path) -> None:
         "  VST3: Zebra2\n"
         "  VST3: ValhallaRoom\n"
         "  VST3: Zebra2\n"
+        "  AUi: Arcade (Output)\n"
     )
 
 
@@ -82,6 +86,9 @@ def test_main_raw_mode_sections(tmp_path: Path) -> None:
       <VST "VST3: Zebra2" "plugin" 0 "" 1234<
         dmFsaWQ=
       >
+      <AU "AU: Crystalline (BABY Audio)" "BABY Audio: Crystalline" "" 1234<
+        bW9yZQ==
+      >
     >
   >
 >
@@ -95,4 +102,5 @@ def test_main_raw_mode_sections(tmp_path: Path) -> None:
     assert result.stdout == (
         "─────────────────────────────────── Example ────────────────────────────────────\n"
         "  valid\n"
+        "  more\n"
     )
