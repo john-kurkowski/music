@@ -36,7 +36,12 @@ def test_main_plugins_for_project_file(tmp_path: Path) -> None:
 
     assert result.stderr == ""
     assert result.exception is None
-    assert result.stdout == "VST3: Zebra2\nVST3: ValhallaRoom\nVST3: Zebra2\n"
+    assert result.stdout == (
+        "─────────────────────────────────── Example ────────────────────────────────────\n"
+        "  VST3: Zebra2\n"
+        "  VST3: ValhallaRoom\n"
+        "  VST3: Zebra2\n"
+    )
 
 
 @mock.patch("music.utils.project.ExtendedProject", autospec=True)
@@ -63,4 +68,31 @@ def test_main_plugins_no_args(mock_project: mock.Mock, tmp_path: Path) -> None:
 
     assert result.stderr == ""
     assert result.exception is None
-    assert result.stdout == "VSTi: Kontakt\n"
+    assert "Song Title Here" in result.stdout
+    assert result.stdout.endswith("  VSTi: Kontakt\n")
+
+
+def test_main_raw_mode_sections(tmp_path: Path) -> None:
+    """Test raw mode prints decoded settings within project sections."""
+    project_file = tmp_path / "Example.rpp"
+    project_file.write_text(
+        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    <FXCHAIN
+      <VST "VST3: Zebra2" "plugin" 0 "" 1234<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert result.stdout == (
+        "─────────────────────────────────── Example ────────────────────────────────────\n"
+        "  valid\n"
+    )

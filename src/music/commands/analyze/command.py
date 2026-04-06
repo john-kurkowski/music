@@ -5,6 +5,8 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import click
+import rich.console
+import rich.rule
 import rpp  # type: ignore[import-untyped]
 
 from music.utils import project
@@ -35,19 +37,18 @@ def main(project_paths: list[Path], plugins: bool) -> None:
         project_paths = [Path(project.ExtendedProject().path)]
 
     project_files = [_project_file(project_path) for project_path in project_paths]
+    console = rich.console.Console()
 
-    lines = (
-        _iter_plugins(project_files)
-        if plugins
-        else (
-            setting
-            for project_file in project_files
-            for setting in iter_encoded_settings(project_file)
-        )
-    )
-
-    for line in lines:
-        click.echo(line)
+    for i, project_file in enumerate(project_files):
+        if i > 0:
+            console.print()
+        console.print(rich.rule.Rule(f"[bold cyan]{project_file.stem}[/bold cyan]"))
+        if plugins:
+            for plugin in iter_vst_names(project_file):
+                console.print(f"  {plugin}")
+        else:
+            for setting in iter_encoded_settings(project_file):
+                console.print(f"  {setting}")
 
 
 def _project_file(project_path: Path) -> Path:
