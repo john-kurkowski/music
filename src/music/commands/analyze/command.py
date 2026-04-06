@@ -12,36 +12,62 @@ from music.utils import project
 
 @click.command("analyze")
 @click.argument(
-    "project_dirs",
+    "project_paths",
     nargs=-1,
     type=click.Path(dir_okay=True, exists=True, file_okay=True, path_type=Path),
 )
-def main(project_dirs: list[Path]) -> None:
+@click.option(
+    "--plugins",
+    is_flag=True,
+    help="List VST names used by the given projects instead of decoded settings.",
+)
+def main(project_paths: list[Path], plugins: bool) -> None:
     """Analyze projects for problems.
 
     Prints out a project's VST settings encoded in base64 for human review.
     Sometimes these contain unwanted settings, which are not possible to see by
     looking at a Reaper .rpp file's XML directly.
 
-    Accepts 0 or more PROJECT_DIRS projects. Defaults to the currently open
+    Accepts 0 or more PROJECT_PATHS projects. Defaults to the currently open
     project.
     """
-    if not project_dirs:
-        project_dirs = [Path(project.ExtendedProject().path)]
+    if not project_paths:
+        project_paths = [Path(project.ExtendedProject().path)]
 
-    project_fils = [
-        project_dir / f"{project_dir.name}.rpp" for project_dir in project_dirs
-    ]
+    project_files = [_project_file(project_path) for project_path in project_paths]
 
-    for project_fil in project_fils:
-        for setting in iter_encoded_settings(project_fil):
-            click.echo(setting)
+    lines = (
+        _iter_plugins(project_files)
+        if plugins
+        else (
+            setting
+            for project_file in project_files
+            for setting in iter_encoded_settings(project_file)
+        )
+    )
+
+    for line in lines:
+        click.echo(line)
+
+
+def _project_file(project_path: Path) -> Path:
+    """Normalize either a project directory or an .rpp file into a file path."""
+    return (
+        project_path
+        if project_path.is_file()
+        else project_path / f"{project_path.name}.rpp"
+    )
+
+
+def _iter_plugins(project_files: list[Path]) -> Iterator[str]:
+    """List VST names used across the given project files."""
+    for project_file in project_files:
+        yield from iter_vst_names(project_file)
 
 
 def iter_encoded_settings(project_fil: Path) -> Iterator[str]:
     """Parse a Reaper project and return all VST settings encoded in base64."""
-    with open(project_fil) as fil:
-        parsed_project = rpp.load(fil)
+    parsed_project = _parse_project(project_fil)
 
     vsts = parsed_project.findall(".//VST")
     for vst in vsts:
@@ -49,6 +75,20 @@ def iter_encoded_settings(project_fil: Path) -> Iterator[str]:
             decode for child in vst.children if (decode := b64_ascii(child))
         )
         yield from successful_decodes
+
+
+def iter_vst_names(project_fil: Path) -> Iterator[str]:
+    """Parse a Reaper project and return all VST names."""
+    parsed_project = _parse_project(project_fil)
+
+    for vst in parsed_project.findall(".//VST"):
+        yield str(vst.attrib[0])
+
+
+def _parse_project(project_fil: Path) -> rpp.Element:
+    """Parse a Reaper project file."""
+    with open(project_fil) as fil:
+        return rpp.load(fil)
 
 
 def b64_ascii(s: str) -> str | None:
