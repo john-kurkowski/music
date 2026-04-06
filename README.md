@@ -61,7 +61,9 @@ music command-name-here --help  # list options for a specific command
    ```sh
    PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install <VERSION>
    ```
-1. [SWS Extension](https://www.sws-extension.org/)
+1. [ffmpeg](https://www.ffmpeg.org/)
+1. [SWS Extension](https://www.sws-extension.org/) (along with its bundled
+   Python function wrappers)
 1. [uv](https://github.com/astral-sh/uv)
 
 ## Install
