@@ -26,7 +26,7 @@ _PLUGIN_TAGS = ("VST", "AU")
     help="List VST names used by the given projects instead of decoded settings.",
 )
 def main(project_paths: list[Path], plugins: bool) -> None:
-    """Analyze projects for problems.
+    """(alpha) Analyze projects for problems.
 
     Prints out a project's VST settings encoded in base64 for human review.
     Sometimes these contain unwanted settings, which are not possible to see by
