@@ -271,6 +271,7 @@ def _iter_arcade_hyperion_warnings(
 ) -> Iterator[str]:
     """Warn when a Hyperion Arcade preset is missing installed source content."""
     preset_name = preset.attrib.get("name", "Unknown Arcade preset")
+    installed_sources = _arcade_installed_source_uuids()
     missing_sources = sorted(
         {
             source_uuid
@@ -278,8 +279,7 @@ def _iter_arcade_hyperion_warnings(
                 elem.attrib.get("LoadedSourceUuid", "")
                 for elem in root.findall(".//HyperionLoadedSource")
             )
-            if source_uuid
-            and not (_arcade_content_root() / "Sources" / source_uuid).exists()
+            if source_uuid and source_uuid not in installed_sources
         }
     )
     has_internal_error = (
@@ -291,7 +291,7 @@ def _iter_arcade_hyperion_warnings(
         if missing_sources:
             sources = ", ".join(missing_sources)
             yield f"{detail} references missing source content: {sources}"
-        if has_internal_error:
+        if has_internal_error and missing_sources:
             yield f'{detail} has an internal "error" state in its saved plugin data'
 
 
@@ -345,6 +345,16 @@ def _arcade_installed_kit_uuids() -> set[str]:
 
     with sqlite3.connect(db_path) as con:
         return {uuid for (uuid,) in con.execute("select uuid from kits")}
+
+
+def _arcade_installed_source_uuids() -> set[str]:
+    """Return the set of Arcade instrument source UUIDs in the local metadata DB."""
+    db_path = _arcade_db_path()
+    if not db_path.exists():
+        return set()
+
+    with sqlite3.connect(db_path) as con:
+        return {uuid for (uuid,) in con.execute("select uuid from sound_sources")}
 
 
 def rpp_plist_value(plist_xml: bytes, key: str) -> object:

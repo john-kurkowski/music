@@ -255,8 +255,9 @@ def test_main_warns_for_arcade_hyperion_missing_source(
 ) -> None:
     """Test Arcade Hyperion presets warn when their source content is missing."""
     project_file = tmp_path / "Example.rpp"
-    content_root = tmp_path / "Arcade Content"
-    monkeypatch.setenv("ARCADE_CONTENT_ROOT", str(content_root))
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids=set(), source_uuids=set())
 
     project_file.write_text(
         f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
@@ -296,6 +297,48 @@ def test_main_warns_for_arcade_hyperion_missing_source(
     assert '"error" state' in result.stdout
 
 
+def test_main_does_not_warn_for_arcade_hyperion_installed_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test Arcade Hyperion presets stay quiet once source content is installed."""
+    project_file = tmp_path / "Example.rpp"
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids=set(), source_uuids={"loaded-source"})
+
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Bass note kit"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {
+            _arcade_au_state_base64(
+                b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+                b"<Hyperion_Preset>"
+                b'<info name="Amped Up" uuid="kit-uuid" product_uuid="product-uuid" version="2.0.0"/>'
+                b"<model>"
+                b'<HyperionLoadedSource LoadedSourceUuid="loaded-source"/>'
+                b'<HyperionFxBusSettings Name="error"/>'
+                b"</model>"
+                b"</Hyperion_Preset>"
+                b"</state_info>"
+            )
+        }
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "Arcade instrument" not in result.stdout
+
+
 def test_main_warns_for_arcade_looper_missing_kit(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -303,7 +346,7 @@ def test_main_warns_for_arcade_looper_missing_kit(
     project_file = tmp_path / "Example.rpp"
     db_path = tmp_path / "arcade.db"
     monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
-    _write_arcade_db(db_path, kit_uuids={"some-other-kit"})
+    _write_arcade_db(db_path, kit_uuids={"some-other-kit"}, source_uuids=set())
 
     project_file.write_text(
         f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
@@ -344,7 +387,7 @@ def test_main_does_not_warn_for_arcade_looper_installed_kit(
     project_file = tmp_path / "Example.rpp"
     db_path = tmp_path / "arcade.db"
     monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
-    _write_arcade_db(db_path, kit_uuids={"downstream-kit"})
+    _write_arcade_db(db_path, kit_uuids={"downstream-kit"}, source_uuids=set())
 
     project_file.write_text(
         f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
@@ -387,12 +430,19 @@ def _arcade_au_state_base64(juce_state: bytes) -> str:
     return base64.b64encode(outer).decode("ascii")
 
 
-def _write_arcade_db(db_path: Path, kit_uuids: set[str]) -> None:
+def _write_arcade_db(
+    db_path: Path, kit_uuids: set[str], source_uuids: set[str]
+) -> None:
     """Create a minimal Arcade metadata DB for tests."""
     import sqlite3
 
     with sqlite3.connect(db_path) as con:
         con.execute("create table kits (uuid text)")
+        con.execute("create table sound_sources (uuid text)")
         con.executemany(
             "insert into kits (uuid) values (?)", [(uuid,) for uuid in kit_uuids]
+        )
+        con.executemany(
+            "insert into sound_sources (uuid) values (?)",
+            [(uuid,) for uuid in source_uuids],
         )
