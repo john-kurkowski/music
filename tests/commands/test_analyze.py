@@ -5,6 +5,7 @@ from unittest import mock
 
 from click.testing import CliRunner
 
+from music.commands.analyze import command
 from music.commands.analyze.command import main as analyze
 
 
@@ -27,24 +28,158 @@ def test_main_plugins_for_project_file(tmp_path: Path) -> None:
       <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
         dmFsaWQ=
       >
+      <JS "utility/KanakaMSEncoder1" "" 0 0<
+        dmFsaWQ=
+      >
+      <JS "ReJJ/ReEQ/ReEQ.jsfx" "" 0 0<
+        dmFsaWQ=
+      >
+      <CLAP "CLAPi: Surge XT" "plugin" 0 "" 1234<
+        dmFsaWQ=
+      >
+      <LV2 "LV2: Dragonfly Hall Reverb" "plugin" 0 "" 1234<
+        dmFsaWQ=
+      >
+      <DX "DX: Classic Compressor" "plugin" 0 "" 1234<
+        dmFsaWQ=
+      >
     >
   >
 >
 """
     )
 
-    result = CliRunner(catch_exceptions=False).invoke(
-        analyze, ["--plugins", str(project_file)]
-    )
+    effects_dir = tmp_path / "Effects"
+    (effects_dir / "utility").mkdir(parents=True)
+    (effects_dir / "ReJJ" / "ReEQ").mkdir(parents=True)
+    (effects_dir / "utility" / "KanakaMSEncoder1").write_text("desc:Mid/Side Encoder\n")
+    (effects_dir / "ReJJ" / "ReEQ" / "ReEQ.jsfx").write_text("desc:ReEQ\n")
+    command._jsfx_file.cache_clear()
+
+    with mock.patch.object(command, "_jsfx_search_paths", return_value=(effects_dir,)):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
 
     assert result.stderr == ""
     assert result.exception is None
     assert result.stdout == (
         "─────────────────────────────────── Example ────────────────────────────────────\n"
-        "  VST3: Zebra2\n"
+        "  AUi: Arcade (Output)\n"
+        "  CLAPi: Surge XT\n"
+        "  DX: Classic Compressor\n"
+        "  JS: Mid/Side Encoder\n"
+        "  JS: ReEQ\n"
+        "  LV2: Dragonfly Hall Reverb\n"
         "  VST3: ValhallaRoom\n"
         "  VST3: Zebra2\n"
-        "  AUi: Arcade (Output)\n"
+        "  VST3: Zebra2\n"
+    )
+
+
+def test_main_plugins_formats_jsfx_names_with_prefix(tmp_path: Path) -> None:
+    """Test JSFX entries use human-readable names from effect metadata."""
+    project_file = tmp_path / "Example.rpp"
+    effects_dir = tmp_path / "Effects"
+    (effects_dir / "analysis").mkdir(parents=True)
+    (effects_dir / "ReJJ" / "ReEQ").mkdir(parents=True)
+    (effects_dir / "analysis" / "loudness_meter").write_text(
+        "desc:Loudness Meter Peak/RMS/LUFS (Cockos)\n"
+    )
+    (effects_dir / "ReJJ" / "ReEQ" / "ReEQ.jsfx").write_text("desc:ReEQ\n")
+    project_file.write_text(
+        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    <FXCHAIN
+      <JS "analysis/loudness_meter" "" 0 0<
+        dmFsaWQ=
+      >
+      <JS "ReJJ/ReEQ/ReEQ.jsfx" "" 0 0<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+    command._jsfx_file.cache_clear()
+
+    with mock.patch.object(command, "_jsfx_search_paths", return_value=(effects_dir,)):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert result.stdout == (
+        "─────────────────────────────────── Example ────────────────────────────────────\n"
+        "  JS: Loudness Meter Peak/RMS/LUFS (Cockos)\n"
+        "  JS: ReEQ\n"
+    )
+
+
+def test_main_plugins_reads_legacy_encoded_jsfx_metadata(tmp_path: Path) -> None:
+    """Test JSFX metadata is read from non-UTF-8 effect files."""
+    project_file = tmp_path / "Example.rpp"
+    effects_dir = tmp_path / "Effects"
+    (effects_dir / "loser").mkdir(parents=True)
+    (effects_dir / "loser" / "masterLimiter").write_bytes(
+        b"desc:Master Limiter\n// Andr\xe9\n"
+    )
+    project_file.write_text(
+        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    <FXCHAIN
+      <JS "loser/masterLimiter" "" 0 0<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+    command._jsfx_file.cache_clear()
+
+    with mock.patch.object(command, "_jsfx_search_paths", return_value=(effects_dir,)):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert result.stdout == (
+        "─────────────────────────────────── Example ────────────────────────────────────\n"
+        "  JS: Master Limiter\n"
+    )
+
+
+def test_main_plugins_falls_back_to_clean_jsfx_basename(tmp_path: Path) -> None:
+    """Test JSFX entries fall back to a cleaned basename when metadata is missing."""
+    project_file = tmp_path / "Example.rpp"
+    project_file.write_text(
+        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    <FXCHAIN
+      <JS "utility/KanakaMSEncoder1" "" 0 0<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+    command._jsfx_file.cache_clear()
+
+    with mock.patch.object(command, "_jsfx_search_paths", return_value=()):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert result.stdout == (
+        "─────────────────────────────────── Example ────────────────────────────────────\n"
+        "  JS: KanakaMSEncoder1\n"
     )
 
 
@@ -89,6 +224,18 @@ def test_main_raw_mode_sections(tmp_path: Path) -> None:
       <AU "AU: Crystalline (BABY Audio)" "BABY Audio: Crystalline" "" 1234<
         bW9yZQ==
       >
+      <JS "JS: Mid/Side Encoder" "" 0 0<
+        anNm
+      >
+      <CLAP "CLAPi: Surge XT" "plugin" 0 "" 1234<
+        Y2xhcA==
+      >
+      <LV2 "LV2: Dragonfly Hall Reverb" "plugin" 0 "" 1234<
+        bHYy
+      >
+      <DX "DX: Classic Compressor" "plugin" 0 "" 1234<
+        ZHg=
+      >
     >
   >
 >
@@ -101,6 +248,10 @@ def test_main_raw_mode_sections(tmp_path: Path) -> None:
     assert result.exception is None
     assert result.stdout == (
         "─────────────────────────────────── Example ────────────────────────────────────\n"
-        "  valid\n"
         "  more\n"
+        "  clap\n"
+        "  dx\n"
+        "  jsf\n"
+        "  lv2\n"
+        "  valid\n"
     )

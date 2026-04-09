@@ -2,6 +2,7 @@
 
 import base64
 from collections.abc import Iterator
+from functools import cache
 from pathlib import Path
 
 import click
@@ -11,7 +12,7 @@ import rpp  # type: ignore[import-untyped]
 
 from music.utils import project
 
-_PLUGIN_TAGS = ("VST", "AU")
+_PLUGIN_TAGS = ("AU", "CLAP", "DX", "JS", "LV2", "VST")
 
 
 @click.command("analyze")
@@ -23,12 +24,12 @@ _PLUGIN_TAGS = ("VST", "AU")
 @click.option(
     "--plugins",
     is_flag=True,
-    help="List VST names used by the given projects instead of decoded settings.",
+    help="List plugin names used by the given projects instead of decoded settings.",
 )
 def main(project_paths: list[Path], plugins: bool) -> None:
     """(alpha) Analyze projects for problems.
 
-    Prints out a project's VST settings encoded in base64 for human review.
+    Prints out a project's plugin settings encoded in base64 for human review.
     Sometimes these contain unwanted settings, which are not possible to see by
     looking at a Reaper .rpp file's XML directly.
 
@@ -46,7 +47,7 @@ def main(project_paths: list[Path], plugins: bool) -> None:
             console.print()
         console.print(rich.rule.Rule(f"[bold cyan]{project_file.stem}[/bold cyan]"))
         if plugins:
-            for plugin in iter_vst_names(project_file):
+            for plugin in sorted(iter_plugin_names(project_file), key=str.casefold):
                 console.print(f"  {plugin}")
         else:
             for setting in iter_encoded_settings(project_file):
@@ -63,9 +64,9 @@ def _project_file(project_path: Path) -> Path:
 
 
 def _iter_plugins(project_files: list[Path]) -> Iterator[str]:
-    """List VST names used across the given project files."""
+    """List plugin names used across the given project files."""
     for project_file in project_files:
-        yield from iter_vst_names(project_file)
+        yield from iter_plugin_names(project_file)
 
 
 def iter_encoded_settings(project_fil: Path) -> Iterator[str]:
@@ -82,13 +83,62 @@ def iter_encoded_settings(project_fil: Path) -> Iterator[str]:
         yield from successful_decodes
 
 
-def iter_vst_names(project_fil: Path) -> Iterator[str]:
+def iter_plugin_names(project_fil: Path) -> Iterator[str]:
     """Parse a Reaper project and return plugin names."""
     parsed_project = _parse_project(project_fil)
 
     for tag in _PLUGIN_TAGS:
         for plugin in parsed_project.findall(f".//{tag}"):
-            yield str(plugin.attrib[0])
+            yield _plugin_name(plugin)
+
+
+def _plugin_name(plugin: rpp.Element) -> str:
+    """Render a plugin's saved RPP attributes as a display name."""
+    name = str(plugin.attrib[0])
+    if plugin.tag == "JS":
+        return f"JS: {_jsfx_display_name(name)}"
+    return name
+
+
+def _jsfx_display_name(path: str) -> str:
+    """Resolve a JSFX script path to a human-readable display name."""
+    if jsfx_file := _jsfx_file(path):
+        if desc := _jsfx_desc(jsfx_file):
+            return desc
+
+    return Path(path).stem.replace("_", " ")
+
+
+@cache
+def _jsfx_file(path: str) -> Path | None:
+    """Find the installed JSFX file for a saved Reaper script path."""
+    for root in _jsfx_search_paths():
+        candidate = root / path
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _jsfx_search_paths() -> tuple[Path, ...]:
+    """Return local directories where REAPER JSFX files may be installed."""
+    return (
+        Path.home() / "Library/Application Support/REAPER/Effects",
+        Path("/Applications/REAPER.app/Contents/InstallFiles/Effects"),
+    )
+
+
+def _jsfx_desc(jsfx_file: Path) -> str | None:
+    """Return the last declared JSFX desc label, if present."""
+    desc = None
+    for line in _jsfx_lines(jsfx_file):
+        if line.startswith("desc:"):
+            desc = line.removeprefix("desc:").strip()
+    return desc
+
+
+def _jsfx_lines(jsfx_file: Path) -> list[str]:
+    """Read a JSFX file, tolerating legacy REAPER effect encodings."""
+    return jsfx_file.read_text(encoding="utf-8", errors="replace").splitlines()
 
 
 def _parse_project(project_fil: Path) -> rpp.Element:
