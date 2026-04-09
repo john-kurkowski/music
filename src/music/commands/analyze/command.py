@@ -19,6 +19,7 @@ import rpp  # type: ignore[import-untyped]
 from music.utils import project
 
 _PLUGIN_TAGS = ("AU", "CLAP", "DX", "JS", "LV2", "VST")
+_MAX_SETTING_PREVIEW_CHARS = 240
 
 
 @dataclass(frozen=True)
@@ -67,7 +68,7 @@ def main(project_paths: list[Path], plugins: bool) -> None:
             console.print(_plugins_table(project_file))
         else:
             for setting in iter_encoded_settings(project_file):
-                console.print(f"  {setting}")
+                console.print(f"  {_display_setting(setting)}")
 
 
 def _project_file(project_path: Path) -> Path:
@@ -118,10 +119,15 @@ def iter_encoded_settings(project_fil: Path) -> Iterator[str]:
         plugin for tag in _PLUGIN_TAGS for plugin in parsed_project.findall(f".//{tag}")
     )
     for plugin in plugins:
-        successful_decodes = (
-            decode for child in plugin.children if (decode := b64_ascii(child))
+        if arcade_state := _arcade_state_xml(plugin):
+            yield arcade_state.decode("utf-8")
+            continue
+
+        raw = "".join(
+            child.strip() for child in plugin.children if isinstance(child, str)
         )
-        yield from successful_decodes
+        if decode := b64_ascii(raw):
+            yield decode
 
 
 def iter_plugin_names(project_fil: Path) -> Iterator[str]:
@@ -199,6 +205,17 @@ def _jsfx_desc(jsfx_file: Path) -> str | None:
 def _jsfx_lines(jsfx_file: Path) -> list[str]:
     """Read a JSFX file, tolerating legacy REAPER effect encodings."""
     return jsfx_file.read_text(encoding="utf-8", errors="replace").splitlines()
+
+
+def _display_setting(setting: str) -> str:
+    """Render plugin settings as compact one-line previews."""
+    single_line = " ".join(setting.split())
+    if len(single_line) <= _MAX_SETTING_PREVIEW_CHARS:
+        return single_line
+
+    preview = single_line[:_MAX_SETTING_PREVIEW_CHARS].rstrip()
+    truncated = len(single_line) - len(preview)
+    return f"{preview}... [{truncated} more chars]"
 
 
 def iter_warnings(project_fil: Path) -> Iterator[str]:
@@ -290,6 +307,9 @@ def _iter_arcade_hyperion_warnings(
 
 def _arcade_state_xml(plugin: rpp.Element) -> bytes | None:
     """Extract Arcade's nested JUCE state XML from an AU plugin chunk."""
+    if "Arcade" not in str(plugin.attrib[0]):
+        return None
+
     raw = "".join(child.strip() for child in plugin.children if isinstance(child, str))
     if not raw:
         return None

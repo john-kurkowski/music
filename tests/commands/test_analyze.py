@@ -251,6 +251,45 @@ def test_main_raw_mode_sections(tmp_path: Path) -> None:
     )
 
 
+def test_main_raw_mode_reassembles_chunked_arcade_state(tmp_path: Path) -> None:
+    """Test raw mode prints one decoded Arcade state instead of chunk fragments."""
+    project_file = tmp_path / "Example.rpp"
+    long_name = "Downstream " + ("very-long-state " * 20)
+    looper_info = (
+        f'<info name="{long_name}" uuid="downstream-kit" '
+        'product_uuid="honey-product" version="1.3.0"/>'
+    ).encode()
+    arcade_state = _arcade_au_state_base64(
+        b'<?xml version="1.0" encoding="UTF-8"?><state_info><Looper_Preset>'
+        + looper_info
+        + b"</Looper_Preset></state_info>"
+    )
+    chunked_state = "\n".join(
+        f"        {arcade_state[i : i + 128]}" for i in range(0, len(arcade_state), 128)
+    )
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+{chunked_state}
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert result.stdout.count("  <?xml version=") == 1
+    assert 'name="Downstream' in result.stdout
+    assert "prefix-bytes" not in result.stdout
+    assert "more chars" in result.stdout
+
+
 def test_main_warns_for_arcade_hyperion_missing_source(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
