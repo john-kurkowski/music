@@ -5,6 +5,7 @@ import os
 import sqlite3
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
+from contextlib import closing
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -231,14 +232,6 @@ def _parse_project(project_fil: Path) -> rpp.Element:
         return rpp.load(fil)
 
 
-def _track_name(track: rpp.Element) -> str:
-    """Extract a Reaper track's display name."""
-    for child in track.children:
-        if isinstance(child, list) and child and child[0] == "NAME":
-            return str(child[1])
-    return "<unnamed track>"
-
-
 def _iter_arcade_warnings(track_name: str, plugin: rpp.Element) -> Iterator[str]:
     """Inspect an Arcade AU state blob for detectable missing content issues."""
     state = _arcade_state_xml(plugin)
@@ -343,7 +336,7 @@ def _arcade_installed_kit_uuids() -> set[str]:
     if not db_path.exists():
         return set()
 
-    with sqlite3.connect(db_path) as con:
+    with closing(sqlite3.connect(db_path)) as con:
         return {uuid for (uuid,) in con.execute("select uuid from kits")}
 
 
@@ -353,7 +346,7 @@ def _arcade_installed_source_uuids() -> set[str]:
     if not db_path.exists():
         return set()
 
-    with sqlite3.connect(db_path) as con:
+    with closing(sqlite3.connect(db_path)) as con:
         return {uuid for (uuid,) in con.execute("select uuid from sound_sources")}
 
 

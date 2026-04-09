@@ -2,6 +2,7 @@
 
 import base64
 import plistlib
+from contextlib import closing
 from pathlib import Path
 from unittest import mock
 
@@ -436,7 +437,7 @@ def _write_arcade_db(
     """Create a minimal Arcade metadata DB for tests."""
     import sqlite3
 
-    with sqlite3.connect(db_path) as con:
+    with closing(sqlite3.connect(db_path)) as con:
         con.execute("create table kits (uuid text)")
         con.execute("create table sound_sources (uuid text)")
         con.executemany(
@@ -446,3 +447,4 @@ def _write_arcade_db(
             "insert into sound_sources (uuid) values (?)",
             [(uuid,) for uuid in source_uuids],
         )
+        con.commit()
