@@ -1,8 +1,11 @@
 """Analyze command tests."""
 
+import base64
+import plistlib
 from pathlib import Path
 from unittest import mock
 
+import pytest
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
@@ -245,3 +248,61 @@ def test_main_raw_mode_sections(tmp_path: Path) -> None:
         "  lv2\n"
         "  valid\n"
     )
+
+
+def test_main_warns_for_arcade_hyperion_missing_source(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test Arcade Hyperion presets warn when their source content is missing."""
+    project_file = tmp_path / "Example.rpp"
+    content_root = tmp_path / "Arcade Content"
+    monkeypatch.setenv("ARCADE_CONTENT_ROOT", str(content_root))
+
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Bass note kit"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {
+            _arcade_au_state_base64(
+                b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+                b"<Hyperion_Preset>"
+                b'<info name="Amped Up" uuid="kit-uuid" product_uuid="product-uuid" version="2.0.0"/>'
+                b"<model>"
+                b'<HyperionLoadedSource LoadedSourceUuid="missing-source"/>'
+                b'<HyperionFxBusSettings Name="error"/>'
+                b"</model>"
+                b"</Hyperion_Preset>"
+                b"</state_info>"
+            )
+        }
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert 'Arcade instrument "Amped Up" on track "Bass note kit"' in result.stdout
+    assert "references" in result.stdout
+    assert "missing source content" in result.stdout
+    assert "missing-source" in result.stdout
+    assert "has an internal" in result.stdout
+    assert '"error" state' in result.stdout
+
+
+def _arcade_au_state_base64(juce_state: bytes) -> str:
+    """Build a minimal Arcade AU state chunk for tests."""
+    outer = plistlib.dumps(
+        {
+            "data": b"",
+            "jucePluginState": b"prefix-bytes" + juce_state + b"trailing-bytes",
+            "name": "Untitled",
+        }
+    )
+    return base64.b64encode(outer).decode("ascii")

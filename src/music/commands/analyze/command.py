@@ -1,6 +1,8 @@
 """Analyze command."""
 
 import base64
+import os
+import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cache
@@ -57,6 +59,8 @@ def main(project_paths: list[Path], plugins: bool) -> None:
         if i > 0:
             console.print()
         console.print(rich.rule.Rule(f"[bold cyan]{project_file.stem}[/bold cyan]"))
+        for warning in iter_warnings(project_file):
+            console.print(f"  [yellow]Warning:[/yellow] {warning}")
         if plugins:
             console.print(_plugins_table(project_file))
         else:
@@ -195,10 +199,118 @@ def _jsfx_lines(jsfx_file: Path) -> list[str]:
     return jsfx_file.read_text(encoding="utf-8", errors="replace").splitlines()
 
 
+def iter_warnings(project_fil: Path) -> Iterator[str]:
+    """Parse a Reaper project and return plugin warnings."""
+    parsed_project = _parse_project(project_fil)
+
+    for track in parsed_project.findall(".//TRACK"):
+        track_name = _track_name(track)
+        fxchain = next(
+            (
+                child
+                for child in track.children
+                if getattr(child, "tag", None) == "FXCHAIN"
+            ),
+            None,
+        )
+        if fxchain is None:
+            continue
+
+        for plugin in fxchain.children:
+            if getattr(plugin, "tag", None) != "AU":
+                continue
+            if "Arcade" not in str(plugin.attrib[0]):
+                continue
+            yield from _iter_arcade_warnings(track_name, plugin)
+
+
 def _parse_project(project_fil: Path) -> rpp.Element:
     """Parse a Reaper project file."""
     with open(project_fil) as fil:
         return rpp.load(fil)
+
+
+def _track_name(track: rpp.Element) -> str:
+    """Extract a Reaper track's display name."""
+    for child in track.children:
+        if isinstance(child, list) and child and child[0] == "NAME":
+            return str(child[1])
+    return "<unnamed track>"
+
+
+def _iter_arcade_warnings(track_name: str, plugin: rpp.Element) -> Iterator[str]:
+    """Inspect an Arcade AU state blob for detectable missing content issues."""
+    state = _arcade_state_xml(plugin)
+    if state is None:
+        return
+
+    root = ET.fromstring(state)
+    preset = root.find("./Hyperion_Preset/info")
+    if preset is None:
+        return
+
+    preset_name = preset.attrib.get("name", "Unknown Arcade preset")
+    missing_sources = sorted(
+        {
+            source_uuid
+            for source_uuid in (
+                elem.attrib.get("LoadedSourceUuid", "")
+                for elem in root.findall(".//HyperionLoadedSource")
+            )
+            if source_uuid
+            and not (_arcade_content_root() / "Sources" / source_uuid).exists()
+        }
+    )
+    has_internal_error = (
+        root.find('.//HyperionFxBusSettings[@Name="error"]') is not None
+    )
+
+    if missing_sources or has_internal_error:
+        detail = f'Arcade instrument "{preset_name}" on track "{track_name}"'
+        if missing_sources:
+            sources = ", ".join(missing_sources)
+            yield f"{detail} references missing source content: {sources}"
+        if has_internal_error:
+            yield f'{detail} has an internal "error" state in its saved plugin data'
+
+
+def _arcade_state_xml(plugin: rpp.Element) -> bytes | None:
+    """Extract Arcade's nested JUCE state XML from an AU plugin chunk."""
+    raw = "".join(child.strip() for child in plugin.children if isinstance(child, str))
+    if not raw:
+        return None
+
+    try:
+        outer = base64.b64decode(raw)
+        plist_start = outer.index(b"<?xml")
+        plist_end = outer.index(b"</plist>") + len(b"</plist>")
+        outer_plist = outer[plist_start:plist_end]
+        juce_state = rpp_plist_value(outer_plist, "jucePluginState")
+        if not isinstance(juce_state, bytes):
+            return None
+
+        state_start = juce_state.index(b"<?xml")
+        state_end = juce_state.index(b"</state_info>") + len(b"</state_info>")
+    except (ValueError, KeyError):
+        return None
+    return juce_state[state_start:state_end]
+
+
+def _arcade_content_root() -> Path:
+    """Return Arcade's content install root, overridable for tests."""
+    return Path(
+        os.environ.get(
+            "ARCADE_CONTENT_ROOT",
+            "/Library/Application Support/Output/Arcade/Arcade Content",
+        )
+    )
+
+
+def rpp_plist_value(plist_xml: bytes, key: str) -> object:
+    """Look up a plist value by key from a parsed Arcade AU state blob."""
+    import plistlib
+
+    return plistlib.loads(plist_xml)[key]
 
 
 def b64_ascii(s: str) -> str | None:
