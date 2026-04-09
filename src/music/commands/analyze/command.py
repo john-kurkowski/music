@@ -2,6 +2,7 @@
 
 import base64
 import os
+import sqlite3
 import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -245,10 +246,30 @@ def _iter_arcade_warnings(track_name: str, plugin: rpp.Element) -> Iterator[str]
         return
 
     root = ET.fromstring(state)
-    preset = root.find("./Hyperion_Preset/info")
-    if preset is None:
-        return
+    hyperion_preset = root.find("./Hyperion_Preset/info")
+    looper_preset = root.find("./Looper_Preset/info")
 
+    if looper_preset is not None:
+        yield from _iter_arcade_looper_warnings(track_name, looper_preset)
+    if hyperion_preset is not None:
+        yield from _iter_arcade_hyperion_warnings(track_name, root, hyperion_preset)
+
+
+def _iter_arcade_looper_warnings(track_name: str, preset: ET.Element) -> Iterator[str]:
+    """Warn when a sampler/looper Arcade kit is not installed locally."""
+    preset_name = preset.attrib.get("name", "Unknown Arcade preset")
+    preset_uuid = preset.attrib.get("uuid", "")
+    if preset_uuid and preset_uuid not in _arcade_installed_kit_uuids():
+        yield (
+            f'Arcade sampler "{preset_name}" on track "{track_name}" is not '
+            f"installed locally (kit UUID: {preset_uuid})"
+        )
+
+
+def _iter_arcade_hyperion_warnings(
+    track_name: str, root: ET.Element, preset: ET.Element
+) -> Iterator[str]:
+    """Warn when a Hyperion Arcade preset is missing installed source content."""
     preset_name = preset.attrib.get("name", "Unknown Arcade preset")
     missing_sources = sorted(
         {
@@ -304,6 +325,26 @@ def _arcade_content_root() -> Path:
             "/Library/Application Support/Output/Arcade/Arcade Content",
         )
     )
+
+
+def _arcade_db_path() -> Path:
+    """Return Arcade's local metadata database, overridable for tests."""
+    return Path(
+        os.environ.get(
+            "ARCADE_DB_PATH",
+            "/Library/Application Support/Output/Arcade/local.db",
+        )
+    )
+
+
+def _arcade_installed_kit_uuids() -> set[str]:
+    """Return the set of Arcade kit UUIDs installed in the local metadata DB."""
+    db_path = _arcade_db_path()
+    if not db_path.exists():
+        return set()
+
+    with sqlite3.connect(db_path) as con:
+        return {uuid for (uuid,) in con.execute("select uuid from kits")}
 
 
 def rpp_plist_value(plist_xml: bytes, key: str) -> object:

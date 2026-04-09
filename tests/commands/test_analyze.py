@@ -296,6 +296,85 @@ def test_main_warns_for_arcade_hyperion_missing_source(
     assert '"error" state' in result.stdout
 
 
+def test_main_warns_for_arcade_looper_missing_kit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test Arcade looper presets warn when the kit is not installed locally."""
+    project_file = tmp_path / "Example.rpp"
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids={"some-other-kit"})
+
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Rhythm"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {
+            _arcade_au_state_base64(
+                b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+                b"<Looper_Preset>"
+                b'<info name="Downstream" uuid="downstream-kit" product_uuid="honey-product" version="1.3.0"/>'
+                b"</Looper_Preset>"
+                b"</state_info>"
+            )
+        }
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert 'Arcade sampler "Downstream" on track "Rhythm"' in result.stdout
+    assert "is not installed" in result.stdout
+    assert "locally" in result.stdout
+    assert "downstream-kit" in result.stdout
+
+
+def test_main_does_not_warn_for_arcade_looper_installed_kit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test Arcade looper presets stay quiet once the kit exists in local DB."""
+    project_file = tmp_path / "Example.rpp"
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids={"downstream-kit"})
+
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Rhythm"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {
+            _arcade_au_state_base64(
+                b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+                b"<Looper_Preset>"
+                b'<info name="Downstream" uuid="downstream-kit" product_uuid="honey-product" version="1.3.0"/>'
+                b"</Looper_Preset>"
+                b"</state_info>"
+            )
+        }
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "Arcade sampler" not in result.stdout
+
+
 def _arcade_au_state_base64(juce_state: bytes) -> str:
     """Build a minimal Arcade AU state chunk for tests."""
     outer = plistlib.dumps(
@@ -306,3 +385,14 @@ def _arcade_au_state_base64(juce_state: bytes) -> str:
         }
     )
     return base64.b64encode(outer).decode("ascii")
+
+
+def _write_arcade_db(db_path: Path, kit_uuids: set[str]) -> None:
+    """Create a minimal Arcade metadata DB for tests."""
+    import sqlite3
+
+    with sqlite3.connect(db_path) as con:
+        con.execute("create table kits (uuid text)")
+        con.executemany(
+            "insert into kits (uuid) values (?)", [(uuid,) for uuid in kit_uuids]
+        )
