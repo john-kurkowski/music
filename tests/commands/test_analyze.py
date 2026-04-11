@@ -205,7 +205,7 @@ def test_main_plugins_no_args(
     assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
-def test_main_raw_mode_sections(tmp_path: Path) -> None:
+def test_main_raw_mode_sections(snapshot: SnapshotAssertion, tmp_path: Path) -> None:
     """Test raw mode prints decoded settings within project sections."""
     project_file = tmp_path / "Example.rpp"
     project_file.write_text(
@@ -238,20 +238,12 @@ def test_main_raw_mode_sections(tmp_path: Path) -> None:
 
     result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert result.stdout == (
-        "─────────────────────────────────── Example ────────────────────────────────────\n"
-        "  more\n"
-        "  clap\n"
-        "  dx\n"
-        "  jsf\n"
-        "  lv2\n"
-        "  valid\n"
-    )
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
-def test_main_raw_mode_reassembles_chunked_arcade_state(tmp_path: Path) -> None:
+def test_main_raw_mode_reassembles_chunked_arcade_state(
+    snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
     """Test raw mode prints one decoded Arcade state instead of chunk fragments."""
     project_file = tmp_path / "Example.rpp"
     long_name = "Downstream " + ("very-long-state " * 20)
@@ -282,16 +274,11 @@ def test_main_raw_mode_reassembles_chunked_arcade_state(tmp_path: Path) -> None:
 
     result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert result.stdout.count("  <?xml version=") == 1
-    assert 'name="Downstream' in result.stdout
-    assert "prefix-bytes" not in result.stdout
-    assert "more chars" in result.stdout
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
 def test_main_warns_for_arcade_hyperion_missing_source(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test Arcade Hyperion presets warn when their source content is missing."""
     project_file = tmp_path / "Example.rpp"
@@ -326,19 +313,11 @@ def test_main_warns_for_arcade_hyperion_missing_source(
     )
 
     result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
-
-    assert result.stderr == ""
-    assert result.exception is None
-    assert 'Arcade instrument "Amped Up" on track "Bass note kit"' in result.stdout
-    assert "references" in result.stdout
-    assert "missing source content" in result.stdout
-    assert "missing-source" in result.stdout
-    assert "has an internal" in result.stdout
-    assert '"error" state' in result.stdout
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
 def test_main_does_not_warn_for_arcade_hyperion_installed_source(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test Arcade Hyperion presets stay quiet once source content is installed."""
     project_file = tmp_path / "Example.rpp"
@@ -374,13 +353,11 @@ def test_main_does_not_warn_for_arcade_hyperion_installed_source(
 
     result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert "Arcade instrument" not in result.stdout
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
 def test_main_warns_for_arcade_looper_missing_kit(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test Arcade looper presets warn when the kit is not installed locally."""
     project_file = tmp_path / "Example.rpp"
@@ -412,16 +389,11 @@ def test_main_warns_for_arcade_looper_missing_kit(
 
     result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert 'Arcade sampler "Downstream" on track "Rhythm"' in result.stdout
-    assert "is not installed" in result.stdout
-    assert "locally" in result.stdout
-    assert "downstream-kit" in result.stdout
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
 def test_main_does_not_warn_for_arcade_looper_installed_kit(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test Arcade looper presets stay quiet once the kit exists in local DB."""
     project_file = tmp_path / "Example.rpp"
@@ -453,9 +425,7 @@ def test_main_does_not_warn_for_arcade_looper_installed_kit(
 
     result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert "Arcade sampler" not in result.stdout
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
 def _arcade_au_state_base64(juce_state: bytes) -> str:

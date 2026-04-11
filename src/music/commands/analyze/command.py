@@ -222,7 +222,7 @@ def iter_warnings(project_fil: Path) -> Iterator[str]:
     """Parse a Reaper project and return plugin warnings."""
     parsed_project = _parse_project(project_fil)
 
-    for track in parsed_project.findall(".//TRACK"):
+    for track_number, track in enumerate(parsed_project.findall(".//TRACK"), start=1):
         track_name = _track_name(track)
         fxchain = next(
             (
@@ -240,7 +240,7 @@ def iter_warnings(project_fil: Path) -> Iterator[str]:
                 continue
             if "Arcade" not in str(plugin.attrib[0]):
                 continue
-            yield from _iter_arcade_warnings(track_name, plugin)
+            yield from _iter_arcade_warnings(track_number, track_name, plugin)
 
 
 def _parse_project(project_fil: Path) -> rpp.Element:
@@ -249,7 +249,9 @@ def _parse_project(project_fil: Path) -> rpp.Element:
         return rpp.load(fil)
 
 
-def _iter_arcade_warnings(track_name: str, plugin: rpp.Element) -> Iterator[str]:
+def _iter_arcade_warnings(
+    track_number: int, track_name: str, plugin: rpp.Element
+) -> Iterator[str]:
     """Inspect an Arcade AU state blob for detectable missing content issues."""
     state = _arcade_state_xml(plugin)
     if state is None:
@@ -260,24 +262,29 @@ def _iter_arcade_warnings(track_name: str, plugin: rpp.Element) -> Iterator[str]
     looper_preset = root.find("./Looper_Preset/info")
 
     if looper_preset is not None:
-        yield from _iter_arcade_looper_warnings(track_name, looper_preset)
+        yield from _iter_arcade_looper_warnings(track_number, track_name, looper_preset)
     if hyperion_preset is not None:
-        yield from _iter_arcade_hyperion_warnings(track_name, root, hyperion_preset)
+        yield from _iter_arcade_hyperion_warnings(
+            track_number, track_name, root, hyperion_preset
+        )
 
 
-def _iter_arcade_looper_warnings(track_name: str, preset: ET.Element) -> Iterator[str]:
+def _iter_arcade_looper_warnings(
+    track_number: int, track_name: str, preset: ET.Element
+) -> Iterator[str]:
     """Warn when a sampler/looper Arcade kit is not installed locally."""
     preset_name = preset.attrib.get("name", "Unknown Arcade preset")
     preset_uuid = preset.attrib.get("uuid", "")
     if preset_uuid and preset_uuid not in _arcade_installed_kit_uuids():
         yield (
-            f'Arcade sampler "{preset_name}" on track "{track_name}" is not '
+            f'Arcade sampler "{preset_name}" on track {track_number} "{track_name}" '
+            f"is not "
             f"installed locally (kit UUID: {preset_uuid})"
         )
 
 
 def _iter_arcade_hyperion_warnings(
-    track_name: str, root: ET.Element, preset: ET.Element
+    track_number: int, track_name: str, root: ET.Element, preset: ET.Element
 ) -> Iterator[str]:
     """Warn when a Hyperion Arcade preset is missing installed source content."""
     preset_name = preset.attrib.get("name", "Unknown Arcade preset")
@@ -297,7 +304,9 @@ def _iter_arcade_hyperion_warnings(
     )
 
     if missing_sources or has_internal_error:
-        detail = f'Arcade instrument "{preset_name}" on track "{track_name}"'
+        detail = (
+            f'Arcade instrument "{preset_name}" on track {track_number} "{track_name}"'
+        )
         if missing_sources:
             sources = ", ".join(missing_sources)
             yield f"{detail} references missing source content: {sources}"
