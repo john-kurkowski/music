@@ -4,17 +4,21 @@ from pathlib import Path
 from unittest import mock
 
 from click.testing import CliRunner
+from syrupy.assertion import SnapshotAssertion
 
 from music.commands.analyze import command
 from music.commands.analyze.command import main as analyze
 
 
-def test_main_plugins_for_project_file(tmp_path: Path) -> None:
+def test_main_plugins_for_project_file(
+    snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
     """Test plugin listing handles direct .rpp file inputs."""
     project_file = tmp_path / "Example.rpp"
     project_file.write_text(
         """<REAPER_PROJECT 0.1 "6.0/x64" 0
   <TRACK
+    NAME "Lead Vox"
     <FXCHAIN
       <VST "VST3: Zebra2" "plugin" 0 "" 1234<
         dmFsaWQ=
@@ -45,6 +49,14 @@ def test_main_plugins_for_project_file(tmp_path: Path) -> None:
       >
     >
   >
+  <TRACK
+    NAME "Drum Bus"
+    <FXCHAIN
+      <VST "VST3: Zebra2" "plugin" 0 "" 1234<
+        dmFsaWQ=
+      >
+    >
+  >
 >
 """
     )
@@ -61,23 +73,12 @@ def test_main_plugins_for_project_file(tmp_path: Path) -> None:
             analyze, ["--plugins", str(project_file)]
         )
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert result.stdout == (
-        "─────────────────────────────────── Example ────────────────────────────────────\n"
-        "  AUi: Arcade (Output)\n"
-        "  CLAPi: Surge XT\n"
-        "  DX: Classic Compressor\n"
-        "  JS: Mid/Side Encoder\n"
-        "  JS: ReEQ\n"
-        "  LV2: Dragonfly Hall Reverb\n"
-        "  VST3: ValhallaRoom\n"
-        "  VST3: Zebra2\n"
-        "  VST3: Zebra2\n"
-    )
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
-def test_main_plugins_formats_jsfx_names_with_prefix(tmp_path: Path) -> None:
+def test_main_plugins_formats_jsfx_names_with_prefix(
+    snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
     """Test JSFX entries use human-readable names from effect metadata."""
     project_file = tmp_path / "Example.rpp"
     effects_dir = tmp_path / "Effects"
@@ -90,6 +91,7 @@ def test_main_plugins_formats_jsfx_names_with_prefix(tmp_path: Path) -> None:
     project_file.write_text(
         """<REAPER_PROJECT 0.1 "6.0/x64" 0
   <TRACK
+    NAME "Analysis"
     <FXCHAIN
       <JS "analysis/loudness_meter" "" 0 0<
         dmFsaWQ=
@@ -109,16 +111,12 @@ def test_main_plugins_formats_jsfx_names_with_prefix(tmp_path: Path) -> None:
             analyze, ["--plugins", str(project_file)]
         )
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert result.stdout == (
-        "─────────────────────────────────── Example ────────────────────────────────────\n"
-        "  JS: Loudness Meter Peak/RMS/LUFS (Cockos)\n"
-        "  JS: ReEQ\n"
-    )
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
-def test_main_plugins_reads_legacy_encoded_jsfx_metadata(tmp_path: Path) -> None:
+def test_main_plugins_reads_legacy_encoded_jsfx_metadata(
+    snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
     """Test JSFX metadata is read from non-UTF-8 effect files."""
     project_file = tmp_path / "Example.rpp"
     effects_dir = tmp_path / "Effects"
@@ -129,6 +127,7 @@ def test_main_plugins_reads_legacy_encoded_jsfx_metadata(tmp_path: Path) -> None
     project_file.write_text(
         """<REAPER_PROJECT 0.1 "6.0/x64" 0
   <TRACK
+    NAME "Master"
     <FXCHAIN
       <JS "loser/masterLimiter" "" 0 0<
         dmFsaWQ=
@@ -145,15 +144,12 @@ def test_main_plugins_reads_legacy_encoded_jsfx_metadata(tmp_path: Path) -> None
             analyze, ["--plugins", str(project_file)]
         )
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert result.stdout == (
-        "─────────────────────────────────── Example ────────────────────────────────────\n"
-        "  JS: Master Limiter\n"
-    )
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
-def test_main_plugins_falls_back_to_clean_jsfx_basename(tmp_path: Path) -> None:
+def test_main_plugins_falls_back_to_clean_jsfx_basename(
+    snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
     """Test JSFX entries fall back to a cleaned basename when metadata is missing."""
     project_file = tmp_path / "Example.rpp"
     project_file.write_text(
@@ -175,16 +171,13 @@ def test_main_plugins_falls_back_to_clean_jsfx_basename(tmp_path: Path) -> None:
             analyze, ["--plugins", str(project_file)]
         )
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert result.stdout == (
-        "─────────────────────────────────── Example ────────────────────────────────────\n"
-        "  JS: KanakaMSEncoder1\n"
-    )
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
 @mock.patch("music.utils.project.ExtendedProject", autospec=True)
-def test_main_plugins_no_args(mock_project: mock.Mock, tmp_path: Path) -> None:
+def test_main_plugins_no_args(
+    mock_project: mock.Mock, snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
     """Test plugin listing defaults to the current project's directory."""
     project_name = "Song Title Here"
     project_dir = tmp_path / "path" / "to" / project_name
@@ -205,10 +198,7 @@ def test_main_plugins_no_args(mock_project: mock.Mock, tmp_path: Path) -> None:
 
     result = CliRunner(catch_exceptions=False).invoke(analyze, ["--plugins"])
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert "Song Title Here" in result.stdout
-    assert result.stdout.endswith("  VSTi: Kontakt\n")
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
 def test_main_raw_mode_sections(tmp_path: Path) -> None:

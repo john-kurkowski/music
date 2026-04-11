@@ -2,17 +2,28 @@
 
 import base64
 from collections.abc import Iterator
+from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 
 import click
 import rich.console
 import rich.rule
+import rich.table
 import rpp  # type: ignore[import-untyped]
 
 from music.utils import project
 
 _PLUGIN_TAGS = ("AU", "CLAP", "DX", "JS", "LV2", "VST")
+
+
+@dataclass(frozen=True)
+class PluginInstance:
+    """A plugin instance and the track it belongs to."""
+
+    track_number: int
+    track_name: str
+    plugin_name: str
 
 
 @click.command("analyze")
@@ -47,8 +58,7 @@ def main(project_paths: list[Path], plugins: bool) -> None:
             console.print()
         console.print(rich.rule.Rule(f"[bold cyan]{project_file.stem}[/bold cyan]"))
         if plugins:
-            for plugin in sorted(iter_plugin_names(project_file), key=str.casefold):
-                console.print(f"  {plugin}")
+            console.print(_plugins_table(project_file))
         else:
             for setting in iter_encoded_settings(project_file):
                 console.print(f"  {setting}")
@@ -69,6 +79,31 @@ def _iter_plugins(project_files: list[Path]) -> Iterator[str]:
         yield from iter_plugin_names(project_file)
 
 
+def _plugins_table(project_file: Path) -> rich.table.Table:
+    """Render plugin instances for a project as a table."""
+    table = rich.table.Table(show_header=True)
+    table.add_column("Plugin")
+    table.add_column("Track #", justify="right")
+    table.add_column("Track Name")
+
+    plugins = sorted(
+        iter_plugin_instances(project_file),
+        key=lambda plugin: (
+            plugin.plugin_name.casefold(),
+            plugin.track_number,
+            plugin.track_name.casefold(),
+        ),
+    )
+    for plugin in plugins:
+        table.add_row(
+            plugin.plugin_name,
+            str(plugin.track_number),
+            plugin.track_name or "(unnamed)",
+        )
+
+    return table
+
+
 def iter_encoded_settings(project_fil: Path) -> Iterator[str]:
     """Parse a Reaper project and return plugin settings encoded in base64."""
     parsed_project = _parse_project(project_fil)
@@ -85,11 +120,22 @@ def iter_encoded_settings(project_fil: Path) -> Iterator[str]:
 
 def iter_plugin_names(project_fil: Path) -> Iterator[str]:
     """Parse a Reaper project and return plugin names."""
+    yield from (plugin.plugin_name for plugin in iter_plugin_instances(project_fil))
+
+
+def iter_plugin_instances(project_fil: Path) -> Iterator[PluginInstance]:
+    """Parse a Reaper project and return plugins with their track locations."""
     parsed_project = _parse_project(project_fil)
 
-    for tag in _PLUGIN_TAGS:
-        for plugin in parsed_project.findall(f".//{tag}"):
-            yield _plugin_name(plugin)
+    for track_number, track in enumerate(parsed_project.findall(".//TRACK"), start=1):
+        track_name = _track_name(track)
+        for tag in _PLUGIN_TAGS:
+            for plugin in track.findall(f".//{tag}"):
+                yield PluginInstance(
+                    track_number=track_number,
+                    track_name=track_name,
+                    plugin_name=_plugin_name(plugin),
+                )
 
 
 def _plugin_name(plugin: rpp.Element) -> str:
@@ -98,6 +144,14 @@ def _plugin_name(plugin: rpp.Element) -> str:
     if plugin.tag == "JS":
         return f"JS: {_jsfx_display_name(name)}"
     return name
+
+
+def _track_name(track: rpp.Element) -> str:
+    """Return a track's saved name, if present."""
+    for child in track.children:
+        if isinstance(child, list) and child and child[0] == "NAME":
+            return str(child[1])
+    return ""
 
 
 def _jsfx_display_name(path: str) -> str:

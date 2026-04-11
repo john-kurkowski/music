@@ -1,0 +1,86 @@
+# serializer version: 1
+# name: test_main_plugins_falls_back_to_clean_jsfx_basename
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+      ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
+      ┃ Plugin               ┃ Track # ┃ Track Name ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
+      │ JS: KanakaMSEncoder1 │       1 │ (unnamed)  │
+      └──────────────────────┴─────────┴────────────┘
+  
+    ''',
+  )
+# ---
+# name: test_main_plugins_for_project_file
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
+      ┃ Plugin                     ┃ Track # ┃ Track Name ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
+      │ AUi: Arcade (Output)       │       1 │ Lead Vox   │
+      │ CLAPi: Surge XT            │       1 │ Lead Vox   │
+      │ DX: Classic Compressor     │       1 │ Lead Vox   │
+      │ JS: Mid/Side Encoder       │       1 │ Lead Vox   │
+      │ JS: ReEQ                   │       1 │ Lead Vox   │
+      │ LV2: Dragonfly Hall Reverb │       1 │ Lead Vox   │
+      │ VST3: ValhallaRoom         │       1 │ Lead Vox   │
+      │ VST3: Zebra2               │       1 │ Lead Vox   │
+      │ VST3: Zebra2               │       1 │ Lead Vox   │
+      │ VST3: Zebra2               │       2 │ Drum Bus   │
+      └────────────────────────────┴─────────┴────────────┘
+  
+    ''',
+  )
+# ---
+# name: test_main_plugins_formats_jsfx_names_with_prefix
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
+      ┃ Plugin                                    ┃ Track # ┃ Track Name ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
+      │ JS: Loudness Meter Peak/RMS/LUFS (Cockos) │       1 │ Analysis   │
+      │ JS: ReEQ                                  │       1 │ Analysis   │
+      └───────────────────────────────────────────┴─────────┴────────────┘
+  
+    ''',
+  )
+# ---
+# name: test_main_plugins_no_args
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────── Song Title Here ────────────────────────────────
+      ┏━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
+      ┃ Plugin        ┃ Track # ┃ Track Name ┃
+      ┡━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
+      │ VSTi: Kontakt │       1 │ (unnamed)  │
+      └───────────────┴─────────┴────────────┘
+  
+    ''',
+  )
+# ---
+# name: test_main_plugins_reads_legacy_encoded_jsfx_metadata
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+      ┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
+      ┃ Plugin             ┃ Track # ┃ Track Name ┃
+      ┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
+      │ JS: Master Limiter │       1 │ Master     │
+      └────────────────────┴─────────┴────────────┘
+  
+    ''',
+  )
+# ---
