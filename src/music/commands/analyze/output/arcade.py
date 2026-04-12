@@ -19,7 +19,13 @@ def is_arcade_plugin(plugin: rpp.Element) -> bool:
 def iter_warnings(
     track_number: int, track_name: str, plugin: rpp.Element
 ) -> Iterator[str]:
-    """Inspect an Arcade AU state blob for detectable missing content issues."""
+    """Inspect an Arcade AU state blob for missing-content issues.
+
+    Arcade saves different preset families under distinct XML sections. This
+    analyzer currently recognizes looper presets, which reference kit installs
+    via ``Looper_Preset``, and Hyperion presets, which reference instrument
+    source installs via ``Hyperion_Preset``.
+    """
     state = arcade_state_xml(plugin)
     if state is None:
         return
@@ -64,7 +70,7 @@ def arcade_state_xml(plugin: rpp.Element) -> bytes | None:
 def _iter_arcade_looper_warnings(
     track_number: int, track_name: str, preset: ET.Element
 ) -> Iterator[str]:
-    """Warn when a sampler/looper Arcade kit is not installed locally."""
+    """Warn when a looper-style Arcade preset references a missing kit install."""
     preset_name = preset.attrib.get("name", "Unknown Arcade preset")
     preset_uuid = preset.attrib.get("uuid", "")
     if preset_uuid and preset_uuid not in _arcade_installed_kit_uuids():
@@ -78,7 +84,7 @@ def _iter_arcade_looper_warnings(
 def _iter_arcade_hyperion_warnings(
     track_number: int, track_name: str, root: ET.Element, preset: ET.Element
 ) -> Iterator[str]:
-    """Warn when a Hyperion Arcade preset is missing installed source content."""
+    """Warn when a Hyperion Arcade preset references missing source content."""
     preset_name = preset.attrib.get("name", "Unknown Arcade preset")
     installed_sources = _arcade_installed_source_uuids()
     missing_sources = sorted(
