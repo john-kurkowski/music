@@ -32,6 +32,15 @@ from .process import Process as UploadProcess
     ),
 )
 @click.option(
+    "--dry-run",
+    default=False,
+    help=(
+        "Whether to skip SoundCloud upload writes while still checking what"
+        " would be uploaded."
+    ),
+    is_flag=True,
+)
+@click.option(
     "--include-main",
     default=None,
     flag_value=SongVersion.MAIN,
@@ -86,6 +95,7 @@ from .process import Process as UploadProcess
 async def main(
     project_dirs: list[Path],
     additional_headers: str,
+    dry_run: bool,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_instrumental_dj: SongVersion | None,
@@ -140,7 +150,7 @@ async def main(
     with rich.live.Live(process.progress, console=console, refresh_per_second=10):
         async with aiohttp.ClientSession() as client:
             uploads = await process.process(
-                client, oauth_token, parsed_additional_headers, files
+                client, oauth_token, parsed_additional_headers, files, dry_run=dry_run
             )
 
     has_error = False

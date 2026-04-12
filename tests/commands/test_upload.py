@@ -130,6 +130,63 @@ def test_main_tracks_newer(
     ) == snapshot
 
 
+def test_main_tracks_newer_dry_run(
+    requests_mocks: RequestsMocks,
+    snapshot: SnapshotAssertion,
+    some_paths: list[Path],
+) -> None:
+    """Test main dry run still skips tracks that are already uploaded."""
+    old_timestamp = "2020-10-01T00:00:00Z"
+    new_timestamp = "2021-10-01T00:00:00Z"
+
+    original_stat = Path.stat
+
+    def mock_stat(self: Path, *args: Any, **kwargs: Any) -> Any:
+        """Mock `Path.stat()` to return a timestamp for some paths under test."""
+        if self in some_paths:
+            return mock.Mock(
+                st_mode=ST_MODE_IS_FILE,
+                st_mtime=datetime.datetime.fromisoformat(old_timestamp).timestamp(),
+                st_size=1_234_567,
+            )
+
+        return original_stat(self, *args, **kwargs)
+
+    def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
+        if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
+            tracks = [
+                {
+                    "id": 1,
+                    "last_modified": new_timestamp,
+                    "title": "some project",
+                    "permalink_url": "https://soundcloud.com/1",
+                },
+                {
+                    "id": 2,
+                    "last_modified": new_timestamp,
+                    "title": "another project",
+                    "permalink_url": "https://soundcloud.com/2",
+                },
+            ]
+            return mock.Mock(json=mock.AsyncMock(return_value={"collection": tracks}))
+
+        return mock.Mock()
+
+    requests_mocks.get.side_effect = mock_get
+    with mock.patch.object(Path, "stat", autospec=True, side_effect=mock_stat):
+        result = CliRunner(catch_exceptions=False).invoke(
+            upload,
+            ["--dry-run", *[str(path.parent.resolve()) for path in some_paths]],
+        )
+
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        requests_mocks.mock_calls,
+    ) == snapshot
+
+
 def test_main_tracks_limit_warning(
     requests_mocks: RequestsMocks,
     snapshot: SnapshotAssertion,
@@ -258,6 +315,52 @@ def test_main_success(
     result = CliRunner(catch_exceptions=False).invoke(
         upload,
         [str(path.parent.resolve()) for path in some_paths],
+    )
+
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        requests_mocks.mock_calls,
+    ) == snapshot
+
+
+def test_main_success_dry_run(
+    requests_mocks: RequestsMocks, snapshot: SnapshotAssertion, some_paths: list[Path]
+) -> None:
+    """Test main dry run performs only read requests and simulated progress."""
+    new_timestamp = "2021-10-01T00:00:00Z"
+
+    def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
+        if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
+            return mock.Mock(
+                json=mock.AsyncMock(
+                    return_value={
+                        "collection": [
+                            {
+                                "id": 1,
+                                "last_modified": new_timestamp,
+                                "title": "some project",
+                                "permalink_url": "https://soundcloud.com/1",
+                            },
+                            {
+                                "id": 2,
+                                "last_modified": new_timestamp,
+                                "title": "another project",
+                                "permalink_url": "https://soundcloud.com/2",
+                            },
+                        ]
+                    }
+                )
+            )
+
+        return mock.Mock()
+
+    requests_mocks.get.side_effect = mock_get
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        upload,
+        ["--dry-run", *[str(path.parent.resolve()) for path in some_paths]],
     )
 
     assert (

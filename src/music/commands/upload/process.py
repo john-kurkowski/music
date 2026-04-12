@@ -54,6 +54,8 @@ class Process:
         oauth_token: str,
         additional_headers: dict[str, Any],
         files: list[Path],
+        *,
+        dry_run: bool = False,
     ) -> list[Track | BaseException]:
         """Upload the given audio files to SoundCloud.
 
@@ -97,7 +99,9 @@ class Process:
 
         tasks = [
             asyncio.create_task(
-                self._upload_one_file_to_track(client, headers, tracks_by_title, fil)
+                self._upload_one_file_to_track(
+                    client, headers, tracks_by_title, fil, dry_run=dry_run
+                )
             )
             for fil in files
         ]
@@ -132,6 +136,8 @@ class Process:
         headers: dict[str, str],
         tracks_by_title: dict[str, Track],
         fil: Path,
+        *,
+        dry_run: bool = False,
     ) -> Track:
         """Perform the API requests for the given audio file to become the new version of the existing SoundCloud track.
 
@@ -162,8 +168,12 @@ class Process:
             self.progress_upload.start_task(task)
 
             try:
-                upload = await self._prepare_upload(client, headers, fil)
-                await self._upload(client, task, fil, upload)
+                if dry_run:
+                    upload = self._prepare_upload_dry_run(fil)
+                    self._upload_dry_run(task, fil)
+                else:
+                    upload = await self._prepare_upload(client, headers, fil)
+                    await self._upload(client, task, fil, upload)
             except Exception as ex:
                 self.progress_upload.fail_task(task, str(ex))
                 raise
@@ -172,12 +182,13 @@ class Process:
             self.progress_transcode.start_task(task)
 
             try:
-                await self._transcode(client, headers, upload)
-                await self._confirm_upload(client, headers, track, fil, upload)
+                if not dry_run:
+                    await self._transcode(client, headers, upload)
+                    await self._confirm_upload(client, headers, track, fil, upload)
             except Exception as ex:
                 self.progress_transcode.fail_task(task, str(ex))
                 raise
-            finally:
+            else:
                 self.progress_transcode.succeed_task(task)
 
         if not self.results_table.columns:
@@ -235,6 +246,10 @@ class Process:
             "url": upload["url"],
         }
 
+    def _prepare_upload_dry_run(self, fil: Path) -> _PrepareUploadResponse:
+        """Return a fake upload target for dry-run mode."""
+        return {"headers": {}, "uid": f"dry-run-{fil.stem}", "url": "dry-run://upload"}
+
     async def _transcode(
         self,
         client: aiohttp.ClientSession,
@@ -278,6 +293,10 @@ class Process:
             timeout=aiohttp.ClientTimeout(total=60 * 10),
         )
         await _raise_for_status(resp)
+
+    def _upload_dry_run(self, task: rich.progress.TaskID, fil: Path) -> None:
+        """Simulate uploading the file without performing network writes."""
+        self.progress_upload.advance(task, fil.stat().st_size)
 
 
 async def _raise_for_status(resp: aiohttp.ClientResponse) -> None:

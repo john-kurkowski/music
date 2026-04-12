@@ -292,7 +292,7 @@ class _Command:
         renders = []
         uploads = []
 
-        if self.upload_existing and not self.dry_run:
+        if self.upload_existing:
             uploads.append(
                 asyncio.create_task(
                     self.upload_process.process(
@@ -300,6 +300,7 @@ class _Command:
                         self.oauth_token,
                         self.additional_headers,
                         _existing_render_fils(project, self.versions),
+                        dry_run=self.dry_run,
                     )
                 )
             )
@@ -314,7 +315,7 @@ class _Command:
         ):
             renders.append(render)
 
-            if self.upload and render.fil.is_file() and not self.dry_run:
+            if self.upload and render.fil.is_file():
                 uploads.append(
                     asyncio.create_task(
                         self.upload_process.process(
@@ -322,6 +323,7 @@ class _Command:
                             self.oauth_token,
                             self.additional_headers,
                             [render.fil],
+                            dry_run=self.dry_run,
                         )
                     )
                 )

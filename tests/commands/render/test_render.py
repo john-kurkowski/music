@@ -142,6 +142,63 @@ def test_main_default_versions_dry_run(
     ) == snapshot
 
 
+def test_main_default_versions_dry_run_upload(
+    render_mocks: RenderMocks,
+    snapshot: SnapshotAssertion,
+    subprocess_with_output: mock.Mock,
+    tmp_path: Path,
+) -> None:
+    """Test main dry run still invokes upload simulation for rendered files."""
+    result = CliRunner(catch_exceptions=False).invoke(
+        render,
+        ["--dry-run", "--upload"],
+    )
+
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        render_mocks.mock_calls,
+        subprocess_with_output.mock_calls,
+        _snapshot_tmp_path(tmp_path),
+    ) == snapshot
+
+
+def test_main_mocked_calls_dry_run_upload_existing(
+    render_mocks: RenderMocks,
+    snapshot: SnapshotAssertion,
+    subprocess_with_output: mock.Mock,
+    tmp_path: Path,
+) -> None:
+    """Test dry-run upload paths receive the dry-run flag."""
+    some_paths = [Path(render_mocks.project.path)]
+
+    some_unspecified_file = SongVersion.INSTRUMENTAL.path_for_project_dir(
+        Path(render_mocks.project.path)
+    )
+    some_unspecified_file.touch()
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        render,
+        [
+            "--dry-run",
+            "--include-main",
+            "--upload",
+            "--upload-existing",
+            *[str(path.resolve()) for path in some_paths],
+        ],
+    )
+
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        render_mocks.mock_calls,
+        subprocess_with_output.mock_calls,
+        _snapshot_tmp_path(tmp_path),
+    ) == snapshot
+
+
 def test_main_instrumental_versions_only_main_vocals(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,
