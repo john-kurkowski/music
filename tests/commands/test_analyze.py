@@ -1,13 +1,26 @@
 """Analyze command tests."""
 
+import base64
+import plistlib
+from collections.abc import Iterator
+from contextlib import closing
 from pathlib import Path
 from unittest import mock
 
+import pytest
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
-from music.commands.analyze import command
+from music.commands.analyze import process
 from music.commands.analyze.command import main as analyze
+
+
+@pytest.fixture(autouse=True)
+def clear_jsfx_file_cache() -> Iterator[None]:
+    """Isolate cached JSFX path lookups between tests."""
+    process._jsfx_file.cache_clear()
+    yield
+    process._jsfx_file.cache_clear()
 
 
 def test_main_plugins_for_project_file(
@@ -66,9 +79,8 @@ def test_main_plugins_for_project_file(
     (effects_dir / "ReJJ" / "ReEQ").mkdir(parents=True)
     (effects_dir / "utility" / "KanakaMSEncoder1").write_text("desc:Mid/Side Encoder\n")
     (effects_dir / "ReJJ" / "ReEQ" / "ReEQ.jsfx").write_text("desc:ReEQ\n")
-    command._jsfx_file.cache_clear()
 
-    with mock.patch.object(command, "_jsfx_search_paths", return_value=(effects_dir,)):
+    with mock.patch.object(process, "_jsfx_search_paths", return_value=(effects_dir,)):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )
@@ -89,7 +101,8 @@ def test_main_plugins_formats_jsfx_names_with_prefix(
     )
     (effects_dir / "ReJJ" / "ReEQ" / "ReEQ.jsfx").write_text("desc:ReEQ\n")
     project_file.write_text(
-        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
   <TRACK
     NAME "Analysis"
     <FXCHAIN
@@ -104,9 +117,8 @@ def test_main_plugins_formats_jsfx_names_with_prefix(
 >
 """
     )
-    command._jsfx_file.cache_clear()
 
-    with mock.patch.object(command, "_jsfx_search_paths", return_value=(effects_dir,)):
+    with mock.patch.object(process, "_jsfx_search_paths", return_value=(effects_dir,)):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )
@@ -125,7 +137,8 @@ def test_main_plugins_reads_legacy_encoded_jsfx_metadata(
         b"desc:Master Limiter\n// Andr\xe9\n"
     )
     project_file.write_text(
-        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
   <TRACK
     NAME "Master"
     <FXCHAIN
@@ -137,9 +150,8 @@ def test_main_plugins_reads_legacy_encoded_jsfx_metadata(
 >
 """
     )
-    command._jsfx_file.cache_clear()
 
-    with mock.patch.object(command, "_jsfx_search_paths", return_value=(effects_dir,)):
+    with mock.patch.object(process, "_jsfx_search_paths", return_value=(effects_dir,)):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )
@@ -153,7 +165,8 @@ def test_main_plugins_falls_back_to_clean_jsfx_basename(
     """Test JSFX entries fall back to a cleaned basename when metadata is missing."""
     project_file = tmp_path / "Example.rpp"
     project_file.write_text(
-        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
   <TRACK
     <FXCHAIN
       <JS "utility/KanakaMSEncoder1" "" 0 0<
@@ -164,9 +177,8 @@ def test_main_plugins_falls_back_to_clean_jsfx_basename(
 >
 """
     )
-    command._jsfx_file.cache_clear()
 
-    with mock.patch.object(command, "_jsfx_search_paths", return_value=()):
+    with mock.patch.object(process, "_jsfx_search_paths", return_value=()):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )
@@ -201,7 +213,7 @@ def test_main_plugins_no_args(
     assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
-def test_main_raw_mode_sections(tmp_path: Path) -> None:
+def test_main_raw_mode_sections(snapshot: SnapshotAssertion, tmp_path: Path) -> None:
     """Test raw mode prints decoded settings within project sections."""
     project_file = tmp_path / "Example.rpp"
     project_file.write_text(
@@ -234,14 +246,222 @@ def test_main_raw_mode_sections(tmp_path: Path) -> None:
 
     result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert result.stdout == (
-        "─────────────────────────────────── Example ────────────────────────────────────\n"
-        "  more\n"
-        "  clap\n"
-        "  dx\n"
-        "  jsf\n"
-        "  lv2\n"
-        "  valid\n"
+    assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_raw_mode_reassembles_chunked_arcade_state(
+    snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
+    """Test raw mode prints one decoded Arcade state instead of chunk fragments."""
+    project_file = tmp_path / "Example.rpp"
+    long_name = "Downstream " + ("very-long-state " * 20)
+    looper_info = (
+        f'<info name="{long_name}" uuid="downstream-kit" '
+        'product_uuid="honey-product" version="1.3.0"/>'
+    ).encode()
+    arcade_state = _arcade_au_state_base64(
+        b'<?xml version="1.0" encoding="UTF-8"?><state_info><Looper_Preset>'
+        + looper_info
+        + b"</Looper_Preset></state_info>"
     )
+    chunked_state = "\n".join(
+        f"        {arcade_state[i : i + 128]}" for i in range(0, len(arcade_state), 128)
+    )
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+{chunked_state}
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_warns_for_arcade_hyperion_missing_source(
+    snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test Arcade Hyperion presets warn when their source content is missing."""
+    project_file = tmp_path / "Example.rpp"
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids=set(), source_uuids=set())
+
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Bass note kit"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {
+            _arcade_au_state_base64(
+                b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+                b"<Hyperion_Preset>"
+                b'<info name="Amped Up" uuid="kit-uuid" product_uuid="product-uuid" version="2.0.0"/>'
+                b"<model>"
+                b'<HyperionLoadedSource LoadedSourceUuid="missing-source"/>'
+                b'<HyperionFxBusSettings Name="error"/>'
+                b"</model>"
+                b"</Hyperion_Preset>"
+                b"</state_info>"
+            )
+        }
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+    assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_does_not_warn_for_arcade_hyperion_installed_source(
+    snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test Arcade Hyperion presets stay quiet once source content is installed."""
+    project_file = tmp_path / "Example.rpp"
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids=set(), source_uuids={"loaded-source"})
+
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Bass note kit"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {
+            _arcade_au_state_base64(
+                b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+                b"<Hyperion_Preset>"
+                b'<info name="Amped Up" uuid="kit-uuid" product_uuid="product-uuid" version="2.0.0"/>'
+                b"<model>"
+                b'<HyperionLoadedSource LoadedSourceUuid="loaded-source"/>'
+                b'<HyperionFxBusSettings Name="error"/>'
+                b"</model>"
+                b"</Hyperion_Preset>"
+                b"</state_info>"
+            )
+        }
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_warns_for_arcade_looper_missing_kit(
+    snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test Arcade looper presets warn when the kit is not installed locally."""
+    project_file = tmp_path / "Example.rpp"
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids={"some-other-kit"}, source_uuids=set())
+
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Rhythm"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {
+            _arcade_au_state_base64(
+                b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+                b"<Looper_Preset>"
+                b'<info name="Downstream" uuid="downstream-kit" product_uuid="honey-product" version="1.3.0"/>'
+                b"</Looper_Preset>"
+                b"</state_info>"
+            )
+        }
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_does_not_warn_for_arcade_looper_installed_kit(
+    snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test Arcade looper presets stay quiet once the kit exists in local DB."""
+    project_file = tmp_path / "Example.rpp"
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids={"downstream-kit"}, source_uuids=set())
+
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Rhythm"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {
+            _arcade_au_state_base64(
+                b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+                b"<Looper_Preset>"
+                b'<info name="Downstream" uuid="downstream-kit" product_uuid="honey-product" version="1.3.0"/>'
+                b"</Looper_Preset>"
+                b"</state_info>"
+            )
+        }
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def _arcade_au_state_base64(juce_state: bytes) -> str:
+    """Build a minimal Arcade AU state chunk for tests."""
+    outer = plistlib.dumps(
+        {
+            "data": b"",
+            "jucePluginState": b"prefix-bytes" + juce_state + b"trailing-bytes",
+            "name": "Untitled",
+        }
+    )
+    return base64.b64encode(outer).decode("ascii")
+
+
+def _write_arcade_db(
+    db_path: Path, kit_uuids: set[str], source_uuids: set[str]
+) -> None:
+    """Create a minimal Arcade metadata DB for tests."""
+    import sqlite3
+
+    with closing(sqlite3.connect(db_path)) as con:
+        con.execute("create table kits (uuid text)")
+        con.execute("create table sound_sources (uuid text)")
+        con.executemany(
+            "insert into kits (uuid) values (?)", [(uuid,) for uuid in kit_uuids]
+        )
+        con.executemany(
+            "insert into sound_sources (uuid) values (?)",
+            [(uuid,) for uuid in source_uuids],
+        )
+        con.commit()

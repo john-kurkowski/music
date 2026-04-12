@@ -1,4 +1,31 @@
 # serializer version: 1
+# name: test_main_does_not_warn_for_arcade_hyperion_installed_source
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+        <?xml version="1.0" encoding="UTF-8"?><state_info><Hyperion_Preset><info 
+      name="Amped Up" uuid="kit-uuid" product_uuid="product-uuid" 
+      version="2.0.0"/><model><HyperionLoadedSource 
+      LoadedSourceUuid="loaded-source"/><HyperionFxBusSettings Name... [49 more chars]
+  
+    ''',
+  )
+# ---
+# name: test_main_does_not_warn_for_arcade_looper_installed_kit
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+        <?xml version="1.0" encoding="UTF-8"?><state_info><Looper_Preset><info 
+      name="Downstream" uuid="downstream-kit" product_uuid="honey-product" 
+      version="1.3.0"/></Looper_Preset></state_info>
+  
+    ''',
+  )
+# ---
 # name: test_main_plugins_falls_back_to_clean_jsfx_basename
   tuple(
     '',
@@ -80,6 +107,75 @@
       ┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
       │ JS: Master Limiter │       1 │ Master     │
       └────────────────────┴─────────┴────────────┘
+  
+    ''',
+  )
+# ---
+# name: test_main_raw_mode_reassembles_chunked_arcade_state
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+        Warning: Arcade sampler "Downstream very-long-state very-long-state 
+      very-long-state very-long-state very-long-state very-long-state very-long-state 
+      very-long-state very-long-state very-long-state very-long-state very-long-state 
+      very-long-state very-long-state very-long-state very-long-state very-long-state 
+      very-long-state very-long-state very-long-state " on track 1 "" is not installed
+      locally (kit UUID: downstream-kit)
+        <?xml version="1.0" encoding="UTF-8"?><state_info><Looper_Preset><info 
+      name="Downstream very-long-state very-long-state very-long-state very-long-state
+      very-long-state very-long-state very-long-state very-long-state very-long-state 
+      very-lon... [267 more chars]
+  
+    ''',
+  )
+# ---
+# name: test_main_raw_mode_sections
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+        more
+        clap
+        dx
+        jsf
+        lv2
+        valid
+  
+    ''',
+  )
+# ---
+# name: test_main_warns_for_arcade_hyperion_missing_source
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+        Warning: Arcade instrument "Amped Up" on track 1 "Bass note kit" references 
+      missing source content: missing-source
+        Warning: Arcade instrument "Amped Up" on track 1 "Bass note kit" has an 
+      internal "error" state in its saved plugin data
+        <?xml version="1.0" encoding="UTF-8"?><state_info><Hyperion_Preset><info 
+      name="Amped Up" uuid="kit-uuid" product_uuid="product-uuid" 
+      version="2.0.0"/><model><HyperionLoadedSource 
+      LoadedSourceUuid="missing-source"/><HyperionFxBusSettings Nam... [50 more chars]
+  
+    ''',
+  )
+# ---
+# name: test_main_warns_for_arcade_looper_missing_kit
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+        Warning: Arcade sampler "Downstream" on track 1 "Rhythm" is not installed 
+      locally (kit UUID: downstream-kit)
+        <?xml version="1.0" encoding="UTF-8"?><state_info><Looper_Preset><info 
+      name="Downstream" uuid="downstream-kit" product_uuid="honey-product" 
+      version="1.3.0"/></Looper_Preset></state_info>
   
     ''',
   )
