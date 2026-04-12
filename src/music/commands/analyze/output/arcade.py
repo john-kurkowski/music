@@ -57,7 +57,7 @@ def iter_plugin_warnings(
     if looper_preset is not None:
         yield from _iter_arcade_looper_plugin_warnings(looper_preset)
     if hyperion_preset is not None:
-        yield from _iter_arcade_hyperion_plugin_warnings(root)
+        yield from _iter_arcade_hyperion_plugin_warnings(root, hyperion_preset)
 
 
 def arcade_state_xml(plugin: rpp.Element) -> bytes | None:
@@ -142,9 +142,12 @@ def _iter_arcade_hyperion_warnings(
 
 def _iter_arcade_hyperion_plugin_warnings(
     root: ET.Element,
+    preset: ET.Element,
 ) -> Iterator[tuple[str, str]]:
     """Return compact plugin-table warnings for missing Hyperion content."""
     installed_sources = _arcade_installed_source_uuids()
+    source_names = _hyperion_source_names_by_uuid(root)
+    preset_name = preset.attrib.get("name", "Unknown Arcade preset")
     missing_sources = sorted(
         {
             source_uuid
@@ -156,7 +159,35 @@ def _iter_arcade_hyperion_plugin_warnings(
         }
     )
     if missing_sources:
-        yield ("⛓️‍💥", ", ".join(missing_sources))
+        display_names = [
+            name
+            for source_uuid in missing_sources
+            if (name := source_names.get(source_uuid))
+        ]
+        if not display_names:
+            display_names = [preset_name]
+        yield ("⛓️‍💥", ", ".join(display_names))
+
+
+def _hyperion_source_names_by_uuid(root: ET.Element) -> dict[str, str]:
+    """Return friendly Hyperion source names from state XML or local metadata."""
+    source_names: dict[str, str] = {}
+    for elem in root.findall(".//HyperionLoadedSource"):
+        source_uuid = elem.attrib.get("LoadedSourceUuid", "")
+        source_name = (
+            elem.attrib.get("LoadedSourceName")
+            or elem.attrib.get("SourceName")
+            or elem.attrib.get("Name")
+            or elem.attrib.get("name")
+            or ""
+        ).strip()
+        if source_uuid and source_name:
+            source_names[source_uuid] = source_name
+
+    if source_names:
+        return source_names
+
+    return _arcade_source_names_by_uuid()
 
 
 def _arcade_content_root() -> Path:
@@ -197,6 +228,35 @@ def _arcade_installed_source_uuids() -> set[str]:
 
     with closing(sqlite3.connect(db_path)) as con:
         return {uuid for (uuid,) in con.execute("select uuid from sound_sources")}
+
+
+def _arcade_source_names_by_uuid() -> dict[str, str]:
+    """Return friendly source names keyed by UUID when Arcade metadata has them."""
+    db_path = _arcade_db_path()
+    if not db_path.exists():
+        return {}
+
+    with closing(sqlite3.connect(db_path)) as con:
+        columns = {row[1] for row in con.execute("pragma table_info(sound_sources)")}
+        if "uuid" not in columns:
+            return {}
+
+        name_column = next(
+            (
+                column
+                for column in ("name", "title", "display_name")
+                if column in columns
+            ),
+            None,
+        )
+        if name_column is None:
+            return {}
+
+        return dict(
+            con.execute(
+                f"select uuid, {name_column} from sound_sources where {name_column} is not null and {name_column} != ''"
+            )
+        )
 
 
 def rpp_plist_value(plist_xml: bytes, key: str) -> object:

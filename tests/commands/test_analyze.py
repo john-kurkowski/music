@@ -505,6 +505,100 @@ def test_main_does_not_warn_for_arcade_hyperion_installed_source(
     assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
+def test_main_plugins_resolves_arcade_hyperion_source_names(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test plugin mode prefers human-readable Arcade source names in warnings."""
+    project_file = tmp_path / "Example.rpp"
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(
+        db_path,
+        kit_uuids=set(),
+        source_uuids={"installed-source"},
+        source_names={"installed-source": "Installed"},
+    )
+
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Bass note kit"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {
+            _arcade_au_state_base64(
+                b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+                b"<Hyperion_Preset>"
+                b'<info name="Amped Up" uuid="kit-uuid" product_uuid="product-uuid" version="2.0.0"/>'
+                b"<model>"
+                b'<HyperionLoadedSource LoadedSourceUuid="missing-source" LoadedSourceName="Amped Up Main"/>'
+                b'<HyperionLoadedSource LoadedSourceUuid="installed-source"/>'
+                b"</model>"
+                b"</Hyperion_Preset>"
+                b"</state_info>"
+            )
+        }
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        analyze, ["--plugins", str(project_file)]
+    )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "⛓️‍💥 Amped Up Main" in result.stdout
+    assert "missing-source" not in result.stdout
+
+
+def test_main_plugins_falls_back_to_arcade_hyperion_preset_name(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test plugin mode uses the Hyperion preset name if source names are unavailable."""
+    project_file = tmp_path / "Example.rpp"
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids=set(), source_uuids=set())
+
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Bass note kit"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {
+            _arcade_au_state_base64(
+                b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+                b"<Hyperion_Preset>"
+                b'<info name="Amped Up" uuid="kit-uuid" product_uuid="product-uuid" version="2.0.0"/>'
+                b"<model>"
+                b'<HyperionLoadedSource LoadedSourceUuid="missing-source"/>'
+                b"</model>"
+                b"</Hyperion_Preset>"
+                b"</state_info>"
+            )
+        }
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        analyze, ["--plugins", str(project_file)]
+    )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "⛓️‍💥 Amped Up" in result.stdout
+    assert "missing-source" not in result.stdout
+
+
 def test_main_warns_for_arcade_looper_missing_kit(
     snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -590,19 +684,26 @@ def _arcade_au_state_base64(juce_state: bytes) -> str:
 
 
 def _write_arcade_db(
-    db_path: Path, kit_uuids: set[str], source_uuids: set[str]
+    db_path: Path,
+    kit_uuids: set[str],
+    source_uuids: set[str],
+    source_names: dict[str, str] | None = None,
 ) -> None:
     """Create a minimal Arcade metadata DB for tests."""
     import sqlite3
 
+    source_names = source_names or {}
     with closing(sqlite3.connect(db_path)) as con:
         con.execute("create table kits (uuid text)")
-        con.execute("create table sound_sources (uuid text)")
+        con.execute("create table sound_sources (uuid text, name text)")
         con.executemany(
             "insert into kits (uuid) values (?)", [(uuid,) for uuid in kit_uuids]
         )
         con.executemany(
-            "insert into sound_sources (uuid) values (?)",
-            [(uuid,) for uuid in source_uuids],
+            "insert into sound_sources (uuid, name) values (?, ?)",
+            [
+                (uuid, source_names.get(uuid))
+                for uuid in source_uuids | source_names.keys()
+            ],
         )
         con.commit()
