@@ -42,6 +42,24 @@ def iter_warnings(
         )
 
 
+def iter_plugin_warnings(
+    track_number: int, track_name: str, plugin: rpp.Element
+) -> Iterator[tuple[str, str]]:
+    """Return compact warning indicators for plugin-table rows."""
+    state = arcade_state_xml(plugin)
+    if state is None:
+        return
+
+    root = ET.fromstring(state)
+    hyperion_preset = root.find("./Hyperion_Preset/info")
+    looper_preset = root.find("./Looper_Preset/info")
+
+    if looper_preset is not None:
+        yield from _iter_arcade_looper_plugin_warnings(looper_preset)
+    if hyperion_preset is not None:
+        yield from _iter_arcade_hyperion_plugin_warnings(root)
+
+
 def arcade_state_xml(plugin: rpp.Element) -> bytes | None:
     """Extract Arcade's nested JUCE state XML from an AU plugin chunk."""
     if not is_arcade_plugin(plugin):
@@ -81,6 +99,16 @@ def _iter_arcade_looper_warnings(
         )
 
 
+def _iter_arcade_looper_plugin_warnings(
+    preset: ET.Element,
+) -> Iterator[tuple[str, str]]:
+    """Return compact plugin-table warnings for missing looper kits."""
+    preset_name = preset.attrib.get("name", "Unknown Arcade preset")
+    preset_uuid = preset.attrib.get("uuid", "")
+    if preset_uuid and preset_uuid not in _arcade_installed_kit_uuids():
+        yield ("⛓️‍💥", preset_name)
+
+
 def _iter_arcade_hyperion_warnings(
     track_number: int, track_name: str, root: ET.Element, preset: ET.Element
 ) -> Iterator[str]:
@@ -110,6 +138,25 @@ def _iter_arcade_hyperion_warnings(
             yield f"{detail} references missing source content: {sources}"
         if has_internal_error and missing_sources:
             yield f'{detail} has an internal "error" state in its saved plugin data'
+
+
+def _iter_arcade_hyperion_plugin_warnings(
+    root: ET.Element,
+) -> Iterator[tuple[str, str]]:
+    """Return compact plugin-table warnings for missing Hyperion content."""
+    installed_sources = _arcade_installed_source_uuids()
+    missing_sources = sorted(
+        {
+            source_uuid
+            for source_uuid in (
+                elem.attrib.get("LoadedSourceUuid", "")
+                for elem in root.findall(".//HyperionLoadedSource")
+            )
+            if source_uuid and source_uuid not in installed_sources
+        }
+    )
+    if missing_sources:
+        yield ("⛓️‍💥", ", ".join(missing_sources))
 
 
 def _arcade_content_root() -> Path:

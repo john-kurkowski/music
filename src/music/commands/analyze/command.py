@@ -45,11 +45,11 @@ def main(project_paths: list[Path], plugins: bool) -> None:
         if i > 0:
             console.print()
         console.print(rich.rule.Rule(f"[bold cyan]{project_file.stem}[/bold cyan]"))
-        for warning in analyzed_project.iter_warnings():
-            console.print(f"  [yellow]Warning:[/yellow] {warning}")
         if plugins:
             console.print(_plugins_table(analyzed_project))
         else:
+            for warning in analyzed_project.iter_warnings():
+                console.print(f"  [yellow]Warning:[/yellow] {warning}")
             for setting in analyzed_project.iter_encoded_settings():
                 console.print(f"  {_display_setting(setting)}")
 
@@ -69,9 +69,10 @@ def _plugins_table(analyzed_project: process.AnalyzeProject) -> rich.table.Table
     table.add_column("Plugin")
     table.add_column("Track #", justify="right")
     table.add_column("Track Name")
+    table.add_column("Warning")
 
     plugins = sorted(
-        analyzed_project.iter_plugin_instances(),
+        analyzed_project.iter_plugin_rows(),
         key=lambda plugin: (
             plugin.plugin_name.casefold(),
             plugin.track_number,
@@ -83,6 +84,7 @@ def _plugins_table(analyzed_project: process.AnalyzeProject) -> rich.table.Table
             plugin.plugin_name,
             str(plugin.track_number),
             plugin.track_name or "(unnamed)",
+            "\n".join(warning.display() for warning in plugin.warnings),
         )
 
     return table

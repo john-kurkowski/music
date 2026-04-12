@@ -288,6 +288,45 @@ def test_main_plugins_warns_for_missing_vst_plugin(
     assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
+def test_main_plugins_renders_warnings_in_table_cells(tmp_path: Path) -> None:
+    """Test plugin mode keeps warnings in the table instead of separate prints."""
+    project_file = tmp_path / "Example.rpp"
+    arcade_state = _arcade_au_state_base64(
+        b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
+        b"<Looper_Preset>"
+        b'<info name="Downstream" uuid="downstream-kit" product_uuid="honey-product" version="1.3.0"/>'
+        b"</Looper_Preset>"
+        b"</state_info>"
+    )
+    project_file.write_text(
+        f"""\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Rhythm"
+    <FXCHAIN
+      <AU "AUi: Arcade (Output)" "Output: Arcade" "" 1234<
+        {arcade_state}
+      >
+      <VST "VST3: Zebra2" "plugin" 0 "" 1234<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        analyze, ["--plugins", str(project_file)]
+    )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "Warning:" not in result.stdout
+    assert "❌" in result.stdout
+    assert "⛓️‍💥 Downstream" in result.stdout
+
+
 @mock.patch("music.utils.project.ExtendedProject", autospec=True)
 def test_main_plugins_no_args(
     mock_project: mock.Mock, snapshot: SnapshotAssertion, tmp_path: Path

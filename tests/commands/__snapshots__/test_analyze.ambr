@@ -32,13 +32,11 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
-        Warning: Plugin "JS: KanakaMSEncoder1" on track 1 "" does not appear to be 
-      installed locally
-      ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
-      ┃ Plugin               ┃ Track # ┃ Track Name ┃
-      ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
-      │ JS: KanakaMSEncoder1 │       1 │ (unnamed)  │
-      └──────────────────────┴─────────┴────────────┘
+      ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+      ┃ Plugin               ┃ Track # ┃ Track Name ┃ Warning          ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+      │ JS: KanakaMSEncoder1 │       1 │ (unnamed)  │ ❌ Not installed │
+      └──────────────────────┴─────────┴────────────┴──────────────────┘
   
     ''',
   )
@@ -49,28 +47,20 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
-        Warning: Plugin "VST3: Zebra2" on track 1 "Lead Vox" does not appear to be 
-      installed locally
-        Warning: Plugin "VST3: ValhallaRoom" on track 1 "Lead Vox" does not appear to 
-      be installed locally
-        Warning: Plugin "VST3: Zebra2" on track 1 "Lead Vox" does not appear to be 
-      installed locally
-        Warning: Plugin "VST3: Zebra2" on track 2 "Drum Bus" does not appear to be 
-      installed locally
-      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
-      ┃ Plugin                     ┃ Track # ┃ Track Name ┃
-      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
-      │ AUi: Arcade (Output)       │       1 │ Lead Vox   │
-      │ CLAPi: Surge XT            │       1 │ Lead Vox   │
-      │ DX: Classic Compressor     │       1 │ Lead Vox   │
-      │ JS: Mid/Side Encoder       │       1 │ Lead Vox   │
-      │ JS: ReEQ                   │       1 │ Lead Vox   │
-      │ LV2: Dragonfly Hall Reverb │       1 │ Lead Vox   │
-      │ VST3: ValhallaRoom         │       1 │ Lead Vox   │
-      │ VST3: Zebra2               │       1 │ Lead Vox   │
-      │ VST3: Zebra2               │       1 │ Lead Vox   │
-      │ VST3: Zebra2               │       2 │ Drum Bus   │
-      └────────────────────────────┴─────────┴────────────┘
+      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+      ┃ Plugin                     ┃ Track # ┃ Track Name ┃ Warning          ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+      │ AUi: Arcade (Output)       │       1 │ Lead Vox   │                  │
+      │ CLAPi: Surge XT            │       1 │ Lead Vox   │                  │
+      │ DX: Classic Compressor     │       1 │ Lead Vox   │                  │
+      │ JS: Mid/Side Encoder       │       1 │ Lead Vox   │                  │
+      │ JS: ReEQ                   │       1 │ Lead Vox   │                  │
+      │ LV2: Dragonfly Hall Reverb │       1 │ Lead Vox   │                  │
+      │ VST3: ValhallaRoom         │       1 │ Lead Vox   │ ❌ Not installed │
+      │ VST3: Zebra2               │       1 │ Lead Vox   │ ❌ Not installed │
+      │ VST3: Zebra2               │       1 │ Lead Vox   │ ❌ Not installed │
+      │ VST3: Zebra2               │       2 │ Drum Bus   │ ❌ Not installed │
+      └────────────────────────────┴─────────┴────────────┴──────────────────┘
   
     ''',
   )
@@ -81,12 +71,12 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
-      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
-      ┃ Plugin                                    ┃ Track # ┃ Track Name ┃
-      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
-      │ JS: Loudness Meter Peak/RMS/LUFS (Cockos) │       1 │ Analysis   │
-      │ JS: ReEQ                                  │       1 │ Analysis   │
-      └───────────────────────────────────────────┴─────────┴────────────┘
+      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━┓
+      ┃ Plugin                                    ┃ Track # ┃ Track Name ┃ Warning ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━┩
+      │ JS: Loudness Meter Peak/RMS/LUFS (Cockos) │       1 │ Analysis   │         │
+      │ JS: ReEQ                                  │       1 │ Analysis   │         │
+      └───────────────────────────────────────────┴─────────┴────────────┴─────────┘
   
     ''',
   )
@@ -97,13 +87,11 @@
     None,
     '''
       ─────────────────────────────── Song Title Here ────────────────────────────────
-        Warning: Plugin "VSTi: Kontakt" on track 1 "" does not appear to be installed 
-      locally
-      ┏━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
-      ┃ Plugin        ┃ Track # ┃ Track Name ┃
-      ┡━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
-      │ VSTi: Kontakt │       1 │ (unnamed)  │
-      └───────────────┴─────────┴────────────┘
+      ┏━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+      ┃ Plugin        ┃ Track # ┃ Track Name ┃ Warning          ┃
+      ┡━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+      │ VSTi: Kontakt │       1 │ (unnamed)  │ ❌ Not installed │
+      └───────────────┴─────────┴────────────┴──────────────────┘
   
     ''',
   )
@@ -114,11 +102,11 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
-      ┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
-      ┃ Plugin             ┃ Track # ┃ Track Name ┃
-      ┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
-      │ JS: Master Limiter │       1 │ Master     │
-      └────────────────────┴─────────┴────────────┘
+      ┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━┓
+      ┃ Plugin             ┃ Track # ┃ Track Name ┃ Warning ┃
+      ┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━┩
+      │ JS: Master Limiter │       1 │ Master     │         │
+      └────────────────────┴─────────┴────────────┴─────────┘
   
     ''',
   )
@@ -129,13 +117,12 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
-        Warning: Plugin "AUi: Captain Chords (Mixed In Key LLC)" on track 1 "Synth - 
-      Chords" does not appear to be installed locally
-      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
-      ┃ Plugin                                 ┃ Track # ┃ Track Name     ┃
-      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
-      │ AUi: Captain Chords (Mixed In Key LLC) │       1 │ Synth - Chords │
-      └────────────────────────────────────────┴─────────┴────────────────┘
+      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+      ┃ Plugin                         ┃ Track # ┃ Track Name     ┃ Warning          ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+      │ AUi: Captain Chords (Mixed In  │       1 │ Synth - Chords │ ❌ Not installed │
+      │ Key LLC)                       │         │                │                  │
+      └────────────────────────────────┴─────────┴────────────────┴──────────────────┘
   
     ''',
   )
@@ -146,13 +133,11 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
-        Warning: Plugin "JS: ReEQ" on track 1 "EQ" does not appear to be installed 
-      locally
-      ┏━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
-      ┃ Plugin   ┃ Track # ┃ Track Name ┃
-      ┡━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
-      │ JS: ReEQ │       1 │ EQ         │
-      └──────────┴─────────┴────────────┘
+      ┏━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+      ┃ Plugin   ┃ Track # ┃ Track Name ┃ Warning          ┃
+      ┡━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+      │ JS: ReEQ │       1 │ EQ         │ ❌ Not installed │
+      └──────────┴─────────┴────────────┴──────────────────┘
   
     ''',
   )
@@ -163,13 +148,12 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
-        Warning: Plugin "VSTi: Captain Chords (Mixed In Key LLC)" on track 1 "Synth - 
-      Chords" does not appear to be installed locally
-      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
-      ┃ Plugin                                  ┃ Track # ┃ Track Name     ┃
-      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
-      │ VSTi: Captain Chords (Mixed In Key LLC) │       1 │ Synth - Chords │
-      └─────────────────────────────────────────┴─────────┴────────────────┘
+      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+      ┃ Plugin                         ┃ Track # ┃ Track Name     ┃ Warning          ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+      │ VSTi: Captain Chords (Mixed In │       1 │ Synth - Chords │ ❌ Not installed │
+      │ Key LLC)                       │         │                │                  │
+      └────────────────────────────────┴─────────┴────────────────┴──────────────────┘
   
     ''',
   )

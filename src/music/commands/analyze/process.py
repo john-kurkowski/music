@@ -24,6 +24,28 @@ class PluginInstance:
 
 
 @dataclass(frozen=True)
+class PluginWarning:
+    """A concise warning associated with a single plugin instance."""
+
+    symbol: str
+    detail: str = ""
+
+    def display(self) -> str:
+        """Render a compact table cell for the warning."""
+        return self.symbol if not self.detail else f"{self.symbol} {self.detail}"
+
+
+@dataclass(frozen=True)
+class PluginRow:
+    """A plugin instance together with any row-level warning indicators."""
+
+    track_number: int
+    track_name: str
+    plugin_name: str
+    warnings: tuple[PluginWarning, ...] = ()
+
+
+@dataclass(frozen=True)
 class AnalyzeProject:
     """A parsed Reaper project file with analyze-oriented query methods."""
 
@@ -72,6 +94,22 @@ class AnalyzeProject:
                         track_name=track_name,
                         plugin_name=_plugin_name(plugin),
                     )
+
+    def iter_plugin_rows(self) -> Iterator[PluginRow]:
+        """Return plugins with track locations and compact row warnings."""
+        for track_number, track in enumerate(
+            self.parsed_project.findall(".//TRACK"), start=1
+        ):
+            track_name = _track_name(track)
+            for plugin in _track_plugins(track):
+                yield PluginRow(
+                    track_number=track_number,
+                    track_name=track_name,
+                    plugin_name=_plugin_name(plugin),
+                    warnings=tuple(
+                        _plugin_row_warnings(track_number, track_name, plugin)
+                    ),
+                )
 
     def iter_warnings(self) -> Iterator[str]:
         """Return warnings from the parsed project."""
@@ -131,6 +169,20 @@ def _missing_plugin_warning(
             if _saved_plugin_basename(plugin) not in _installed_vst_names():
                 return _warning_message(track_number, track_name, plugin)
     return None
+
+
+def _plugin_row_warnings(
+    track_number: int, track_name: str, plugin: rpp.Element
+) -> Iterator[PluginWarning]:
+    """Return compact warning indicators for a plugin table row."""
+    if _missing_plugin_warning(track_number, track_name, plugin):
+        yield PluginWarning(symbol="❌", detail="Not installed")
+
+    if arcade.is_arcade_plugin(plugin):
+        for symbol, detail in arcade.iter_plugin_warnings(
+            track_number, track_name, plugin
+        ):
+            yield PluginWarning(symbol=symbol, detail=detail)
 
 
 def _warning_message(track_number: int, track_name: str, plugin: rpp.Element) -> str:
