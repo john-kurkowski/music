@@ -219,12 +219,45 @@ def test_main_plugins_warns_for_missing_au_plugin(
 """
     )
 
-    with mock.patch.object(process, "_au_search_paths", return_value=(components_dir,)):
+    with (
+        mock.patch.object(process, "_audio_units_supported", return_value=True),
+        mock.patch.object(process, "_au_search_paths", return_value=(components_dir,)),
+    ):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )
 
     assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_plugins_skips_au_install_check_when_audio_units_unsupported(
+    tmp_path: Path,
+) -> None:
+    """Test AU install warnings stay silent on platforms without Audio Units."""
+    project_file = tmp_path / "Example.rpp"
+    project_file.write_text(
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Synth - Chords"
+    <FXCHAIN
+      <AU "AUi: Captain Chords (Mixed In Key LLC)" "Mixed In Key: Captain Chords" "" 1234<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+
+    with mock.patch.object(process, "_audio_units_supported", return_value=False):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "does not appear to be installed locally" not in result.stdout
 
 
 def test_main_plugins_warns_for_missing_jsfx_plugin(

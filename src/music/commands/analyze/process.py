@@ -2,6 +2,7 @@
 
 import base64
 import re
+import sys
 from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cache
@@ -156,6 +157,8 @@ def _missing_plugin_warning(
     """Return a warning when a saved plugin cannot be located locally."""
     match plugin.tag:
         case "AU":
+            if not _audio_units_supported():
+                return None
             if _is_builtin_apple_au(plugin):
                 return None
             if _saved_plugin_basename(plugin) not in _installed_au_names():
@@ -246,6 +249,11 @@ def _jsfx_search_paths() -> tuple[Path, ...]:
         Path.home() / "Library/Application Support/REAPER/Effects",
         Path("/Applications/REAPER.app/Contents/InstallFiles/Effects"),
     )
+
+
+def _audio_units_supported() -> bool:
+    """Return whether this platform can install Audio Unit plugins."""
+    return sys.platform == "darwin"
 
 
 @cache
