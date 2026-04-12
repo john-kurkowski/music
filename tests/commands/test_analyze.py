@@ -19,8 +19,12 @@ from music.commands.analyze.command import main as analyze
 def clear_jsfx_file_cache() -> Iterator[None]:
     """Isolate cached JSFX path lookups between tests."""
     process._jsfx_file.cache_clear()
+    process._installed_au_names.cache_clear()
+    process._installed_vst_names.cache_clear()
     yield
     process._jsfx_file.cache_clear()
+    process._installed_au_names.cache_clear()
+    process._installed_vst_names.cache_clear()
 
 
 def test_main_plugins_for_project_file(
@@ -75,12 +79,18 @@ def test_main_plugins_for_project_file(
     )
 
     effects_dir = tmp_path / "Effects"
+    components_dir = tmp_path / "Components"
     (effects_dir / "utility").mkdir(parents=True)
     (effects_dir / "ReJJ" / "ReEQ").mkdir(parents=True)
+    components_dir.mkdir()
     (effects_dir / "utility" / "KanakaMSEncoder1").write_text("desc:Mid/Side Encoder\n")
     (effects_dir / "ReJJ" / "ReEQ" / "ReEQ.jsfx").write_text("desc:ReEQ\n")
+    (components_dir / "Arcade.component").write_text("")
 
-    with mock.patch.object(process, "_jsfx_search_paths", return_value=(effects_dir,)):
+    with (
+        mock.patch.object(process, "_jsfx_search_paths", return_value=(effects_dir,)),
+        mock.patch.object(process, "_au_search_paths", return_value=(components_dir,)),
+    ):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )
@@ -179,6 +189,98 @@ def test_main_plugins_falls_back_to_clean_jsfx_basename(
     )
 
     with mock.patch.object(process, "_jsfx_search_paths", return_value=()):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_plugins_warns_for_missing_au_plugin(
+    snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
+    """Test plugin mode warns when an AU saved in the project is not installed."""
+    project_file = tmp_path / "Example.rpp"
+    components_dir = tmp_path / "Components"
+    components_dir.mkdir()
+    (components_dir / "Captain Chords Epic Audio.component").write_text("")
+    project_file.write_text(
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Synth - Chords"
+    <FXCHAIN
+      <AU "AUi: Captain Chords (Mixed In Key LLC)" "Mixed In Key: Captain Chords" "" 1234<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+
+    with mock.patch.object(process, "_au_search_paths", return_value=(components_dir,)):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_plugins_warns_for_missing_jsfx_plugin(
+    snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
+    """Test plugin mode warns when a JSFX path is not installed locally."""
+    project_file = tmp_path / "Example.rpp"
+    effects_dir = tmp_path / "Effects"
+    effects_dir.mkdir()
+    project_file.write_text(
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "EQ"
+    <FXCHAIN
+      <JS "ReJJ/ReEQ/ReEQ.jsfx" "" 0 0<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+
+    with mock.patch.object(process, "_jsfx_search_paths", return_value=(effects_dir,)):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_plugins_warns_for_missing_vst_plugin(
+    snapshot: SnapshotAssertion, tmp_path: Path
+) -> None:
+    """Test plugin mode warns when a VST saved in the project is not installed."""
+    project_file = tmp_path / "Example.rpp"
+    vst3_dir = tmp_path / "VST3"
+    vst3_dir.mkdir()
+    (vst3_dir / "Captain Chords Epic.vst3").write_text("")
+    project_file.write_text(
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Synth - Chords"
+    <FXCHAIN
+      <VST "VSTi: Captain Chords (Mixed In Key LLC)" "Captain Chords.vst" 0 "" 1234<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+
+    with mock.patch.object(process, "_vst_search_paths", return_value=(vst3_dir,)):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )

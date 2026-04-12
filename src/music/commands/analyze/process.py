@@ -1,6 +1,7 @@
 """Analyze processing for Reaper project files."""
 
 import base64
+import re
 from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cache
@@ -73,23 +74,14 @@ class AnalyzeProject:
                     )
 
     def iter_warnings(self) -> Iterator[str]:
-        """Return plugin warnings from the parsed project."""
+        """Return warnings from the parsed project."""
         for track_number, track in enumerate(
             self.parsed_project.findall(".//TRACK"), start=1
         ):
             track_name = _track_name(track)
-            fxchain = next(
-                (
-                    child
-                    for child in track.children
-                    if getattr(child, "tag", None) == "FXCHAIN"
-                ),
-                None,
-            )
-            if fxchain is None:
-                continue
-
-            for plugin in fxchain.children:
+            for plugin in _track_plugins(track):
+                if warning := _missing_plugin_warning(track_number, track_name, plugin):
+                    yield warning
                 if arcade.is_arcade_plugin(plugin):
                     yield from arcade.iter_warnings(track_number, track_name, plugin)
 
@@ -108,6 +100,73 @@ def _track_name(track: rpp.Element) -> str:
         if isinstance(child, list) and child and child[0] == "NAME":
             return str(child[1])
     return ""
+
+
+def _track_plugins(track: rpp.Element) -> Iterator[rpp.Element]:
+    """Yield saved plugin chunks from a track in a consistent order."""
+    yield from (
+        plugin
+        for tag in _PLUGIN_TAGS
+        for plugin in track.findall(f".//{tag}")
+        if hasattr(plugin, "tag")
+    )
+
+
+def _missing_plugin_warning(
+    track_number: int, track_name: str, plugin: rpp.Element
+) -> str | None:
+    """Return a warning when a saved plugin cannot be located locally."""
+    match plugin.tag:
+        case "AU":
+            if _is_builtin_apple_au(plugin):
+                return None
+            if _saved_plugin_basename(plugin) not in _installed_au_names():
+                return _warning_message(track_number, track_name, plugin)
+        case "JS":
+            if _jsfx_file(str(plugin.attrib[0])) is None:
+                return _warning_message(track_number, track_name, plugin)
+        case "VST":
+            if _is_builtin_cockos_vst(plugin):
+                return None
+            if _saved_plugin_basename(plugin) not in _installed_vst_names():
+                return _warning_message(track_number, track_name, plugin)
+    return None
+
+
+def _warning_message(track_number: int, track_name: str, plugin: rpp.Element) -> str:
+    """Format a missing-plugin warning for user display."""
+    return (
+        f'Plugin "{_plugin_name(plugin)}" on track {track_number} "{track_name}" '
+        "does not appear to be installed locally"
+    )
+
+
+def _saved_plugin_basename(plugin: rpp.Element) -> str:
+    """Normalize a saved plugin label for installation lookup."""
+    name = str(plugin.attrib[0])
+    name = re.sub(r"^[^:]+:\s*", "", name)
+    name = re.sub(r"(?:\s+\([^()]*\))+$", "", name).strip()
+    return _normalize_plugin_basename(name)
+
+
+def _is_builtin_apple_au(plugin: rpp.Element) -> bool:
+    """Return whether a saved AU label refers to an Apple-built system effect."""
+    return str(plugin.attrib[0]).endswith("(Apple)")
+
+
+def _is_builtin_cockos_vst(plugin: rpp.Element) -> bool:
+    """Return whether a saved VST label refers to a bundled Cockos plugin."""
+    return str(plugin.attrib[0]).endswith("(Cockos)")
+
+
+def _normalize_plugin_basename(name: str) -> str:
+    """Normalize plugin names from saved project text and install filenames."""
+    normalized = name.strip()
+    normalized = re.sub(r"\.vst(?:\.dylib(?:\.rpl)?)?$", "", normalized, flags=re.I)
+    normalized = re.sub(r"\.(?:component|vst3|clap)$", "", normalized, flags=re.I)
+    normalized = re.sub(r"\s+(?:audio|midi)$", "", normalized, flags=re.I)
+    normalized = normalized.replace("_x64", "")
+    return normalized.casefold()
 
 
 def _jsfx_display_name(path: str) -> str:
@@ -134,6 +193,50 @@ def _jsfx_search_paths() -> tuple[Path, ...]:
     return (
         Path.home() / "Library/Application Support/REAPER/Effects",
         Path("/Applications/REAPER.app/Contents/InstallFiles/Effects"),
+    )
+
+
+@cache
+def _installed_au_names() -> frozenset[str]:
+    """Return installed AU plugin basenames from standard macOS locations."""
+    return frozenset(
+        _normalize_plugin_basename(component.stem)
+        for root in _au_search_paths()
+        for component in root.glob("*.component")
+    )
+
+
+def _au_search_paths() -> tuple[Path, ...]:
+    """Return local directories where Audio Unit plugins may be installed."""
+    return (
+        Path.home() / "Library/Audio/Plug-Ins/Components",
+        Path("/Library/Audio/Plug-Ins/Components"),
+    )
+
+
+@cache
+def _installed_vst_names() -> frozenset[str]:
+    """Return installed VST/VST3 plugin basenames from common macOS locations."""
+    names = {
+        _normalize_plugin_basename(plugin.stem)
+        for root in _vst_search_paths()
+        for plugin in root.glob("*.vst")
+    }
+    names.update(
+        _normalize_plugin_basename(plugin.stem)
+        for root in _vst_search_paths()
+        for plugin in root.glob("*.vst3")
+    )
+    return frozenset(names)
+
+
+def _vst_search_paths() -> tuple[Path, ...]:
+    """Return local directories where VST/VST3 plugins may be installed."""
+    return (
+        Path.home() / "Library/Audio/Plug-Ins/VST",
+        Path("/Library/Audio/Plug-Ins/VST"),
+        Path.home() / "Library/Audio/Plug-Ins/VST3",
+        Path("/Library/Audio/Plug-Ins/VST3"),
     )
 
 

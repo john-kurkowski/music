@@ -32,6 +32,8 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
+        Warning: Plugin "JS: KanakaMSEncoder1" on track 1 "" does not appear to be 
+      installed locally
       ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
       ┃ Plugin               ┃ Track # ┃ Track Name ┃
       ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
@@ -47,6 +49,14 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
+        Warning: Plugin "VST3: Zebra2" on track 1 "Lead Vox" does not appear to be 
+      installed locally
+        Warning: Plugin "VST3: ValhallaRoom" on track 1 "Lead Vox" does not appear to 
+      be installed locally
+        Warning: Plugin "VST3: Zebra2" on track 1 "Lead Vox" does not appear to be 
+      installed locally
+        Warning: Plugin "VST3: Zebra2" on track 2 "Drum Bus" does not appear to be 
+      installed locally
       ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
       ┃ Plugin                     ┃ Track # ┃ Track Name ┃
       ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
@@ -87,6 +97,8 @@
     None,
     '''
       ─────────────────────────────── Song Title Here ────────────────────────────────
+        Warning: Plugin "VSTi: Kontakt" on track 1 "" does not appear to be installed 
+      locally
       ┏━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
       ┃ Plugin        ┃ Track # ┃ Track Name ┃
       ┡━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
@@ -107,6 +119,57 @@
       ┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
       │ JS: Master Limiter │       1 │ Master     │
       └────────────────────┴─────────┴────────────┘
+  
+    ''',
+  )
+# ---
+# name: test_main_plugins_warns_for_missing_au_plugin
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+        Warning: Plugin "AUi: Captain Chords (Mixed In Key LLC)" on track 1 "Synth - 
+      Chords" does not appear to be installed locally
+      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+      ┃ Plugin                                 ┃ Track # ┃ Track Name     ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
+      │ AUi: Captain Chords (Mixed In Key LLC) │       1 │ Synth - Chords │
+      └────────────────────────────────────────┴─────────┴────────────────┘
+  
+    ''',
+  )
+# ---
+# name: test_main_plugins_warns_for_missing_jsfx_plugin
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+        Warning: Plugin "JS: ReEQ" on track 1 "EQ" does not appear to be installed 
+      locally
+      ┏━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┓
+      ┃ Plugin   ┃ Track # ┃ Track Name ┃
+      ┡━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━┩
+      │ JS: ReEQ │       1 │ EQ         │
+      └──────────┴─────────┴────────────┘
+  
+    ''',
+  )
+# ---
+# name: test_main_plugins_warns_for_missing_vst_plugin
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+        Warning: Plugin "VSTi: Captain Chords (Mixed In Key LLC)" on track 1 "Synth - 
+      Chords" does not appear to be installed locally
+      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+      ┃ Plugin                                  ┃ Track # ┃ Track Name     ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
+      │ VSTi: Captain Chords (Mixed In Key LLC) │       1 │ Synth - Chords │
+      └─────────────────────────────────────────┴─────────┴────────────────┘
   
     ''',
   )
@@ -137,6 +200,10 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
+        Warning: Plugin "JS: Side Encoder" on track 1 "" does not appear to be 
+      installed locally
+        Warning: Plugin "VST3: Zebra2" on track 1 "" does not appear to be installed 
+      locally
         more
         clap
         dx
