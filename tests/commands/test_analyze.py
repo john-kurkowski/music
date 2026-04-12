@@ -288,6 +288,37 @@ def test_main_plugins_warns_for_missing_vst_plugin(
     assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
+def test_main_plugins_detects_nested_vst3_shell_plugins(tmp_path: Path) -> None:
+    """Test VST shell plugins are detected from nested bundle layouts."""
+    project_file = tmp_path / "Example.rpp"
+    vst3_dir = tmp_path / "VST3"
+    shell_dir = vst3_dir / "MeldaProduction" / "Modulation" / "MAutopan.vst3"
+    shell_dir.mkdir(parents=True)
+    project_file.write_text(
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Vfx"
+    <FXCHAIN
+      <VST "VST3: MAutopan (MeldaProduction)" "MAutopan.vst3" 0 "" 1234<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+
+    with mock.patch.object(process, "_vst_search_paths", return_value=(vst3_dir,)):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "❌ Not installed" not in result.stdout
+
+
 def test_main_plugins_renders_warnings_in_table_cells(tmp_path: Path) -> None:
     """Test plugin mode keeps warnings in the table instead of separate prints."""
     project_file = tmp_path / "Example.rpp"
@@ -633,6 +664,47 @@ def test_main_warns_for_arcade_looper_missing_kit(
     result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
 
     assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_plugins_warns_for_chunked_vst_arcade_looper_missing_kit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test plugin mode reads chunked VST Arcade state and surfaces missing kits."""
+    project_file = tmp_path / "Example.rpp"
+    db_path = tmp_path / "arcade.db"
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids=set(), source_uuids=set())
+    arcade_state = "\n".join(
+        base64.b64encode(chunk).decode("ascii")
+        for chunk in (
+            b"\x00" * 16,
+            b'<?xml version="1.0" encoding="UTF-8"?><state_info>',
+            b"<Looper_Preset>",
+            b'<info name="Downstream" uuid="downstream-kit" product_uuid="honey-product" version="1.3.0"/>',
+            b"</Looper_Preset></state_info>",
+        )
+    )
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Rhythm"
+    <FXCHAIN
+      <VST "VST3i: Arcade (Output)" "Arcade.vst3" 0 "" 1234<
+        {arcade_state.replace(chr(10), chr(10) + "        ")}
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        analyze, ["--plugins", str(project_file)]
+    )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "⛓️‍💥 Downstream" in result.stdout
 
 
 def test_main_does_not_warn_for_arcade_looper_installed_kit(

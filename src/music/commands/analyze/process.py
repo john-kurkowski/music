@@ -271,15 +271,26 @@ def _installed_vst_names() -> frozenset[str]:
     """Return installed VST/VST3 plugin basenames from common macOS locations."""
     names = {
         _normalize_plugin_basename(plugin.stem)
-        for root in _vst_search_paths()
-        for plugin in root.glob("*.vst")
+        for plugin in _installed_vst_plugins()
+        if plugin.suffix.casefold() == ".vst"
     }
     names.update(
         _normalize_plugin_basename(plugin.stem)
-        for root in _vst_search_paths()
-        for plugin in root.glob("*.vst3")
+        for plugin in _installed_vst_plugins()
+        if plugin.suffix.casefold() == ".vst3"
     )
     return frozenset(names)
+
+
+def _installed_vst_plugins() -> tuple[Path, ...]:
+    """Return installed VST bundle paths, including nested shell layouts."""
+    plugins: list[Path] = []
+    for root in _vst_search_paths():
+        if not root.exists():
+            continue
+        plugins.extend(root.rglob("*.vst"))
+        plugins.extend(root.rglob("*.vst3"))
+    return tuple(plugins)
 
 
 def _vst_search_paths() -> tuple[Path, ...]:

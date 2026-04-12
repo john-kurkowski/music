@@ -13,13 +13,13 @@ import rpp  # type: ignore[import-untyped]
 
 def is_arcade_plugin(plugin: rpp.Element) -> bool:
     """Return whether the plugin chunk belongs to Output Arcade."""
-    return getattr(plugin, "tag", None) == "AU" and "Arcade" in str(plugin.attrib[0])
+    return _is_arcade_plugin(plugin)
 
 
 def iter_warnings(
     track_number: int, track_name: str, plugin: rpp.Element
 ) -> Iterator[str]:
-    """Inspect an Arcade AU state blob for missing-content issues.
+    """Inspect an Arcade state blob for missing-content issues.
 
     Arcade saves different preset families under distinct XML sections. This
     analyzer currently recognizes looper presets, which reference kit installs
@@ -61,28 +61,44 @@ def iter_plugin_warnings(
 
 
 def arcade_state_xml(plugin: rpp.Element) -> bytes | None:
-    """Extract Arcade's nested JUCE state XML from an AU plugin chunk."""
-    if not is_arcade_plugin(plugin):
+    """Extract Arcade's nested state XML from a saved plugin chunk."""
+    if not _is_arcade_plugin(plugin):
         return None
 
-    raw = "".join(child.strip() for child in plugin.children if isinstance(child, str))
-    if not raw:
+    chunks = [child.strip() for child in plugin.children if isinstance(child, str)]
+    if not chunks:
         return None
 
     try:
-        outer = base64.b64decode(raw)
-        plist_start = outer.index(b"<?xml")
-        plist_end = outer.index(b"</plist>") + len(b"</plist>")
-        outer_plist = outer[plist_start:plist_end]
-        juce_state = rpp_plist_value(outer_plist, "jucePluginState")
-        if not isinstance(juce_state, bytes):
+        decoded = b"".join(base64.b64decode(chunk) for chunk in chunks)
+    except ValueError:
+        return None
+
+    if plugin.tag == "AU":
+        try:
+            plist_start = decoded.index(b"<?xml")
+            plist_end = decoded.index(b"</plist>") + len(b"</plist>")
+            outer_plist = decoded[plist_start:plist_end]
+            juce_state = rpp_plist_value(outer_plist, "jucePluginState")
+            if not isinstance(juce_state, bytes):
+                return None
+            decoded = juce_state
+        except (ValueError, KeyError):
             return None
 
-        state_start = juce_state.index(b"<?xml")
-        state_end = juce_state.index(b"</state_info>") + len(b"</state_info>")
-    except (ValueError, KeyError):
+    try:
+        state_start = decoded.index(b"<?xml")
+        state_end = decoded.index(b"</state_info>") + len(b"</state_info>")
+    except ValueError:
         return None
-    return juce_state[state_start:state_end]
+    return decoded[state_start:state_end]
+
+
+def _is_arcade_plugin(plugin: rpp.Element) -> bool:
+    """Return whether the plugin chunk belongs to Output Arcade in a supported format."""
+    return getattr(plugin, "tag", None) in {"AU", "VST"} and "Arcade" in str(
+        plugin.attrib[0]
+    )
 
 
 def _iter_arcade_looper_warnings(
