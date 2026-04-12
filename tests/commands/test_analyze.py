@@ -2,6 +2,7 @@
 
 import base64
 import plistlib
+from collections.abc import Iterator
 from contextlib import closing
 from pathlib import Path
 from unittest import mock
@@ -10,8 +11,16 @@ import pytest
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
-from music.commands.analyze import command
+from music.commands.analyze import process
 from music.commands.analyze.command import main as analyze
+
+
+@pytest.fixture(autouse=True)
+def clear_jsfx_file_cache() -> Iterator[None]:
+    """Isolate cached JSFX path lookups between tests."""
+    process._jsfx_file.cache_clear()
+    yield
+    process._jsfx_file.cache_clear()
 
 
 def test_main_plugins_for_project_file(
@@ -70,9 +79,8 @@ def test_main_plugins_for_project_file(
     (effects_dir / "ReJJ" / "ReEQ").mkdir(parents=True)
     (effects_dir / "utility" / "KanakaMSEncoder1").write_text("desc:Mid/Side Encoder\n")
     (effects_dir / "ReJJ" / "ReEQ" / "ReEQ.jsfx").write_text("desc:ReEQ\n")
-    command._jsfx_file.cache_clear()
 
-    with mock.patch.object(command, "_jsfx_search_paths", return_value=(effects_dir,)):
+    with mock.patch.object(process, "_jsfx_search_paths", return_value=(effects_dir,)):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )
@@ -93,7 +101,8 @@ def test_main_plugins_formats_jsfx_names_with_prefix(
     )
     (effects_dir / "ReJJ" / "ReEQ" / "ReEQ.jsfx").write_text("desc:ReEQ\n")
     project_file.write_text(
-        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
   <TRACK
     NAME "Analysis"
     <FXCHAIN
@@ -108,9 +117,8 @@ def test_main_plugins_formats_jsfx_names_with_prefix(
 >
 """
     )
-    command._jsfx_file.cache_clear()
 
-    with mock.patch.object(command, "_jsfx_search_paths", return_value=(effects_dir,)):
+    with mock.patch.object(process, "_jsfx_search_paths", return_value=(effects_dir,)):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )
@@ -129,7 +137,8 @@ def test_main_plugins_reads_legacy_encoded_jsfx_metadata(
         b"desc:Master Limiter\n// Andr\xe9\n"
     )
     project_file.write_text(
-        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
   <TRACK
     NAME "Master"
     <FXCHAIN
@@ -141,9 +150,8 @@ def test_main_plugins_reads_legacy_encoded_jsfx_metadata(
 >
 """
     )
-    command._jsfx_file.cache_clear()
 
-    with mock.patch.object(command, "_jsfx_search_paths", return_value=(effects_dir,)):
+    with mock.patch.object(process, "_jsfx_search_paths", return_value=(effects_dir,)):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )
@@ -157,7 +165,8 @@ def test_main_plugins_falls_back_to_clean_jsfx_basename(
     """Test JSFX entries fall back to a cleaned basename when metadata is missing."""
     project_file = tmp_path / "Example.rpp"
     project_file.write_text(
-        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
   <TRACK
     <FXCHAIN
       <JS "utility/KanakaMSEncoder1" "" 0 0<
@@ -168,9 +177,8 @@ def test_main_plugins_falls_back_to_clean_jsfx_basename(
 >
 """
     )
-    command._jsfx_file.cache_clear()
 
-    with mock.patch.object(command, "_jsfx_search_paths", return_value=()):
+    with mock.patch.object(process, "_jsfx_search_paths", return_value=()):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
         )
