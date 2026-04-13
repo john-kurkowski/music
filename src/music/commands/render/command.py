@@ -29,7 +29,7 @@ from .consts import (
     SWS_ERROR_SENTINEL,
     VOCAL_LOUDNESS_WORTH,
 )
-from .result import RenderResult
+from .result import ManagedRenderResults, RenderResult
 
 # Test-only property. Set to a large number to avoid text wrapping in the console.
 _CONSOLE_WIDTH: int | None = None
@@ -217,8 +217,9 @@ async def main(
         versions,
     )
 
-    renders, uploads = await command()
-    _report(renders, uploads)
+    with ManagedRenderResults() as managed_renders:
+        renders, uploads = await command(managed_renders)
+        _report(renders, uploads)
 
 
 @dataclasses.dataclass
@@ -248,6 +249,7 @@ class _Command:
 
     async def __call__(
         self,
+        managed_renders: ManagedRenderResults,
     ) -> tuple[
         list[RenderResult], list[music.commands.upload.process.Track | BaseException]
     ]:
@@ -266,6 +268,7 @@ class _Command:
                     for project in self.projects
                 ):
                     renders.extend(renders_)
+                    managed_renders.extend(renders_)
                     uploads.extend(uploads_)
 
                 flattened_uploads = [

@@ -41,6 +41,30 @@ def test_render_result_render_speedup(
     assert subprocess.mock_calls == snapshot
 
 
+def test_render_result_close(tmp_path: Path) -> None:
+    """Test RenderResult.close removes owned temporary files."""
+    project = mock.Mock(path="some/path")
+    version = mock.Mock()
+
+    some_file = tmp_path / "foo.tmp.wav"
+    some_secondary_file = tmp_path / "foo.tmp.mp3"
+    some_file.touch()
+    some_secondary_file.touch()
+
+    result = RenderResult(
+        project,
+        version,
+        some_file,
+        datetime.timedelta(seconds=1),
+        cleanup_paths=(some_file, some_secondary_file),
+    )
+
+    result.close()
+
+    assert not some_file.exists()
+    assert not some_secondary_file.exists()
+
+
 def test_main_reaper_not_configured(
     render_mocks: RenderMocks,
 ) -> None:
@@ -162,6 +186,11 @@ def test_main_default_versions_dry_run_upload(
         subprocess_with_output.mock_calls,
         _snapshot_tmp_path(tmp_path),
     ) == snapshot
+
+    assert render_mocks.upload.call_count == 3
+    assert all(
+        call.kwargs["dry_run"] is True for call in render_mocks.upload.call_args_list
+    )
 
 
 def test_main_mocked_calls_dry_run_upload_existing(

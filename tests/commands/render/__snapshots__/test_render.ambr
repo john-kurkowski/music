@@ -2769,6 +2769,54 @@
         ),
       ]),
       'upload': _CallList([
+        _Call(
+          '',
+          tuple(
+            'CLIENT_SESSION_HERE',
+            'stub-fake-token',
+            dict({
+              'X-Test-Additional-Header': '1',
+            }),
+            list([
+              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).tmp.wav',
+            ]),
+          ),
+          dict({
+            'dry_run': True,
+          }),
+        ),
+        _Call(
+          '',
+          tuple(
+            'CLIENT_SESSION_HERE',
+            'stub-fake-token',
+            dict({
+              'X-Test-Additional-Header': '1',
+            }),
+            list([
+              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).tmp.wav',
+            ]),
+          ),
+          dict({
+            'dry_run': True,
+          }),
+        ),
+        _Call(
+          '',
+          tuple(
+            'CLIENT_SESSION_HERE',
+            'stub-fake-token',
+            dict({
+              'X-Test-Additional-Header': '1',
+            }),
+            list([
+              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).tmp.wav',
+            ]),
+          ),
+          dict({
+            'dry_run': True,
+          }),
+        ),
       ]),
     }),
     _CallList([
@@ -6323,6 +6371,22 @@
             }),
             list([
               'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+            ]),
+          ),
+          dict({
+            'dry_run': True,
+          }),
+        ),
+        _Call(
+          '',
+          tuple(
+            'CLIENT_SESSION_HERE',
+            'stub-fake-token',
+            dict({
+              'X-Test-Additional-Header': '1',
+            }),
+            list([
+              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).tmp.wav',
             ]),
           ),
           dict({
