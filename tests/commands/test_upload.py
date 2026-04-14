@@ -15,7 +15,12 @@ from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
 from music.commands.upload import process as upload_process
-from music.commands.upload.command import main as upload
+from music.commands.upload.command import (
+    _redact_http_header_value,
+)
+from music.commands.upload.command import (
+    main as upload,
+)
 
 from ..conftest import RequestsMocks
 
@@ -43,6 +48,58 @@ def test_main_no_network_calls(some_paths: list[Path]) -> None:
             upload,
             [str(path.parent.resolve()) for path in some_paths],
         )
+
+
+def test_main_debug_http_enables_trace_config(some_paths: list[Path]) -> None:
+    """Test main enables aiohttp tracing when debug output is requested."""
+
+    class FakeClientSession:
+        """Capture ClientSession configuration while bypassing network."""
+
+        seen_trace_configs: list[aiohttp.TraceConfig] | None = None
+
+        def __init__(
+            self, *args: Any, trace_configs: list[aiohttp.TraceConfig], **kwargs: Any
+        ) -> None:
+            self.trace_configs = trace_configs
+
+        async def __aenter__(self) -> "FakeClientSession":
+            type(self).seen_trace_configs = self.trace_configs
+            return self
+
+        async def __aexit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+            return None
+
+    with (
+        mock.patch(
+            "music.commands.upload.command.aiohttp.ClientSession", FakeClientSession
+        ),
+        mock.patch(
+            "music.commands.upload.command.UploadProcess.process",
+            new=mock.AsyncMock(return_value=[]),
+        ),
+    ):
+        result = CliRunner(catch_exceptions=False).invoke(
+            upload,
+            ["--debug-http", *[str(path.parent.resolve()) for path in some_paths]],
+        )
+
+    assert result.exception is None
+    assert FakeClientSession.seen_trace_configs is not None
+    assert len(FakeClientSession.seen_trace_configs) == 1
+
+
+def test_redact_http_header_value() -> None:
+    """Test HTTP debug output redacts auth secrets but keeps useful headers."""
+    assert (
+        _redact_http_header_value("Authorization", "OAuth some-secret-token")
+        == "OAuth <redacted>"
+    )
+    assert (
+        _redact_http_header_value("x-datadome-clientid", "some-secret-datadome")
+        == "<redacted>"
+    )
+    assert _redact_http_header_value("User-Agent", "Mozilla/5.0") == "Mozilla/5.0"
 
 
 def test_main_tracks_not_found(

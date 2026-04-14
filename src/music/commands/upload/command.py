@@ -2,6 +2,7 @@
 
 import email
 from pathlib import Path
+from typing import Any
 
 import aiohttp
 import click
@@ -31,6 +32,12 @@ from .process import UploadItem
         "SoundCloud additional HTTP request headers. Read from the environment variable"
         " SOUNDCLOUD_ADDITIONAL_HEADERS."
     ),
+)
+@click.option(
+    "--debug-http",
+    default=False,
+    help="Print outgoing SoundCloud HTTP requests and responses for debugging.",
+    is_flag=True,
 )
 @click.option(
     "--dry-run",
@@ -96,6 +103,7 @@ from .process import UploadItem
 async def main(
     project_dirs: list[Path],
     additional_headers: str,
+    debug_http: bool,
     dry_run: bool,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
@@ -148,8 +156,9 @@ async def main(
 
     console = rich.console.Console()
     process = UploadProcess(console)
+    trace_configs = [_build_http_debug_trace(console)] if debug_http else []
     with rich.live.Live(process.progress, console=console, refresh_per_second=10):
-        async with aiohttp.ClientSession() as client:
+        async with aiohttp.ClientSession(trace_configs=trace_configs) as client:
             uploads = await process.process(
                 client,
                 oauth_token,
@@ -166,3 +175,67 @@ async def main(
 
     if has_error:
         raise click.exceptions.Exit(2)
+
+
+def _build_http_debug_trace(console: rich.console.Console) -> aiohttp.TraceConfig:
+    """Build an aiohttp trace config for upload HTTP debugging."""
+    trace = aiohttp.TraceConfig()
+
+    @trace.on_request_headers_sent.append
+    async def on_request_headers_sent(
+        _session: aiohttp.ClientSession,
+        _trace_config_ctx: Any,
+        params: aiohttp.TraceRequestHeadersSentParams,
+    ) -> None:
+        if params.url.host != "api-v2.soundcloud.com":
+            return
+
+        console.print(
+            f"[dim]HTTP {params.method} {params.url}[/dim]",
+            markup=True,
+        )
+        for key, value in params.headers.items():
+            console.print(
+                f"[dim]{key}: {_redact_http_header_value(key, value)}[/dim]",
+                markup=True,
+            )
+
+    @trace.on_request_end.append
+    async def on_request_end(
+        _session: aiohttp.ClientSession,
+        _trace_config_ctx: Any,
+        params: aiohttp.TraceRequestEndParams,
+    ) -> None:
+        if params.url.host != "api-v2.soundcloud.com":
+            return
+
+        console.print(
+            f"[dim]HTTP {params.response.status} {params.method} {params.url}[/dim]",
+            markup=True,
+        )
+
+    @trace.on_request_exception.append
+    async def on_request_exception(
+        _session: aiohttp.ClientSession,
+        _trace_config_ctx: Any,
+        params: aiohttp.TraceRequestExceptionParams,
+    ) -> None:
+        if params.url.host != "api-v2.soundcloud.com":
+            return
+
+        console.print(
+            f"[dim]HTTP EXCEPTION {params.method} {params.url}: {params.exception}[/dim]",
+            markup=True,
+        )
+
+    return trace
+
+
+def _redact_http_header_value(key: str, value: str) -> str:
+    """Redact secrets in debug header output."""
+    lower_key = key.lower()
+    if lower_key == "authorization":
+        return "OAuth <redacted>"
+    if lower_key == "x-datadome-clientid":
+        return "<redacted>"
+    return value

@@ -21,6 +21,9 @@ from .progress import DeterminateProgress
 
 USER_ID = 41506
 TRACKS_FETCH_LIMIT = 250
+CLIENT_ID = "6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M"
+APP_VERSION = "1776169468"
+APP_LOCALE = "en"
 
 Track = dict[str, Any]
 
@@ -81,19 +84,34 @@ class Process:
         Returns the first non-zero exit code encountered, or zero if all uploads succeeded.
         """
         headers = {
-            "Accept": "application/json",
+            "Accept": "application/json, text/javascript, */*; q=0.1",
+            "Accept-Language": "en-US,en;q=0.9",
             "Authorization": f"OAuth {oauth_token}",
+            "Connection": "keep-alive",
+            "Origin": "https://soundcloud.com",
+            "Referer": "https://soundcloud.com/",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-site",
             "User-Agent": (
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,"
-                " like Gecko) Chrome/105.0.0.0 Safari/537.36"
+                " like Gecko) Chrome/146.0.0.0 Safari/537.36"
             ),
+            "Sec-CH-UA": '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"',
+            "Sec-CH-UA-Mobile": "?0",
+            "Sec-CH-UA-Platform": '"macOS"',
             **additional_headers,
+        }
+        api_params = {
+            "app_locale": APP_LOCALE,
+            "app_version": APP_VERSION,
+            "client_id": CLIENT_ID,
         }
 
         tracks_resp = await client.get(
             f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
             headers=headers,
-            params={"limit": TRACKS_FETCH_LIMIT},
+            params={"limit": TRACKS_FETCH_LIMIT, **api_params},
             timeout=aiohttp.ClientTimeout(total=10),
         )
         await _raise_for_status(tracks_resp)
@@ -239,6 +257,11 @@ class Process:
         resp = await client.put(
             f"https://api-v2.soundcloud.com/tracks/soundcloud:tracks:{track['id']}",
             headers=headers,
+            params={
+                "app_locale": APP_LOCALE,
+                "app_version": APP_VERSION,
+                "client_id": CLIENT_ID,
+            },
             json={
                 "track": {
                     **track_metadata_to_update,
@@ -257,6 +280,11 @@ class Process:
         resp = await client.post(
             "https://api-v2.soundcloud.com/uploads/track-upload-policy",
             headers=headers,
+            params={
+                "app_locale": APP_LOCALE,
+                "app_version": APP_VERSION,
+                "client_id": CLIENT_ID,
+            },
             json={"filename": fil.name, "filesize": fil.stat().st_size},
         )
         await _raise_for_status(resp)
@@ -284,12 +312,22 @@ class Process:
         resp = await client.post(
             f"https://api-v2.soundcloud.com/uploads/{upload['uid']}/track-transcoding",
             headers=headers,
+            params={
+                "app_locale": APP_LOCALE,
+                "app_version": APP_VERSION,
+                "client_id": CLIENT_ID,
+            },
         )
         await _raise_for_status(resp)
         while True:
             resp = await client.get(
                 f"https://api-v2.soundcloud.com/uploads/{upload['uid']}/track-transcoding",
                 headers=headers,
+                params={
+                    "app_locale": APP_LOCALE,
+                    "app_version": APP_VERSION,
+                    "client_id": CLIENT_ID,
+                },
             )
             await _raise_for_status(resp)
             transcoding = await resp.json()
