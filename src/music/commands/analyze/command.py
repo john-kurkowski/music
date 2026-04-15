@@ -11,6 +11,7 @@ from music.commands.analyze import process
 from music.utils import project
 
 _MAX_SETTING_PREVIEW_CHARS = 240
+_PLUGIN_SORT_CHOICES = ("plugin", "track", "track-name")
 
 
 @click.command("analyze")
@@ -24,7 +25,13 @@ _MAX_SETTING_PREVIEW_CHARS = 240
     is_flag=True,
     help="List plugin names used by the given projects instead of decoded settings.",
 )
-def main(project_paths: list[Path], plugins: bool) -> None:
+@click.option(
+    "--sort",
+    "sort_key",
+    type=click.Choice(_PLUGIN_SORT_CHOICES, case_sensitive=False),
+    help="Sort plugin rows by the given column when using --plugins.",
+)
+def main(project_paths: list[Path], plugins: bool, sort_key: str | None) -> None:
     """(alpha) Analyze projects for problems.
 
     Prints out a project's plugin settings encoded in base64 for human review.
@@ -34,6 +41,9 @@ def main(project_paths: list[Path], plugins: bool) -> None:
     Accepts 0 or more PROJECT_PATHS projects. Defaults to the currently open
     project.
     """
+    if sort_key is not None and not plugins:
+        raise click.UsageError("--sort is only supported together with --plugins")
+
     if not project_paths:
         project_paths = [Path(project.ExtendedProject().path)]
 
@@ -46,7 +56,7 @@ def main(project_paths: list[Path], plugins: bool) -> None:
             console.print()
         console.print(rich.rule.Rule(f"[bold cyan]{project_file.stem}[/bold cyan]"))
         if plugins:
-            console.print(_plugins_table(analyzed_project))
+            console.print(_plugins_table(analyzed_project, sort_key=sort_key))
         else:
             for warning in analyzed_project.iter_warnings():
                 console.print(f"  [yellow]Warning:[/yellow] {warning}")
@@ -63,7 +73,9 @@ def _project_file(project_path: Path) -> Path:
     )
 
 
-def _plugins_table(analyzed_project: process.AnalyzeProject) -> rich.table.Table:
+def _plugins_table(
+    analyzed_project: process.AnalyzeProject, sort_key: str | None
+) -> rich.table.Table:
     """Render plugin instances for a project as a table."""
     table = rich.table.Table(show_header=True)
     table.add_column("Plugin")
@@ -74,11 +86,7 @@ def _plugins_table(analyzed_project: process.AnalyzeProject) -> rich.table.Table
 
     plugins = sorted(
         analyzed_project.iter_plugin_rows(),
-        key=lambda plugin: (
-            plugin.plugin_name.casefold(),
-            plugin.track_number,
-            plugin.track_name.casefold(),
-        ),
+        key=lambda plugin: _plugin_sort_key(plugin, sort_key or "plugin"),
     )
     for plugin in plugins:
         table.add_row(
@@ -90,6 +98,31 @@ def _plugins_table(analyzed_project: process.AnalyzeProject) -> rich.table.Table
         )
 
     return table
+
+
+def _plugin_sort_key(plugin: process.PluginRow, sort_key: str) -> tuple[object, ...]:
+    """Build a stable sort key for plugin table rows."""
+    match sort_key:
+        case "track":
+            return (
+                plugin.track_number,
+                plugin.plugin_name.casefold(),
+                plugin.track_name.casefold(),
+            )
+        case "track-name":
+            return (
+                plugin.track_name.casefold(),
+                plugin.plugin_name.casefold(),
+                plugin.track_number,
+            )
+        case "plugin":
+            return (
+                plugin.plugin_name.casefold(),
+                plugin.track_number,
+                plugin.track_name.casefold(),
+            )
+        case _:
+            raise ValueError(f"unsupported plugin sort key: {sort_key}")
 
 
 def _display_setting(setting: str) -> str:

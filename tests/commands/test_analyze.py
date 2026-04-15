@@ -2,6 +2,7 @@
 
 import base64
 import plistlib
+import re
 from collections.abc import Iterator
 from contextlib import closing
 from pathlib import Path
@@ -13,6 +14,56 @@ from syrupy.assertion import SnapshotAssertion
 
 from music.commands.analyze import process
 from music.commands.analyze.command import main as analyze
+
+
+def _plugin_sort_fixture_project(project_file: Path) -> None:
+    """Write a project fixture whose plugin order changes across sort modes."""
+    project_file.write_text(
+        """\
+<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Zulu"
+    <FXCHAIN
+      <VST "VST3: Bravo" "plugin" 0 "" 1234<
+        dmFsaWQ=
+      >
+      <VST "VST3: Alpha" "plugin" 0 "" 1234<
+        dmFsaWQ=
+      >
+    >
+  >
+  <TRACK
+    NAME "Alpha"
+    <FXCHAIN
+      <VST "VST3: Charlie" "plugin" 0 "" 1234<
+        dmFsaWQ=
+      >
+    >
+  >
+  <TRACK
+    NAME "Bravo"
+    <FXCHAIN
+      <VST "VST3: Alpha" "plugin" 0 "" 1234<
+        dmFsaWQ=
+      >
+    >
+  >
+>
+"""
+    )
+
+
+def _plugin_row_values(stdout: str) -> list[tuple[str, int, str]]:
+    """Return plugin row values from the rendered table."""
+    rows = []
+    for line in stdout.splitlines():
+        if "VST3:" not in line:
+            continue
+
+        cells = [cell.strip() for cell in re.split(r"[│┃]", line) if cell.strip()]
+        rows.append((cells[0], int(cells[1]), cells[2]))
+
+    return rows
 
 
 @pytest.fixture(autouse=True)
@@ -101,6 +152,106 @@ def test_main_plugins_for_project_file(
         )
 
     assert (result.stderr, result.exception, result.stdout) == snapshot
+
+
+def test_main_plugins_keeps_default_sort_order(tmp_path: Path) -> None:
+    """Test plugin mode defaults to plugin, then track, then track name."""
+    project_file = tmp_path / "Example.rpp"
+    _plugin_sort_fixture_project(project_file)
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        analyze, ["--plugins", str(project_file)]
+    )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert _plugin_row_values(result.stdout) == [
+        ("VST3: Alpha", 1, "Zulu"),
+        ("VST3: Alpha", 3, "Bravo"),
+        ("VST3: Bravo", 1, "Zulu"),
+        ("VST3: Charlie", 2, "Alpha"),
+    ]
+
+
+def test_main_plugins_sort_plugin_matches_default_order(tmp_path: Path) -> None:
+    """Test explicit plugin sorting matches the default plugin-mode order."""
+    project_file = tmp_path / "Example.rpp"
+    _plugin_sort_fixture_project(project_file)
+
+    default_result = CliRunner(catch_exceptions=False).invoke(
+        analyze, ["--plugins", str(project_file)]
+    )
+    sorted_result = CliRunner(catch_exceptions=False).invoke(
+        analyze, ["--plugins", "--sort", "plugin", str(project_file)]
+    )
+
+    assert default_result.stderr == ""
+    assert default_result.exception is None
+    assert sorted_result.stderr == ""
+    assert sorted_result.exception is None
+    assert _plugin_row_values(sorted_result.stdout) == (
+        _plugin_row_values(default_result.stdout)
+    )
+
+
+def test_main_plugins_sort_track_orders_by_track_number(tmp_path: Path) -> None:
+    """Test plugin mode can sort rows by track number first."""
+    project_file = tmp_path / "Example.rpp"
+    _plugin_sort_fixture_project(project_file)
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        analyze, ["--plugins", "--sort", "track", str(project_file)]
+    )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert _plugin_row_values(result.stdout) == [
+        ("VST3: Alpha", 1, "Zulu"),
+        ("VST3: Bravo", 1, "Zulu"),
+        ("VST3: Charlie", 2, "Alpha"),
+        ("VST3: Alpha", 3, "Bravo"),
+    ]
+
+
+def test_main_plugins_sort_track_name_orders_by_track_name(tmp_path: Path) -> None:
+    """Test plugin mode can sort rows by track name first."""
+    project_file = tmp_path / "Example.rpp"
+    _plugin_sort_fixture_project(project_file)
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        analyze, ["--plugins", "--sort", "track-name", str(project_file)]
+    )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert _plugin_row_values(result.stdout) == [
+        ("VST3: Charlie", 2, "Alpha"),
+        ("VST3: Alpha", 3, "Bravo"),
+        ("VST3: Alpha", 1, "Zulu"),
+        ("VST3: Bravo", 1, "Zulu"),
+    ]
+
+
+def test_main_sort_requires_plugins() -> None:
+    """Test --sort is rejected outside plugin table mode."""
+    result = CliRunner(catch_exceptions=False).invoke(analyze, ["--sort", "track"])
+
+    assert result.exit_code == 2
+    assert result.exception is not None
+    assert "--sort is only supported together with --plugins" in result.stderr
+    assert "--sort is only supported together with --plugins" in result.output
+
+
+def test_main_sort_rejects_unknown_value() -> None:
+    """Test Click rejects unsupported plugin sort keys."""
+    result = CliRunner(catch_exceptions=False).invoke(
+        analyze, ["--plugins", "--sort", "warning"]
+    )
+
+    assert result.exit_code == 2
+    assert result.exception is not None
+    assert "Invalid value for '--sort'" in result.stderr
+    assert "Invalid value for '--sort'" in result.output
 
 
 def test_main_plugins_formats_jsfx_names_with_prefix(
