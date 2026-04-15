@@ -40,6 +40,7 @@ def test_main_plugins_for_project_file(
       <VST "VST3: Zebra2" "plugin" 0 "" 1234<
         dmFsaWQ=
       >
+      BYPASS 1 0 0
       <VST "VST3: ValhallaRoom" "plugin" 0 "" 1234<
         dmFsaWQ=
       >
@@ -67,10 +68,14 @@ def test_main_plugins_for_project_file(
     >
   >
   <TRACK
-    NAME "Drum Bus"
-    <FXCHAIN
-      <VST "VST3: Zebra2" "plugin" 0 "" 1234<
-        dmFsaWQ=
+    NAME "Muted Folder"
+    MUTESOLO 1 0 0
+    <TRACK
+      NAME "Drum Bus"
+      <FXCHAIN
+        <VST "VST3: Zebra2" "plugin" 0 "" 1234<
+          dmFsaWQ=
+        >
       >
     >
   >

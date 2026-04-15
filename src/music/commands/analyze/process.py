@@ -43,6 +43,7 @@ class PluginRow:
     track_number: int
     track_name: str
     plugin_name: str
+    mute: bool = False
     warnings: tuple[PluginWarning, ...] = ()
 
 
@@ -98,15 +99,16 @@ class AnalyzeProject:
 
     def iter_plugin_rows(self) -> Iterator[PluginRow]:
         """Return plugins with track locations and compact row warnings."""
-        for track_number, track in enumerate(
-            self.parsed_project.findall(".//TRACK"), start=1
+        for track_number, track, track_muted in _iter_tracks_with_mute_state(
+            self.parsed_project
         ):
             track_name = _track_name(track)
-            for plugin in _track_plugins(track):
+            for plugin, plugin_bypassed in _track_plugins_with_bypass(track):
                 yield PluginRow(
                     track_number=track_number,
                     track_name=track_name,
                     plugin_name=_plugin_name(plugin),
+                    mute=track_muted or plugin_bypassed,
                     warnings=tuple(
                         _plugin_row_warnings(track_number, track_name, plugin)
                     ),
@@ -149,6 +151,65 @@ def _track_plugins(track: rpp.Element) -> Iterator[rpp.Element]:
         for plugin in track.findall(f".//{tag}")
         if hasattr(plugin, "tag")
     )
+
+
+def _track_plugins_with_bypass(
+    track: rpp.Element,
+) -> Iterator[tuple[rpp.Element, bool]]:
+    """Yield each saved plugin chunk together with its hard bypass state."""
+    for child in track.children:
+        if not hasattr(child, "tag") or child.tag != "FXCHAIN":
+            continue
+        yield from _fxchain_plugins_with_bypass(child)
+
+
+def _fxchain_plugins_with_bypass(
+    fxchain: rpp.Element,
+) -> Iterator[tuple[rpp.Element, bool]]:
+    """Yield FX chain plugins with the saved bypass flag that precedes them."""
+    bypassed = False
+    for child in fxchain.children:
+        if isinstance(child, list) and child and child[0] == "BYPASS":
+            bypassed = _bypass_enabled(child)
+            continue
+        if hasattr(child, "tag") and child.tag in _PLUGIN_TAGS:
+            yield child, bypassed
+            bypassed = False
+
+
+def _iter_tracks_with_mute_state(
+    project: rpp.Element,
+) -> Iterator[tuple[int, rpp.Element, bool]]:
+    """Yield tracks in document order together with inherited mute state."""
+    track_number = 0
+
+    def visit(
+        track: rpp.Element, parent_muted: bool
+    ) -> Iterator[tuple[int, rpp.Element, bool]]:
+        nonlocal track_number
+        track_number += 1
+        track_muted = parent_muted or _track_is_muted(track)
+        yield track_number, track, track_muted
+        for child in track.children:
+            if hasattr(child, "tag") and child.tag == "TRACK":
+                yield from visit(child, track_muted)
+
+    for child in project.children:
+        if hasattr(child, "tag") and child.tag == "TRACK":
+            yield from visit(child, False)
+
+
+def _track_is_muted(track: rpp.Element) -> bool:
+    """Return whether a parsed Reaper track is muted in the saved project state."""
+    for child in track.children:
+        if isinstance(child, list) and child and child[0] == "MUTESOLO":
+            return bool(int(child[1]))
+    return False
+
+
+def _bypass_enabled(bypass: list[str]) -> bool:
+    """Return whether a parsed FXCHAIN BYPASS entry hard-disables the next plugin."""
+    return len(bypass) > 1 and bool(int(bypass[1]))
 
 
 def _missing_plugin_warning(

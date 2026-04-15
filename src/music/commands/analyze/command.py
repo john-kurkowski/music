@@ -69,6 +69,7 @@ def _plugins_table(analyzed_project: process.AnalyzeProject) -> rich.table.Table
     table.add_column("Plugin")
     table.add_column("Track #", justify="right")
     table.add_column("Track Name")
+    table.add_column("Mute")
     table.add_column("Warning")
 
     plugins = sorted(
@@ -84,6 +85,7 @@ def _plugins_table(analyzed_project: process.AnalyzeProject) -> rich.table.Table
             plugin.plugin_name,
             str(plugin.track_number),
             plugin.track_name or "(unnamed)",
+            "🔇 " if plugin.mute else "",
             "\n".join(warning.display() for warning in plugin.warnings),
         )
 
