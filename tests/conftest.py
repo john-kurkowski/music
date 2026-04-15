@@ -8,10 +8,11 @@ from pathlib import Path
 from typing import Any
 from unittest import mock
 
-import aiohttp
 import pytest
 import syrupy
 from syrupy.assertion import SnapshotAssertion
+
+from music.utils.http import ClientSession
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -59,7 +60,7 @@ def snapshot(
     tmp_id_re = re.compile(r"(?P<tmp_id>\s*\d+)(?P<ext>\.tmp)")
 
     def matcher(data: Any, path: Any) -> Any:
-        if isinstance(data, aiohttp.ClientSession):
+        if isinstance(data, ClientSession):
             return "CLIENT_SESSION_HERE"
         elif _is_dataclass_instance(data):
             return dataclasses.asdict(data)
@@ -87,11 +88,17 @@ def requests_mocks() -> Iterator[RequestsMocks]:
     """Fake the network calls made during upload."""
 
     def request_mock() -> mock.Mock:
-        return mock.AsyncMock(return_value=mock.Mock(spec=aiohttp.ClientResponse))
+        return mock.AsyncMock(return_value=mock.Mock(status_code=200))
 
     with (
-        mock.patch("aiohttp.ClientSession.get", new_callable=request_mock) as get,
-        mock.patch("aiohttp.ClientSession.post", new_callable=request_mock) as post,
-        mock.patch("aiohttp.ClientSession.put", new_callable=request_mock) as put,
+        mock.patch(
+            "music.utils.http.ClientSession.get", new_callable=request_mock
+        ) as get,
+        mock.patch(
+            "music.utils.http.ClientSession.post", new_callable=request_mock
+        ) as post,
+        mock.patch(
+            "music.utils.http.ClientSession.put", new_callable=request_mock
+        ) as put,
     ):
         yield RequestsMocks(get=get, post=post, put=put)

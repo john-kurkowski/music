@@ -16,8 +16,8 @@ classifiers = [
 
 dependencies = [
     "aiofiles",
-    "aiohttp",
     "click",
+    "curl-cffi>=0.15.0",
     "openai",
     "psutil",
     "python-reapy @ git+https://github.com/RomeoDespres/reapy.git@refs/pull/138/head",

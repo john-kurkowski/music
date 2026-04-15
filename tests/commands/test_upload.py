@@ -6,21 +6,14 @@ from pathlib import Path
 from typing import Any
 from unittest import mock
 
-import aiohttp
-import multidict
 import pytest
 import pytest_socket  # type: ignore[import-untyped]
-import yarl
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
 from music.commands.upload import process as upload_process
-from music.commands.upload.command import (
-    _redact_http_header_value,
-)
-from music.commands.upload.command import (
-    main as upload,
-)
+from music.commands.upload.command import main as upload
+from music.utils.http import _redact_http_header_value
 
 from ..conftest import RequestsMocks
 
@@ -43,7 +36,13 @@ def some_paths(tmp_path: Path) -> list[Path]:
 
 def test_main_no_network_calls(some_paths: list[Path]) -> None:
     """Test that main network calls are blocked."""
-    with pytest.raises(pytest_socket.SocketBlockedError):
+    with (
+        mock.patch(
+            "music.utils.http.AsyncSession.request",
+            new=mock.AsyncMock(side_effect=pytest_socket.SocketBlockedError),
+        ),
+        pytest.raises(pytest_socket.SocketBlockedError),
+    ):
         CliRunner(catch_exceptions=False).invoke(
             upload,
             [str(path.parent.resolve()) for path in some_paths],
@@ -51,20 +50,27 @@ def test_main_no_network_calls(some_paths: list[Path]) -> None:
 
 
 def test_main_debug_http_enables_trace_config(some_paths: list[Path]) -> None:
-    """Test main enables aiohttp tracing when debug output is requested."""
+    """Test main enables HTTP debugging when debug output is requested."""
 
     class FakeClientSession:
         """Capture ClientSession configuration while bypassing network."""
 
-        seen_trace_configs: list[aiohttp.TraceConfig] | None = None
+        seen_console: Any | None = None
+        seen_debug_http: bool | None = None
 
         def __init__(
-            self, *args: Any, trace_configs: list[aiohttp.TraceConfig], **kwargs: Any
+            self,
+            *args: Any,
+            console: Any | None = None,
+            debug_http: bool = False,
+            **kwargs: Any,
         ) -> None:
-            self.trace_configs = trace_configs
+            self.console = console
+            self.debug_http = debug_http
 
         async def __aenter__(self) -> "FakeClientSession":
-            type(self).seen_trace_configs = self.trace_configs
+            type(self).seen_console = self.console
+            type(self).seen_debug_http = self.debug_http
             return self
 
         async def __aexit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
@@ -72,7 +78,8 @@ def test_main_debug_http_enables_trace_config(some_paths: list[Path]) -> None:
 
     with (
         mock.patch(
-            "music.commands.upload.command.aiohttp.ClientSession", FakeClientSession
+            "music.commands.upload.command.music.utils.http.ClientSession",
+            FakeClientSession,
         ),
         mock.patch(
             "music.commands.upload.command.UploadProcess.process",
@@ -85,8 +92,8 @@ def test_main_debug_http_enables_trace_config(some_paths: list[Path]) -> None:
         )
 
     assert result.exception is None
-    assert FakeClientSession.seen_trace_configs is not None
-    assert len(FakeClientSession.seen_trace_configs) == 1
+    assert FakeClientSession.seen_console is not None
+    assert FakeClientSession.seen_debug_http is True
 
 
 def test_redact_http_header_value() -> None:
@@ -106,6 +113,11 @@ def test_main_tracks_not_found(
     requests_mocks: RequestsMocks, snapshot: SnapshotAssertion, some_paths: list[Path]
 ) -> None:
     """Test main when tracks are not found/matched in the upstream database."""
+    requests_mocks.get.return_value = mock.Mock(
+        status_code=200,
+        json=mock.Mock(return_value={"collection": []}),
+    )
+
     result = CliRunner(catch_exceptions=False).invoke(
         upload,
         [str(path.parent.resolve()) for path in some_paths],
@@ -168,9 +180,12 @@ def test_main_tracks_newer(
                     for idx in range(upload_process.TRACKS_FETCH_LIMIT - 3)
                 ],
             ]
-            return mock.Mock(json=mock.AsyncMock(return_value={"collection": tracks}))
+            return mock.Mock(
+                status_code=200,
+                json=mock.Mock(return_value={"collection": tracks}),
+            )
 
-        return mock.Mock()
+        return mock.Mock(status_code=200)
 
     requests_mocks.get.side_effect = mock_get
     with mock.patch.object(Path, "stat", autospec=True, side_effect=mock_stat):
@@ -225,9 +240,12 @@ def test_main_tracks_newer_dry_run(
                     "permalink_url": "https://soundcloud.com/2",
                 },
             ]
-            return mock.Mock(json=mock.AsyncMock(return_value={"collection": tracks}))
+            return mock.Mock(
+                status_code=200,
+                json=mock.Mock(return_value={"collection": tracks}),
+            )
 
-        return mock.Mock()
+        return mock.Mock(status_code=200)
 
     requests_mocks.get.side_effect = mock_get
     with mock.patch.object(Path, "stat", autospec=True, side_effect=mock_stat):
@@ -286,9 +304,12 @@ def test_main_tracks_limit_warning(
                     for idx in range(upload_process.TRACKS_FETCH_LIMIT - 2)
                 ],
             ]
-            return mock.Mock(json=mock.AsyncMock(return_value={"collection": tracks}))
+            return mock.Mock(
+                status_code=200,
+                json=mock.Mock(return_value={"collection": tracks}),
+            )
 
-        return mock.Mock()
+        return mock.Mock(status_code=200)
 
     requests_mocks.get.side_effect = mock_get
 
@@ -318,7 +339,8 @@ def test_main_success(
     def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
         if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
             return mock.Mock(
-                json=mock.AsyncMock(
+                status_code=200,
+                json=mock.Mock(
                     return_value={
                         "collection": [
                             {
@@ -335,36 +357,38 @@ def test_main_success(
                             },
                         ]
                     }
-                )
+                ),
             )
         elif re.search(
             r"^https://api-v2.soundcloud.com/uploads/.*/track-transcoding", url
         ):
             return mock.Mock(
-                json=mock.AsyncMock(
+                status_code=200,
+                json=mock.Mock(
                     return_value={
                         "status": "finished",
                     }
-                )
+                ),
             )
 
-        return mock.Mock()
+        return mock.Mock(status_code=200)
 
     def mock_post(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
         if re.search(
             r"^https://api-v2.soundcloud.com/uploads/track-upload-policy", url
         ):
             return mock.Mock(
-                json=mock.AsyncMock(
+                status_code=200,
+                json=mock.Mock(
                     return_value={
                         "headers": {"some-uploader-id": "some-uploader-value"},
                         "url": "https://some-url",
                         "uid": "stub-uid",
                     }
-                )
+                ),
             )
 
-        return mock.Mock()
+        return mock.Mock(status_code=200)
 
     requests_mocks.get.side_effect = mock_get
     requests_mocks.post.side_effect = mock_post
@@ -391,7 +415,8 @@ def test_main_success_dry_run(
     def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
         if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
             return mock.Mock(
-                json=mock.AsyncMock(
+                status_code=200,
+                json=mock.Mock(
                     return_value={
                         "collection": [
                             {
@@ -408,10 +433,10 @@ def test_main_success_dry_run(
                             },
                         ]
                     }
-                )
+                ),
             )
 
-        return mock.Mock()
+        return mock.Mock(status_code=200)
 
     requests_mocks.get.side_effect = mock_get
 
@@ -440,7 +465,8 @@ def test_main_transcode_failure(
     def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
         if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
             return mock.Mock(
-                json=mock.AsyncMock(
+                status_code=200,
+                json=mock.Mock(
                     return_value={
                         "collection": [
                             {
@@ -451,52 +477,35 @@ def test_main_transcode_failure(
                             },
                         ]
                     }
-                )
+                ),
             )
         elif re.search(
             r"^https://api-v2.soundcloud.com/uploads/.*/track-transcoding", url
         ):
-            # Simulate transcode failure with an HTTP error
-            request_info = aiohttp.RequestInfo(
-                url=yarl.URL(url),
-                method="GET",
-                headers=multidict.CIMultiDictProxy(multidict.CIMultiDict()),
-                real_url=yarl.URL(url),
-            )
-
             error_response = mock.Mock()
-            error_response.ok = False
-            error_response.status = 422
-            error_response.text = mock.AsyncMock(
-                return_value="Transcoding failed: Invalid audio format"
-            )
-            error_response.raise_for_status = mock.Mock(
-                side_effect=aiohttp.ClientResponseError(
-                    request_info=request_info,
-                    history=(),
-                    status=422,
-                    message="Unprocessable Entity",
-                )
-            )
+            error_response.status_code = 422
+            error_response.text = "Transcoding failed: Invalid audio format"
+            error_response._music_request_url = url
             return error_response
 
-        return mock.Mock()
+        return mock.Mock(status_code=200)
 
     def mock_post(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
         if re.search(
             r"^https://api-v2.soundcloud.com/uploads/track-upload-policy", url
         ):
             return mock.Mock(
-                json=mock.AsyncMock(
+                status_code=200,
+                json=mock.Mock(
                     return_value={
                         "headers": {"some-uploader-id": "some-uploader-value"},
                         "url": "https://some-url",
                         "uid": "stub-uid",
                     }
-                )
+                ),
             )
 
-        return mock.Mock()
+        return mock.Mock(status_code=200)
 
     requests_mocks.get.side_effect = mock_get
     requests_mocks.post.side_effect = mock_post

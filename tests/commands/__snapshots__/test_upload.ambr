@@ -3,8 +3,8 @@
   tuple(
     None,
     '''
-      ⠋ Uploading "some project"    0:00:00                                 0/29 bytes
-      ⠋ Uploading "another project" 0:00:00                                 0/32 bytes
+      ✓ Uploading "some project"    0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 29/29 bytes
+      ✓ Uploading "another project" 0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 32/32 bytes
       ✓ Transcoding "some project"    0:00:00
       ✓ Transcoding "another project" 0:00:00
                         ╷                           
@@ -45,7 +45,9 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': dict({
+              'total': 10,
+            }),
           }),
         ),
         _Call(
@@ -240,11 +242,13 @@
             'https://some-url',
           ),
           dict({
-            'data': 'ASYNC_ITERABLE_HERE',
+            'data': b'.wav content for some project',
             'headers': dict({
               'some-uploader-id': 'some-uploader-value',
             }),
-            'timeout': ClientTimeout(total=600, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': dict({
+              'total': 600,
+            }),
           }),
         ),
         _Call(
@@ -293,11 +297,13 @@
             'https://some-url',
           ),
           dict({
-            'data': 'ASYNC_ITERABLE_HERE',
+            'data': b'.wav content for another project',
             'headers': dict({
               'some-uploader-id': 'some-uploader-value',
             }),
-            'timeout': ClientTimeout(total=600, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': dict({
+              'total': 600,
+            }),
           }),
         ),
         _Call(
@@ -390,7 +396,9 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': dict({
+              'total': 10,
+            }),
           }),
         ),
       ]),
@@ -442,7 +450,9 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': dict({
+              'total': 10,
+            }),
           }),
         ),
       ]),
@@ -492,7 +502,9 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': dict({
+              'total': 10,
+            }),
           }),
         ),
       ]),
@@ -542,7 +554,9 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': dict({
+              'total': 10,
+            }),
           }),
         ),
       ]),
@@ -598,7 +612,16 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': dict({
+              'total': 10,
+            }),
+          }),
+        ),
+        _Call(
+          '().json',
+          tuple(
+          ),
+          dict({
           }),
         ),
       ]),
@@ -613,12 +636,12 @@
   tuple(
     SystemExit(2),
     '''
-      ⠋ Uploading "some project" 0:00:00                                    0/29 bytes
-      Transcoding "some project" (422, message='Unprocessable Entity (with body "Tra… 
+      ✓ Uploading "some project" 0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 29/29 bytes
+      Transcoding "some project" (422, message='Unprocessable Content (with body "Tr… 
   
     ''',
     '''
-      422, message='Unprocessable Entity (with body "Transcoding failed: Invalid audio format")', url='https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding'
+      422, message='Unprocessable Content (with body "Transcoding failed: Invalid audio format")', url='https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding'
   
     ''',
     dict({
@@ -651,7 +674,9 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': dict({
+              'total': 10,
+            }),
           }),
         ),
         _Call(
@@ -755,11 +780,13 @@
             'https://some-url',
           ),
           dict({
-            'data': 'ASYNC_ITERABLE_HERE',
+            'data': b'.wav content for some project',
             'headers': dict({
               'some-uploader-id': 'some-uploader-value',
             }),
-            'timeout': ClientTimeout(total=600, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': dict({
+              'total': 600,
+            }),
           }),
         ),
       ]),

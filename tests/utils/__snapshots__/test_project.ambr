@@ -20,7 +20,9 @@
           'http://localhost:2307/_/42230',
         ),
         dict({
-          'timeout': ClientTimeout(total=7200, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+          'timeout': dict({
+            'total': 7200,
+          }),
         }),
       ),
     ]),

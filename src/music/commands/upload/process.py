@@ -6,15 +6,15 @@ import datetime
 from collections.abc import AsyncGenerator, Callable
 from functools import cached_property
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
 import aiofiles
-import aiohttp
 import rich.box
 import rich.console
 import rich.progress
 
 from music.commands.render.progress import IndeterminateProgress
+from music.utils import http
 from music.utils.songversion import SongVersion
 
 from .progress import DeterminateProgress
@@ -69,7 +69,7 @@ class Process:
 
     async def process(
         self,
-        client: aiohttp.ClientSession,
+        client: http.ClientSession,
         oauth_token: str,
         additional_headers: dict[str, Any],
         upload_items: list[UploadItem],
@@ -112,12 +112,12 @@ class Process:
             f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
             headers=headers,
             params={"limit": TRACKS_FETCH_LIMIT, **api_params},
-            timeout=aiohttp.ClientTimeout(total=10),
+            timeout=http.ClientTimeout(total=10),
         )
         await _raise_for_status(tracks_resp)
 
         upload_items_by_title = {item.track_title: item for item in upload_items}
-        tracks_payload = await tracks_resp.json()
+        tracks_payload = _response_json(tracks_resp)
         tracks_collection = tracks_payload["collection"]
         if len(tracks_collection) >= TRACKS_FETCH_LIMIT:
             self.console.print(
@@ -170,7 +170,7 @@ class Process:
 
     async def _upload_one_file_to_track(
         self,
-        client: aiohttp.ClientSession,
+        client: http.ClientSession,
         headers: dict[str, str],
         tracks_by_title: dict[str, Track],
         item: UploadItem,
@@ -243,7 +243,7 @@ class Process:
 
     async def _confirm_upload(
         self,
-        client: aiohttp.ClientSession,
+        client: http.ClientSession,
         headers: dict[str, str],
         track: Track,
         fil: Path,
@@ -274,7 +274,7 @@ class Process:
         await _raise_for_status(resp)
 
     async def _prepare_upload(
-        self, client: aiohttp.ClientSession, headers: dict[str, str], fil: Path
+        self, client: http.ClientSession, headers: dict[str, str], fil: Path
     ) -> _PrepareUploadResponse:
         """Request an AWS S3 upload URL."""
         resp = await client.post(
@@ -288,7 +288,7 @@ class Process:
             json={"filename": fil.name, "filesize": fil.stat().st_size},
         )
         await _raise_for_status(resp)
-        upload = await resp.json()
+        upload = _response_json(resp)
         return {
             "headers": upload["headers"],
             "uid": upload["uid"],
@@ -301,7 +301,7 @@ class Process:
 
     async def _transcode(
         self,
-        client: aiohttp.ClientSession,
+        client: http.ClientSession,
         headers: dict[str, str],
         upload: _PrepareUploadResponse,
     ) -> None:
@@ -330,26 +330,30 @@ class Process:
                 },
             )
             await _raise_for_status(resp)
-            transcoding = await resp.json()
+            transcoding = _response_json(resp)
             if transcoding["status"] == "finished":
                 break
             await asyncio.sleep(3)
 
     async def _upload(
         self,
-        client: aiohttp.ClientSession,
+        client: http.ClientSession,
         task: rich.progress.TaskID,
         fil: Path,
         upload: _PrepareUploadResponse,
     ) -> None:
         """Upload the audio file to the prepared upload destination."""
+        payload = bytearray()
+        async for chunk in _file_reader(
+            lambda steps: self.progress_upload.advance(task, steps), fil
+        ):
+            payload.extend(chunk)
+
         resp = await client.put(
             upload["url"],
-            data=_file_reader(
-                lambda steps: self.progress_upload.advance(task, steps), fil
-            ),
+            data=bytes(payload),
             headers=upload["headers"],
-            timeout=aiohttp.ClientTimeout(total=60 * 10),
+            timeout=http.ClientTimeout(total=60 * 10),
         )
         await _raise_for_status(resp)
 
@@ -358,22 +362,30 @@ class Process:
         self.progress_upload.advance(task, fil.stat().st_size)
 
 
-async def _raise_for_status(resp: aiohttp.ClientResponse) -> None:
-    """Decorate `aiohttp.ClientResponse.raise_for_status()` with response body text.
-
-    The exception raised by `aiohttp.ClientResponse.raise_for_status()`
-    normally only provides high level diagnostics, like error code and a brief
-    message. The body has more info.
-    """
-    if resp.ok:
+async def _raise_for_status(resp: Any) -> None:
+    """Raise a decorated error with the response body included."""
+    if resp.status_code < 400:
         return
 
-    text = await resp.text()
-    try:
-        resp.raise_for_status()
-    except aiohttp.ClientResponseError as ex:
-        ex.message = f'{ex.message} (with body "{text}")'
-        raise
+    text = resp.text
+    raise http.ClientResponseError(
+        status=resp.status_code,
+        message=f'{http.reason_phrase(resp.status_code)} (with body "{text}")',
+        url=_response_url(resp),
+    )
+
+
+def _response_json(resp: Any) -> dict[str, Any]:
+    """Return a response JSON body with a typed dict shape."""
+    return cast(dict[str, Any], resp.json())
+
+
+def _response_url(resp: Any) -> str:
+    """Return a stable response URL string."""
+    url = getattr(resp, "url", None)
+    if isinstance(url, str):
+        return url
+    return str(getattr(resp, "_music_request_url", ""))
 
 
 async def _file_reader(
