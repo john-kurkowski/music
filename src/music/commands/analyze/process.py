@@ -2,6 +2,7 @@
 
 import base64
 import re
+import subprocess
 import sys
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -43,6 +44,7 @@ class PluginRow:
     track_number: int
     track_name: str
     plugin_name: str
+    architecture: str = ""
     mute: bool = False
     warnings: tuple[PluginWarning, ...] = ()
 
@@ -104,13 +106,17 @@ class AnalyzeProject:
         ):
             track_name = _track_name(track)
             for plugin, plugin_bypassed in _track_plugins_with_bypass(track):
+                architecture = _plugin_architecture(plugin)
                 yield PluginRow(
                     track_number=track_number,
                     track_name=track_name,
                     plugin_name=_plugin_name(plugin),
+                    architecture=architecture,
                     mute=track_muted or plugin_bypassed,
                     warnings=tuple(
-                        _plugin_row_warnings(track_number, track_name, plugin)
+                        _plugin_row_warnings(
+                            track_number, track_name, plugin, architecture
+                        )
                     ),
                 )
 
@@ -236,17 +242,42 @@ def _missing_plugin_warning(
 
 
 def _plugin_row_warnings(
-    track_number: int, track_name: str, plugin: rpp.Element
+    track_number: int, track_name: str, plugin: rpp.Element, architecture: str
 ) -> Iterator[PluginWarning]:
     """Return compact warning indicators for a plugin table row."""
     if _missing_plugin_warning(track_number, track_name, plugin):
         yield PluginWarning(symbol="❌", detail="Not installed")
+
+    if architecture == "Intel-only":
+        yield PluginWarning(symbol="⚠️", detail="Intel-only")
 
     if arcade.is_arcade_plugin(plugin):
         for symbol, detail in arcade.iter_plugin_warnings(
             track_number, track_name, plugin
         ):
             yield PluginWarning(symbol=symbol, detail=detail)
+
+
+def _plugin_architecture(plugin: rpp.Element) -> str:
+    """Return a concise CPU architecture label for an installed plugin bundle."""
+    bundle = _installed_plugin_bundle(plugin)
+    if bundle is None:
+        return ""
+
+    binary = _bundle_binary(bundle)
+    if binary is None:
+        return ""
+
+    archs = _binary_architectures(binary)
+    if not archs:
+        return ""
+    if archs == frozenset({"x86_64"}):
+        return "Intel-only"
+    if archs == frozenset({"arm64"}):
+        return "Apple Silicon"
+    if {"x86_64", "arm64"}.issubset(archs):
+        return "Universal"
+    return ", ".join(sorted(archs))
 
 
 def _warning_message(track_number: int, track_name: str, plugin: rpp.Element) -> str:
@@ -327,6 +358,18 @@ def _installed_au_names() -> frozenset[str]:
     )
 
 
+@cache
+def _installed_au_plugins() -> dict[str, Path]:
+    """Return installed AU bundles keyed by normalized basename."""
+    plugins: dict[str, Path] = {}
+    for root in _au_search_paths():
+        if not root.exists():
+            continue
+        for component in root.glob("*.component"):
+            plugins.setdefault(_normalize_plugin_basename(component.stem), component)
+    return plugins
+
+
 def _au_search_paths() -> tuple[Path, ...]:
     """Return local directories where Audio Unit plugins may be installed."""
     return (
@@ -349,6 +392,15 @@ def _installed_vst_names() -> frozenset[str]:
         if plugin.suffix.casefold() == ".vst3"
     )
     return frozenset(names)
+
+
+@cache
+def _installed_vst_plugins_by_name() -> dict[str, Path]:
+    """Return installed VST bundle paths keyed by normalized basename."""
+    plugins: dict[str, Path] = {}
+    for plugin in _installed_vst_plugins():
+        plugins.setdefault(_normalize_plugin_basename(plugin.stem), plugin)
+    return plugins
 
 
 def _installed_vst_plugins() -> tuple[Path, ...]:
@@ -384,6 +436,58 @@ def _jsfx_desc(jsfx_file: Path) -> str | None:
 def _jsfx_lines(jsfx_file: Path) -> list[str]:
     """Read a JSFX file, tolerating legacy REAPER effect encodings."""
     return jsfx_file.read_text(encoding="utf-8", errors="replace").splitlines()
+
+
+def _installed_plugin_bundle(plugin: rpp.Element) -> Path | None:
+    """Return the installed bundle path that matches a saved plugin entry."""
+    basename = _saved_plugin_basename(plugin)
+    match plugin.tag:
+        case "AU":
+            return _installed_au_plugins().get(basename)
+        case "VST":
+            return _installed_vst_plugins_by_name().get(basename)
+        case _:
+            return None
+
+
+def _bundle_binary(bundle: Path) -> Path | None:
+    """Return the executable binary inside a macOS audio plugin bundle."""
+    info_plist = bundle / "Contents/Info.plist"
+    if info_plist.is_file():
+        try:
+            import plistlib
+
+            executable = plistlib.loads(info_plist.read_bytes()).get(
+                "CFBundleExecutable"
+            )
+        except (OSError, ValueError):
+            executable = None
+        if isinstance(executable, str):
+            binary = bundle / "Contents/MacOS" / executable
+            if binary.is_file():
+                return binary
+
+    macos_dir = bundle / "Contents/MacOS"
+    for binary in sorted(macos_dir.glob("*")):
+        if binary.is_file():
+            return binary
+    return None
+
+
+@cache
+def _binary_architectures(binary: Path) -> frozenset[str]:
+    """Return Mach-O CPU architectures reported for a plugin executable."""
+    try:
+        completed = subprocess.run(
+            ["lipo", "-archs", str(binary)],
+            capture_output=True,
+            check=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return frozenset()
+
+    return frozenset(completed.stdout.strip().split())
 
 
 def b64_ascii(s: str) -> str | None:

@@ -47,20 +47,22 @@
     None,
     '''
       ─────────────────────────────────── Example ────────────────────────────────────
-      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━┓
-      ┃ Plugin                     ┃ Track # ┃ Track Name ┃ Mute ┃ Warning          ┃
-      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━┩
-      │ AUi: Arcade (Output)       │       1 │ Lead Vox   │      │                  │
-      │ CLAPi: Surge XT            │       1 │ Lead Vox   │      │                  │
-      │ DX: Classic Compressor     │       1 │ Lead Vox   │      │                  │
-      │ JS: Mid/Side Encoder       │       1 │ Lead Vox   │      │                  │
-      │ JS: ReEQ                   │       1 │ Lead Vox   │      │                  │
-      │ LV2: Dragonfly Hall Reverb │       1 │ Lead Vox   │      │                  │
-      │ VST3: ValhallaRoom         │       1 │ Lead Vox   │ 🔇   │ ❌ Not installed │
-      │ VST3: Zebra2               │       1 │ Lead Vox   │      │ ❌ Not installed │
-      │ VST3: Zebra2               │       1 │ Lead Vox   │      │ ❌ Not installed │
-      │ VST3: Zebra2               │       3 │ Drum Bus   │ 🔇   │ ❌ Not installed │
-      └────────────────────────────┴─────────┴────────────┴──────┴──────────────────┘
+      ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+      ┃ Plugin                      ┃ Track # ┃ Track Name ┃ Mute ┃ Warning          ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+      │ AUi: Arcade (Output)        │       1 │ Lead Vox   │      │                  │
+      │ CLAPi: Surge XT             │       1 │ Lead Vox   │      │                  │
+      │ DX: Classic Compressor      │       1 │ Lead Vox   │      │                  │
+      │ JS: Mid/Side Encoder        │       1 │ Lead Vox   │      │                  │
+      │ JS: ReEQ                    │       1 │ Lead Vox   │      │                  │
+      │ LV2: Dragonfly Hall Reverb  │       1 │ Lead Vox   │      │                  │
+      │ VST3: ValhallaRoom          │       1 │ Lead Vox   │ 🔇   │ ❌ Not installed │
+      │ VST3: Zebra2                │       1 │ Lead Vox   │      │ ❌ Not installed │
+      │ VST3: Zebra2                │       1 │ Lead Vox   │      │ ❌ Not installed │
+      │ VST3: Zebra2                │       3 │ Drum Bus   │ 🔇   │ ❌ Not installed │
+      │ VST3i: Drumart SLD (ESL)    │       1 │ Lead Vox   │      │ ⚠️ Intel-only    │
+      │ (32 out)                    │         │            │      │                  │
+      └─────────────────────────────┴─────────┴────────────┴──────┴──────────────────┘
   
     ''',
   )
@@ -108,6 +110,38 @@
       ┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━┩
       │ JS: Master Limiter │       1 │ Master     │      │         │
       └────────────────────┴─────────┴────────────┴──────┴─────────┘
+  
+    ''',
+  )
+# ---
+# name: test_main_plugins_renders_warnings_in_table_cells
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+      ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+      ┃ Plugin               ┃ Track # ┃ Track Name ┃ Mute ┃ Warning          ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+      │ AUi: Arcade (Output) │       1 │ Rhythm     │      │ ⚠️ Intel-only    │
+      │                      │         │            │      │ ⛓️‍💥 Downstream    │
+      │ VST3: Zebra2         │       1 │ Rhythm     │      │ ❌ Not installed │
+      └──────────────────────┴─────────┴────────────┴──────┴──────────────────┘
+  
+    ''',
+  )
+# ---
+# name: test_main_plugins_resolves_arcade_hyperion_source_names
+  tuple(
+    '',
+    None,
+    '''
+      ─────────────────────────────────── Example ────────────────────────────────────
+      ┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+      ┃ Plugin               ┃ Track # ┃ Track Name    ┃ Mute ┃ Warning          ┃
+      ┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+      │ AUi: Arcade (Output) │       1 │ Bass note kit │      │ ⛓️‍💥 Amped Up Main │
+      └──────────────────────┴─────────┴───────────────┴──────┴──────────────────┘
   
     ''',
   )

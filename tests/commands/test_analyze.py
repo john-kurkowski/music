@@ -71,11 +71,17 @@ def clear_jsfx_file_cache() -> Iterator[None]:
     """Isolate cached JSFX path lookups between tests."""
     process._jsfx_file.cache_clear()
     process._installed_au_names.cache_clear()
+    process._installed_au_plugins.cache_clear()
     process._installed_vst_names.cache_clear()
+    process._installed_vst_plugins_by_name.cache_clear()
+    process._binary_architectures.cache_clear()
     yield
     process._jsfx_file.cache_clear()
     process._installed_au_names.cache_clear()
+    process._installed_au_plugins.cache_clear()
     process._installed_vst_names.cache_clear()
+    process._installed_vst_plugins_by_name.cache_clear()
+    process._binary_architectures.cache_clear()
 
 
 def test_main_plugins_for_project_file(
@@ -136,16 +142,38 @@ def test_main_plugins_for_project_file(
 
     effects_dir = tmp_path / "Effects"
     components_dir = tmp_path / "Components"
+    vst3_dir = tmp_path / "VST3"
     (effects_dir / "utility").mkdir(parents=True)
     (effects_dir / "ReJJ" / "ReEQ").mkdir(parents=True)
     components_dir.mkdir()
+    (vst3_dir / "Drumart SLD.vst3" / "Contents" / "MacOS").mkdir(parents=True)
     (effects_dir / "utility" / "KanakaMSEncoder1").write_text("desc:Mid/Side Encoder\n")
     (effects_dir / "ReJJ" / "ReEQ" / "ReEQ.jsfx").write_text("desc:ReEQ\n")
     (components_dir / "Arcade.component").write_text("")
+    (vst3_dir / "Drumart SLD.vst3" / "Contents" / "MacOS" / "MSP").write_text("")
+    project_file.write_text(
+        project_file.read_text().replace(
+            '      <DX "DX: Classic Compressor" "plugin" 0 "" 1234<\n'
+            "        dmFsaWQ=\n"
+            "      >\n",
+            '      <DX "DX: Classic Compressor" "plugin" 0 "" 1234<\n'
+            "        dmFsaWQ=\n"
+            "      >\n"
+            '      <VST "VST3i: Drumart SLD (ESL) (32 out)" "Drumart SLD.vst3" 0 "" 1234<\n'
+            "        dmFsaWQ=\n"
+            "      >\n",
+        )
+    )
 
     with (
         mock.patch.object(process, "_jsfx_search_paths", return_value=(effects_dir,)),
         mock.patch.object(process, "_au_search_paths", return_value=(components_dir,)),
+        mock.patch.object(process, "_vst_search_paths", return_value=(vst3_dir,)),
+        mock.patch.object(
+            process,
+            "_binary_architectures",
+            return_value=frozenset({"x86_64"}),
+        ),
     ):
         result = CliRunner(catch_exceptions=False).invoke(
             analyze, ["--plugins", str(project_file)]
@@ -508,9 +536,19 @@ def test_main_plugins_detects_nested_vst3_shell_plugins(tmp_path: Path) -> None:
     assert "❌ Not installed" not in result.stdout
 
 
-def test_main_plugins_renders_warnings_in_table_cells(tmp_path: Path) -> None:
+def test_main_plugins_renders_warnings_in_table_cells(
+    snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test plugin mode keeps warnings in the table instead of separate prints."""
     project_file = tmp_path / "Example.rpp"
+    components_dir = tmp_path / "Components"
+    db_path = tmp_path / "arcade.db"
+    (components_dir / "Arcade.component" / "Contents" / "MacOS").mkdir(parents=True)
+    (components_dir / "Arcade.component" / "Contents" / "MacOS" / "Arcade").write_text(
+        ""
+    )
+    monkeypatch.setenv("ARCADE_DB_PATH", str(db_path))
+    _write_arcade_db(db_path, kit_uuids=set(), source_uuids=set())
     arcade_state = _arcade_au_state_base64(
         b'<?xml version="1.0" encoding="UTF-8"?><state_info>'
         b"<Looper_Preset>"
@@ -536,15 +574,20 @@ def test_main_plugins_renders_warnings_in_table_cells(tmp_path: Path) -> None:
 """
     )
 
-    result = CliRunner(catch_exceptions=False).invoke(
-        analyze, ["--plugins", str(project_file)]
-    )
+    with (
+        mock.patch.object(process, "_audio_units_supported", return_value=True),
+        mock.patch.object(process, "_au_search_paths", return_value=(components_dir,)),
+        mock.patch.object(
+            process,
+            "_binary_architectures",
+            return_value=frozenset({"x86_64"}),
+        ),
+    ):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert "Warning:" not in result.stdout
-    assert "❌" in result.stdout
-    assert "⛓️‍💥 Downstream" in result.stdout
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
 @mock.patch("music.utils.project.ExtendedProject", autospec=True)
@@ -726,7 +769,7 @@ def test_main_does_not_warn_for_arcade_hyperion_installed_source(
 
 
 def test_main_plugins_resolves_arcade_hyperion_source_names(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    snapshot: SnapshotAssertion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test plugin mode prefers human-readable Arcade source names in warnings."""
     project_file = tmp_path / "Example.rpp"
@@ -769,10 +812,7 @@ def test_main_plugins_resolves_arcade_hyperion_source_names(
         analyze, ["--plugins", str(project_file)]
     )
 
-    assert result.stderr == ""
-    assert result.exception is None
-    assert "⛓️‍💥 Amped Up Main" in result.stdout
-    assert "missing-source" not in result.stdout
+    assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
 def test_main_plugins_falls_back_to_arcade_hyperion_preset_name(
