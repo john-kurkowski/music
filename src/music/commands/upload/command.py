@@ -35,7 +35,7 @@ from .process import UploadItem
 @click.option(
     "--debug-http",
     default=False,
-    help="Print outgoing SoundCloud HTTP requests and responses for debugging.",
+    help="Print outgoing HTTP requests and responses for debugging.",
     is_flag=True,
 )
 @click.option(
