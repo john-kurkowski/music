@@ -28,5 +28,7 @@
     ]),
     'put': _CallList([
     ]),
+    'put_file': _CallList([
+    ]),
   })
 # ---

@@ -1,9 +1,11 @@
 """HTTP helpers backed by curl_cffi."""
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any, Literal, cast
 from urllib.parse import urlencode
 
+from curl_cffi import CurlOpt
 from curl_cffi.requests import AsyncSession, Response
 
 type BrowserType = Literal["chrome146"]
@@ -29,6 +31,7 @@ class ClientSession:
         self,
         *,
         console: Any | None = None,
+        curl_options: dict[CurlOpt, Any] | None = None,
         debug_http: bool = False,
     ) -> None:
         """Initialize."""
@@ -36,6 +39,7 @@ class ClientSession:
         self.debug_http = debug_http
         self._session = AsyncSession(
             default_headers=False,
+            curl_options=curl_options,
             impersonate=DEFAULT_IMPERSONATE,
             trust_env=True,
         )
@@ -63,6 +67,28 @@ class ClientSession:
     async def put(self, url: str, **kwargs: Any) -> Response:
         """Send a PUT request."""
         return await self.request("PUT", url, **kwargs)
+
+    async def put_file(
+        self,
+        url: str,
+        fil: Path,
+        *,
+        progress: Callable[[int], Any] | None = None,
+        **kwargs: Any,
+    ) -> Response:
+        """Send a PUT request streaming the request body from a file."""
+        with fil.open("rb") as fobj:
+            reader = _ProgressReader(fobj, progress)
+            async with ClientSession(
+                console=self.console,
+                curl_options={
+                    CurlOpt.UPLOAD: 1,
+                    CurlOpt.READDATA: reader,
+                    CurlOpt.INFILESIZE_LARGE: fil.stat().st_size,
+                },
+                debug_http=self.debug_http,
+            ) as upload_client:
+                return await upload_client.put(url, **kwargs)
 
     async def request(self, method: HttpMethod, url: str, **kwargs: Any) -> Response:
         """Send an HTTP request."""
@@ -124,6 +150,21 @@ def raise_for_status(resp: Response) -> None:
     """Raise the underlying curl_cffi HTTP status exception."""
     raise_for_status_ = cast(Callable[[], None], resp.raise_for_status)
     raise_for_status_()
+
+
+class _ProgressReader:
+    """File-like reader that reports bytes as curl consumes them."""
+
+    def __init__(self, fobj: Any, progress: Callable[[int], Any] | None = None) -> None:
+        self.fobj = fobj
+        self.progress = progress
+
+    def read(self, size: int) -> bytes:
+        """Read bytes and report the number consumed."""
+        chunk = self.fobj.read(size)
+        if chunk and self.progress:
+            self.progress(len(chunk))
+        return cast(bytes, chunk)
 
 
 def _redact_http_header_value(key: str, value: str) -> str:

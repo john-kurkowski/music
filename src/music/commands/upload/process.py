@@ -307,16 +307,11 @@ class Process:
         upload: _PrepareUploadResponse,
     ) -> None:
         """Upload the audio file to the prepared upload destination."""
-        payload = bytearray()
-        async for chunk in _file_reader(
-            lambda steps: self.progress_upload.advance(task, steps), fil
-        ):
-            payload.extend(chunk)
-
-        resp = await client.put(
+        resp = await client.put_file(
             upload["url"],
-            data=bytes(payload),
+            fil,
             headers=upload["headers"],
+            progress=lambda steps: self.progress_upload.advance(task, steps),
             timeout=60 * 10,
         )
         await _raise_for_status(resp)

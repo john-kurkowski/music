@@ -3,6 +3,7 @@
 import dataclasses
 import io
 import re
+import types
 from collections.abc import AsyncIterable, Iterator
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,7 @@ class RequestsMocks:
     get: mock.Mock
     post: mock.Mock
     put: mock.Mock
+    put_file: mock.Mock
 
     @property
     def mock_calls(self) -> dict[str, Any]:
@@ -66,6 +68,8 @@ def snapshot(
             return dataclasses.asdict(data)
         elif isinstance(data, AsyncIterable):
             return "ASYNC_ITERABLE_HERE"
+        elif isinstance(data, types.FunctionType):
+            return "CALLABLE_HERE"
         elif isinstance(data, Path | io.IOBase | str):
             without_tmp_id = tmp_id_re.sub(r"\g<ext>", str(data))
             without_path = without_tmp_id.replace(tmp_path_str, "TMP_PATH_HERE")
@@ -90,6 +94,12 @@ def requests_mocks() -> Iterator[RequestsMocks]:
     def request_mock() -> mock.Mock:
         return mock.AsyncMock(return_value=mock.Mock(status_code=200))
 
+    async def put_file(_url: str, fil: Path, *args: Any, **kwargs: Any) -> mock.Mock:
+        progress = kwargs.get("progress")
+        if progress:
+            progress(fil.stat().st_size)
+        return mock.Mock(status_code=200)
+
     with (
         mock.patch(
             "music.utils.http.ClientSession.get", new_callable=request_mock
@@ -100,5 +110,9 @@ def requests_mocks() -> Iterator[RequestsMocks]:
         mock.patch(
             "music.utils.http.ClientSession.put", new_callable=request_mock
         ) as put,
+        mock.patch(
+            "music.utils.http.ClientSession.put_file",
+            new=mock.AsyncMock(side_effect=put_file),
+        ) as put_file,
     ):
-        yield RequestsMocks(get=get, post=post, put=put)
+        yield RequestsMocks(get=get, post=post, put=put, put_file=put_file)

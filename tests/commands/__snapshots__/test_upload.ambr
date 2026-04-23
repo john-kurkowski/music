@@ -134,19 +134,6 @@
         _Call(
           '',
           tuple(
-            'https://some-url',
-          ),
-          dict({
-            'data': b'.wav content for some project',
-            'headers': dict({
-              'some-uploader-id': 'some-uploader-value',
-            }),
-            'timeout': 600,
-          }),
-        ),
-        _Call(
-          '',
-          tuple(
             'https://api-v2.soundcloud.com/tracks/soundcloud:tracks:1',
           ),
           dict({
@@ -172,19 +159,6 @@
         _Call(
           '',
           tuple(
-            'https://some-url',
-          ),
-          dict({
-            'data': b'.wav content for another project',
-            'headers': dict({
-              'some-uploader-id': 'some-uploader-value',
-            }),
-            'timeout': 600,
-          }),
-        ),
-        _Call(
-          '',
-          tuple(
             'https://api-v2.soundcloud.com/tracks/soundcloud:tracks:2',
           ),
           dict({
@@ -205,6 +179,36 @@
                 'title': 'another project',
               }),
             }),
+          }),
+        ),
+      ]),
+      'put_file': _CallList([
+        _Call(
+          '',
+          tuple(
+            'https://some-url',
+            'TMP_PATH_HERE/path/to/some project/some project.wav',
+          ),
+          dict({
+            'headers': dict({
+              'some-uploader-id': 'some-uploader-value',
+            }),
+            'progress': 'CALLABLE_HERE',
+            'timeout': 600,
+          }),
+        ),
+        _Call(
+          '',
+          tuple(
+            'https://some-url',
+            'TMP_PATH_HERE/path/to/another project/another project.wav',
+          ),
+          dict({
+            'headers': dict({
+              'some-uploader-id': 'some-uploader-value',
+            }),
+            'progress': 'CALLABLE_HERE',
+            'timeout': 600,
           }),
         ),
       ]),
@@ -252,6 +256,8 @@
       ]),
       'put': _CallList([
       ]),
+      'put_file': _CallList([
+      ]),
     }),
   )
 # ---
@@ -291,6 +297,8 @@
       ]),
       'put': _CallList([
       ]),
+      'put_file': _CallList([
+      ]),
     }),
   )
 # ---
@@ -328,6 +336,8 @@
       ]),
       'put': _CallList([
       ]),
+      'put_file': _CallList([
+      ]),
     }),
   )
 # ---
@@ -364,6 +374,8 @@
       'post': _CallList([
       ]),
       'put': _CallList([
+      ]),
+      'put_file': _CallList([
       ]),
     }),
   )
@@ -414,6 +426,8 @@
       'post': _CallList([
       ]),
       'put': _CallList([
+      ]),
+      'put_file': _CallList([
       ]),
     }),
   )
@@ -500,16 +514,19 @@
         ),
       ]),
       'put': _CallList([
+      ]),
+      'put_file': _CallList([
         _Call(
           '',
           tuple(
             'https://some-url',
+            'TMP_PATH_HERE/path/to/some project/some project.wav',
           ),
           dict({
-            'data': b'.wav content for some project',
             'headers': dict({
               'some-uploader-id': 'some-uploader-value',
             }),
+            'progress': 'CALLABLE_HERE',
             'timeout': 600,
           }),
         ),
