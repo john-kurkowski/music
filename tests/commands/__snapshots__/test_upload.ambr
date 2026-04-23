@@ -45,9 +45,7 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': dict({
-              'total': 10,
-            }),
+            'timeout': 10,
           }),
         ),
         _Call(
@@ -246,9 +244,7 @@
             'headers': dict({
               'some-uploader-id': 'some-uploader-value',
             }),
-            'timeout': dict({
-              'total': 600,
-            }),
+            'timeout': 600,
           }),
         ),
         _Call(
@@ -301,9 +297,7 @@
             'headers': dict({
               'some-uploader-id': 'some-uploader-value',
             }),
-            'timeout': dict({
-              'total': 600,
-            }),
+            'timeout': 600,
           }),
         ),
         _Call(
@@ -396,9 +390,7 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': dict({
-              'total': 10,
-            }),
+            'timeout': 10,
           }),
         ),
       ]),
@@ -450,9 +442,7 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': dict({
-              'total': 10,
-            }),
+            'timeout': 10,
           }),
         ),
       ]),
@@ -502,9 +492,7 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': dict({
-              'total': 10,
-            }),
+            'timeout': 10,
           }),
         ),
       ]),
@@ -554,9 +542,7 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': dict({
-              'total': 10,
-            }),
+            'timeout': 10,
           }),
         ),
       ]),
@@ -612,9 +598,7 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': dict({
-              'total': 10,
-            }),
+            'timeout': 10,
           }),
         ),
         _Call(
@@ -637,11 +621,11 @@
     SystemExit(2),
     '''
       ✓ Uploading "some project" 0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 29/29 bytes
-      Transcoding "some project" (422, message='Unprocessable Content (with body "Tr… 
+      Transcoding "some project" (HTTP Error 422: Unprocessable Content (with body "… 
   
     ''',
     '''
-      422, message='Unprocessable Content (with body "Transcoding failed: Invalid audio format")', url='https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding'
+      HTTP Error 422: Unprocessable Content (with body "Transcoding failed: Invalid audio format")
   
     ''',
     dict({
@@ -674,9 +658,7 @@
               'client_id': '6WhDr76MMPZigcAD8KUL0ogFpYtLVP9M',
               'limit': 250,
             }),
-            'timeout': dict({
-              'total': 10,
-            }),
+            'timeout': 10,
           }),
         ),
         _Call(
@@ -784,9 +766,7 @@
             'headers': dict({
               'some-uploader-id': 'some-uploader-value',
             }),
-            'timeout': dict({
-              'total': 600,
-            }),
+            'timeout': 600,
           }),
         ),
       ]),

@@ -5,6 +5,7 @@ import dataclasses
 import datetime
 from collections.abc import AsyncGenerator, Callable
 from functools import cached_property
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any, TypedDict, cast
 
@@ -12,6 +13,7 @@ import aiofiles
 import rich.box
 import rich.console
 import rich.progress
+from curl_cffi.requests.exceptions import HTTPError
 
 from music.commands.render.progress import IndeterminateProgress
 from music.utils import http
@@ -112,7 +114,7 @@ class Process:
             f"https://api-v2.soundcloud.com/users/{USER_ID}/tracks",
             headers=headers,
             params={"limit": TRACKS_FETCH_LIMIT, **api_params},
-            timeout=http.ClientTimeout(total=10),
+            timeout=10,
         )
         await _raise_for_status(tracks_resp)
 
@@ -353,7 +355,7 @@ class Process:
             upload["url"],
             data=bytes(payload),
             headers=upload["headers"],
-            timeout=http.ClientTimeout(total=60 * 10),
+            timeout=60 * 10,
         )
         await _raise_for_status(resp)
 
@@ -368,24 +370,25 @@ async def _raise_for_status(resp: Any) -> None:
         return
 
     text = resp.text
-    raise http.ClientResponseError(
-        status=resp.status_code,
-        message=f'{http.reason_phrase(resp.status_code)} (with body "{text}")',
-        url=_response_url(resp),
+    try:
+        resp.raise_for_status()
+    except HTTPError as ex:
+        raise HTTPError(f'{ex.args[0]} (with body "{text}")', 0, resp) from ex
+
+    try:
+        reason = HTTPStatus(resp.status_code).phrase
+    except ValueError:
+        reason = "HTTP Error"
+    raise HTTPError(
+        f'HTTP Error {resp.status_code}: {reason} (with body "{text}")',
+        0,
+        resp,
     )
 
 
 def _response_json(resp: Any) -> dict[str, Any]:
     """Return a response JSON body with a typed dict shape."""
     return cast(dict[str, Any], resp.json())
-
-
-def _response_url(resp: Any) -> str:
-    """Return a stable response URL string."""
-    url = getattr(resp, "url", None)
-    if isinstance(url, str):
-        return url
-    return str(getattr(resp, "_music_request_url", ""))
 
 
 async def _file_reader(

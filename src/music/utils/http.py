@@ -1,8 +1,7 @@
 """HTTP helpers backed by curl_cffi."""
 
-from dataclasses import dataclass
-from http import HTTPStatus
-from typing import Any, Literal
+from collections.abc import Callable
+from typing import Any, Literal, cast
 from urllib.parse import urlencode
 
 from curl_cffi.requests import AsyncSession, Response
@@ -21,28 +20,6 @@ type HttpMethod = Literal[
 ]
 
 DEFAULT_IMPERSONATE: BrowserType = "chrome146"
-
-
-@dataclass(frozen=True)
-class ClientTimeout:
-    """Simple total-time timeout container."""
-
-    total: float
-
-
-class ClientResponseError(Exception):
-    """HTTP error with an aiohttp-like string form."""
-
-    def __init__(self, *, status: int, message: str, url: str) -> None:
-        """Initialize."""
-        super().__init__(message)
-        self.status = status
-        self.message = message
-        self.url = url
-
-    def __str__(self) -> str:
-        """Return a stable human-readable error string."""
-        return f"{self.status}, message='{self.message}', url='{self.url}'"
 
 
 class ClientSession:
@@ -89,12 +66,6 @@ class ClientSession:
 
     async def request(self, method: HttpMethod, url: str, **kwargs: Any) -> Response:
         """Send an HTTP request."""
-        timeout = kwargs.pop("timeout", None)
-        if isinstance(timeout, ClientTimeout):
-            kwargs["timeout"] = timeout.total
-        elif timeout is not None:
-            kwargs["timeout"] = timeout
-
         headers = kwargs.get("headers")
         params = kwargs.get("params")
         final_url = _url_with_params(url, params)
@@ -139,14 +110,6 @@ class ClientSession:
         )
 
 
-def reason_phrase(status_code: int) -> str:
-    """Return the standard reason phrase for the given status code."""
-    try:
-        return HTTPStatus(status_code).phrase
-    except ValueError:
-        return "HTTP Error"
-
-
 def _url_with_params(url: str, params: dict[str, Any] | None) -> str:
     """Build a human-readable URL including query params."""
     if not params:
@@ -155,6 +118,12 @@ def _url_with_params(url: str, params: dict[str, Any] | None) -> str:
     query = urlencode(params)
     joiner = "&" if "?" in url else "?"
     return f"{url}{joiner}{query}"
+
+
+def raise_for_status(resp: Response) -> None:
+    """Raise the underlying curl_cffi HTTP status exception."""
+    raise_for_status_ = cast(Callable[[], None], resp.raise_for_status)
+    raise_for_status_()
 
 
 def _redact_http_header_value(key: str, value: str) -> str:

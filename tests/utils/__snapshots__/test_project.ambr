@@ -20,9 +20,7 @@
           'http://localhost:2307/_/42230',
         ),
         dict({
-          'timeout': dict({
-            'total': 7200,
-          }),
+          'timeout': 7200,
         }),
       ),
     ]),

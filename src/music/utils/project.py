@@ -65,21 +65,14 @@ class ExtendedProject(reapy.core.Project):
         """
         port = reapy.config.WEB_INTERFACE_PORT
 
-        timeout_for_complex_project_stems = http.ClientTimeout(
-            total=60 * 60 * 2  # 2 hours
-        )
+        timeout_for_complex_project_stems = 60 * 60 * 2
 
         async with http.ClientSession() as client:
             resp = await client.get(
                 f"http://localhost:{port}/_/{RENDER_CMD_ID}",
                 timeout=timeout_for_complex_project_stems,
             )
-            if resp.status_code >= 400:
-                raise http.ClientResponseError(
-                    status=resp.status_code,
-                    message=http.reason_phrase(resp.status_code),
-                    url=f"http://localhost:{port}/_/{RENDER_CMD_ID}",
-                )
+            http.raise_for_status(resp)
 
     @property
     def path(self) -> str:
