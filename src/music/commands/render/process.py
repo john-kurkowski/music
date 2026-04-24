@@ -102,15 +102,13 @@ async def render_version(
         version,
         final_fil,
         datetime.timedelta(seconds=time_end - time_start),
+        cleanup_paths=(path for path in (tmp_fil, tmp_secondary) if path is not None)
+        if dry_run
+        else (),
         eager=dry_run,
     )
 
-    if dry_run:
-        rm_rf(tmp_fil)
-
-        if tmp_secondary:
-            rm_rf(tmp_secondary)
-    else:
+    if not dry_run:
         rm_rf(final_fil)
         shutil.move(tmp_fil, final_fil)
 

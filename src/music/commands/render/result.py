@@ -4,10 +4,14 @@ import datetime
 import math
 import re
 import subprocess
+from collections.abc import Iterable
+from contextlib import AbstractContextManager
 from functools import cached_property
 from pathlib import Path
+from typing import Self
 
 from music.commands.__codegen__ import stats
+from music.utils import rm_rf
 from music.utils.project import ExtendedProject
 from music.utils.songversion import SongVersion
 
@@ -48,18 +52,33 @@ class RenderResult(ExistingRenderResult):
         fil: Path,
         render_delta: datetime.timedelta,
         *,
+        cleanup_paths: Iterable[Path] = (),
         eager: bool = False,
     ):
         """Override. Initialize."""
         super().__init__(project, version)
         self.fil = fil
         self.render_delta = datetime.timedelta(seconds=round(render_delta.seconds))
+        self._cleanup_paths = tuple(cleanup_paths)
 
         if eager:
             # Trigger computation eagerly. For example, the input file might be
             # temporary and not exist later.
             self.duration_delta  # noqa: B018
             self.summary_stats  # noqa: B018
+
+    def __enter__(self) -> Self:
+        """Support `with`-style lifetime management."""
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        """Clean up temporary files when the caller is done with this result."""
+        self.close()
+
+    def close(self) -> None:
+        """Remove any temporary files owned by this render result."""
+        for path in self._cleanup_paths:
+            rm_rf(path)
 
     @cached_property
     def duration_delta(self) -> datetime.timedelta:
@@ -90,6 +109,27 @@ class RenderResult(ExistingRenderResult):
         return (
             (self.duration_delta / self.render_delta) if self.render_delta else math.inf
         )
+
+
+class ManagedRenderResults(AbstractContextManager["ManagedRenderResults"]):
+    """Track render results and close them together when the workflow is done."""
+
+    def __init__(self) -> None:
+        """Initialize an empty render result collection."""
+        self.renders: list[RenderResult] = []
+
+    def __enter__(self) -> Self:
+        """Support `with`-style lifetime management."""
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        """Close every tracked render result."""
+        for render in self.renders:
+            render.close()
+
+    def extend(self, renders: Iterable[RenderResult]) -> None:
+        """Track more render results for later cleanup."""
+        self.renders.extend(renders)
 
 
 def summary_stats_for_file(fil: Path, *, verbose: int = 0) -> dict[str, float | str]:

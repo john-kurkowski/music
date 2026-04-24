@@ -41,6 +41,30 @@ def test_render_result_render_speedup(
     assert subprocess.mock_calls == snapshot
 
 
+def test_render_result_close(tmp_path: Path) -> None:
+    """Test RenderResult.close removes owned temporary files."""
+    project = mock.Mock(path="some/path")
+    version = mock.Mock()
+
+    some_file = tmp_path / "foo.tmp.wav"
+    some_secondary_file = tmp_path / "foo.tmp.mp3"
+    some_file.touch()
+    some_secondary_file.touch()
+
+    result = RenderResult(
+        project,
+        version,
+        some_file,
+        datetime.timedelta(seconds=1),
+        cleanup_paths=(some_file, some_secondary_file),
+    )
+
+    result.close()
+
+    assert not some_file.exists()
+    assert not some_secondary_file.exists()
+
+
 def test_main_reaper_not_configured(
     render_mocks: RenderMocks,
 ) -> None:
@@ -137,6 +161,63 @@ def test_main_default_versions_dry_run(
         result.stdout,
         result.stderr,
         render_mocks.project.mock_calls,
+        subprocess_with_output.mock_calls,
+        _snapshot_tmp_path(tmp_path),
+    ) == snapshot
+
+
+def test_main_default_versions_dry_run_upload(
+    render_mocks: RenderMocks,
+    snapshot: SnapshotAssertion,
+    subprocess_with_output: mock.Mock,
+    tmp_path: Path,
+) -> None:
+    """Test main dry run still invokes upload simulation for rendered files."""
+    result = CliRunner(catch_exceptions=False).invoke(
+        render,
+        ["--dry-run", "--upload"],
+    )
+
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        render_mocks.mock_calls,
+        subprocess_with_output.mock_calls,
+        _snapshot_tmp_path(tmp_path),
+    ) == snapshot
+
+
+def test_main_mocked_calls_dry_run_upload_existing(
+    render_mocks: RenderMocks,
+    snapshot: SnapshotAssertion,
+    subprocess_with_output: mock.Mock,
+    tmp_path: Path,
+) -> None:
+    """Test dry-run upload paths receive the dry-run flag."""
+    some_paths = [Path(render_mocks.project.path)]
+
+    some_unspecified_file = SongVersion.INSTRUMENTAL.path_for_project_dir(
+        Path(render_mocks.project.path)
+    )
+    some_unspecified_file.touch()
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        render,
+        [
+            "--dry-run",
+            "--include-main",
+            "--upload",
+            "--upload-existing",
+            *[str(path.resolve()) for path in some_paths],
+        ],
+    )
+
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        render_mocks.mock_calls,
         subprocess_with_output.mock_calls,
         _snapshot_tmp_path(tmp_path),
     ) == snapshot
@@ -241,6 +322,40 @@ def test_main_mixed_errors(
     assert subprocess_with_output.mock_calls == snapshot
 
     assert _snapshot_tmp_path(tmp_path) == snapshot
+
+
+def test_main_dry_run_cleans_rendered_files_after_later_error(
+    render_mocks: RenderMocks,
+    subprocess_with_output: mock.Mock,
+    tmp_path: Path,
+) -> None:
+    """Test dry-run temporary files are cleaned when a later render fails."""
+    original_render = render_mocks.project.render.side_effect
+    render_count = 0
+
+    async def render_with_error(*args: Any, **kwargs: Any) -> Any:
+        nonlocal render_count
+        render_count += 1
+        if render_count >= 2:
+            raise RuntimeError("some error")
+
+        return await original_render(*args, **kwargs)
+
+    render_mocks.project.render.side_effect = render_with_error
+
+    result = CliRunner(catch_exceptions=True).invoke(
+        render,
+        [
+            "--dry-run",
+            "--include-main",
+            "--include-instrumental",
+        ],
+    )
+
+    assert isinstance(result.exception, RuntimeError)
+    assert list(tmp_path.glob("**/*.tmp.wav")) == []
+    assert list(tmp_path.glob("**/*.tmp.mp3")) == []
+    assert subprocess_with_output.mock_calls
 
 
 def test_main_filenames_all_versions(

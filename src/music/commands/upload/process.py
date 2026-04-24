@@ -1,6 +1,7 @@
 """Upload processing functions."""
 
 import asyncio
+import dataclasses
 import datetime
 from collections.abc import AsyncGenerator, Callable
 from functools import cached_property
@@ -14,6 +15,7 @@ import rich.console
 import rich.progress
 
 from music.commands.render.progress import IndeterminateProgress
+from music.utils.songversion import SongVersion
 
 from .progress import DeterminateProgress
 
@@ -41,6 +43,20 @@ class _PrepareUploadResponse(TypedDict):
     url: str
 
 
+@dataclasses.dataclass(frozen=True)
+class UploadItem:
+    """A local audio file paired with its canonical render identity."""
+
+    fil: Path
+    project_dir: Path
+    version: SongVersion
+
+    @property
+    def track_title(self) -> str:
+        """SoundCloud title matched by the canonical render filename."""
+        return self.version.path_for_project_dir(self.project_dir).stem
+
+
 class Process:
     """Encapsulate the state of uploading audio files."""
 
@@ -53,7 +69,9 @@ class Process:
         client: aiohttp.ClientSession,
         oauth_token: str,
         additional_headers: dict[str, Any],
-        files: list[Path],
+        upload_items: list[UploadItem],
+        *,
+        dry_run: bool = False,
     ) -> list[Track | BaseException]:
         """Upload the given audio files to SoundCloud.
 
@@ -80,7 +98,7 @@ class Process:
         )
         await _raise_for_status(tracks_resp)
 
-        files_by_stem = {file.stem: file for file in files}
+        upload_items_by_title = {item.track_title: item for item in upload_items}
         tracks_payload = await tracks_resp.json()
         tracks_collection = tracks_payload["collection"]
         if len(tracks_collection) >= TRACKS_FETCH_LIMIT:
@@ -92,14 +110,20 @@ class Process:
         tracks_by_title = {
             track["title"]: track
             for track in tracks_collection
-            if track["title"] in files_by_stem
+            if track["title"] in upload_items_by_title
         }
 
         tasks = [
             asyncio.create_task(
-                self._upload_one_file_to_track(client, headers, tracks_by_title, fil)
+                self._upload_one_file_to_track(
+                    client,
+                    headers,
+                    tracks_by_title,
+                    item,
+                    dry_run=dry_run,
+                )
             )
-            for fil in files
+            for item in upload_items
         ]
 
         return await asyncio.gather(*tasks, return_exceptions=True)
@@ -131,7 +155,9 @@ class Process:
         client: aiohttp.ClientSession,
         headers: dict[str, str],
         tracks_by_title: dict[str, Track],
-        fil: Path,
+        item: UploadItem,
+        *,
+        dry_run: bool = False,
     ) -> Track:
         """Perform the API requests for the given audio file to become the new version of the existing SoundCloud track.
 
@@ -146,11 +172,12 @@ class Process:
         Returns the track metadata if the upload is successful, otherwise
         raises an exception.
         """
+        fil = item.fil
         task = self.progress_upload.add_task(
-            f'Uploading "{fil.name}"', total=fil.stat().st_size
+            f'Uploading "{item.track_title}"', total=fil.stat().st_size
         )
 
-        track = tracks_by_title.get(fil.stem)
+        track = tracks_by_title.get(item.track_title)
         if not track:
             self.progress_upload.fail_task(task, "not found in SoundCloud")
             raise ValueError(f"not found in SoundCloud: {fil}")
@@ -162,22 +189,27 @@ class Process:
             self.progress_upload.start_task(task)
 
             try:
-                upload = await self._prepare_upload(client, headers, fil)
-                await self._upload(client, task, fil, upload)
+                if dry_run:
+                    upload = self._prepare_upload_dry_run(fil)
+                    self._upload_dry_run(task, fil)
+                else:
+                    upload = await self._prepare_upload(client, headers, fil)
+                    await self._upload(client, task, fil, upload)
             except Exception as ex:
                 self.progress_upload.fail_task(task, str(ex))
                 raise
 
-            task = self.progress_transcode.add_task(f'Transcoding "{fil.name}"')
+            task = self.progress_transcode.add_task(f'Transcoding "{item.track_title}"')
             self.progress_transcode.start_task(task)
 
             try:
-                await self._transcode(client, headers, upload)
-                await self._confirm_upload(client, headers, track, fil, upload)
+                if not dry_run:
+                    await self._transcode(client, headers, upload)
+                    await self._confirm_upload(client, headers, track, fil, upload)
             except Exception as ex:
                 self.progress_transcode.fail_task(task, str(ex))
                 raise
-            finally:
+            else:
                 self.progress_transcode.succeed_task(task)
 
         if not self.results_table.columns:
@@ -235,6 +267,10 @@ class Process:
             "url": upload["url"],
         }
 
+    def _prepare_upload_dry_run(self, fil: Path) -> _PrepareUploadResponse:
+        """Return a fake upload target for dry-run mode."""
+        return {"headers": {}, "uid": f"dry-run-{fil.stem}", "url": "dry-run://upload"}
+
     async def _transcode(
         self,
         client: aiohttp.ClientSession,
@@ -278,6 +314,10 @@ class Process:
             timeout=aiohttp.ClientTimeout(total=60 * 10),
         )
         await _raise_for_status(resp)
+
+    def _upload_dry_run(self, task: rich.progress.TaskID, fil: Path) -> None:
+        """Simulate uploading the file without performing network writes."""
+        self.progress_upload.advance(task, fil.stat().st_size)
 
 
 async def _raise_for_status(resp: aiohttp.ClientResponse) -> None:

@@ -29,7 +29,7 @@ from .consts import (
     SWS_ERROR_SENTINEL,
     VOCAL_LOUDNESS_WORTH,
 )
-from .result import RenderResult
+from .result import ManagedRenderResults, RenderResult
 
 # Test-only property. Set to a large number to avoid text wrapping in the console.
 _CONSOLE_WIDTH: int | None = None
@@ -217,8 +217,9 @@ async def main(
         versions,
     )
 
-    renders, uploads = await command()
-    _report(renders, uploads)
+    with ManagedRenderResults() as managed_renders:
+        renders, uploads = await command(managed_renders)
+        _report(renders, uploads)
 
 
 @dataclasses.dataclass
@@ -248,6 +249,7 @@ class _Command:
 
     async def __call__(
         self,
+        managed_renders: ManagedRenderResults,
     ) -> tuple[
         list[RenderResult], list[music.commands.upload.process.Track | BaseException]
     ]:
@@ -262,7 +264,7 @@ class _Command:
                 renders = []
                 uploads = []
                 async for renders_, uploads_ in (
-                    await self._render_project(client, project)
+                    await self._render_project(client, project, managed_renders)
                     for project in self.projects
                 ):
                     renders.extend(renders_)
@@ -277,7 +279,10 @@ class _Command:
                 return renders, flattened_uploads
 
     async def _render_project(
-        self, client: aiohttp.ClientSession, project: project.ExtendedProject
+        self,
+        client: aiohttp.ClientSession,
+        project: project.ExtendedProject,
+        managed_renders: ManagedRenderResults,
     ) -> tuple[
         list[RenderResult],
         list[asyncio.Task[list[music.commands.upload.process.Track | BaseException]]],
@@ -292,19 +297,20 @@ class _Command:
         renders = []
         uploads = []
 
-        if self.upload_existing and not self.dry_run:
+        if self.upload_existing:
             uploads.append(
                 asyncio.create_task(
                     self.upload_process.process(
                         client,
                         self.oauth_token,
                         self.additional_headers,
-                        _existing_render_fils(project, self.versions),
+                        _existing_render_items(project, self.versions),
+                        dry_run=self.dry_run,
                     )
                 )
             )
 
-        async for _, render in self.render_process.process(
+        async for version, render in self.render_process.process(
             project,
             *self.versions,
             dry_run=self.dry_run,
@@ -313,15 +319,21 @@ class _Command:
             vocal_loudness_worth=self.vocal_loudness_worth,
         ):
             renders.append(render)
+            managed_renders.extend([render])
 
-            if self.upload and render.fil.is_file() and not self.dry_run:
+            if self.upload and render.fil.is_file():
                 uploads.append(
                     asyncio.create_task(
                         self.upload_process.process(
                             client,
                             self.oauth_token,
                             self.additional_headers,
-                            [render.fil],
+                            [
+                                music.commands.upload.process.UploadItem(
+                                    render.fil, Path(project.path), version
+                                )
+                            ],
+                            dry_run=self.dry_run,
                         )
                     )
                 )
@@ -329,18 +341,19 @@ class _Command:
         return renders, uploads
 
 
-def _existing_render_fils(
+def _existing_render_items(
     project: project.ExtendedProject, versions: Collection[SongVersion]
-) -> list[Path]:
+) -> list[music.commands.upload.process.UploadItem]:
     """Return a project's existing render files to upload.
 
     Eases uploading newer files when the render was performed separately.
     """
     existing_versions = set(SongVersion).difference(versions)
+    project_dir = Path(project.path)
     return [
-        fil
+        music.commands.upload.process.UploadItem(fil, project_dir, version)
         for version in existing_versions
-        if (fil := version.path_for_project_dir(Path(project.path))) and fil.is_file()
+        if (fil := version.path_for_project_dir(project_dir)) and fil.is_file()
     ]
 
 
