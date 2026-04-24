@@ -3,10 +3,10 @@
   tuple(
     None,
     '''
-      ⠋ Uploading "some project.wav"    0:00:00                             0/29 bytes
-      ⠋ Uploading "another project.wav" 0:00:00                             0/32 bytes
-      ✓ Transcoding "some project.wav"    0:00:00
-      ✓ Transcoding "another project.wav" 0:00:00
+      ⠋ Uploading "some project"    0:00:00                                 0/29 bytes
+      ⠋ Uploading "another project" 0:00:00                                 0/32 bytes
+      ✓ Transcoding "some project"    0:00:00
+      ✓ Transcoding "another project" 0:00:00
                         ╷                           
         Title           │ URL                       
       ╶─────────────────┼──────────────────────────╴
@@ -215,10 +215,10 @@
   tuple(
     None,
     '''
-      ✓ Uploading "some project.wav"    0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━ 29/29 bytes
-      ✓ Uploading "another project.wav" 0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━ 32/32 bytes
-      ✓ Transcoding "some project.wav"    0:00:00
-      ✓ Transcoding "another project.wav" 0:00:00
+      ✓ Uploading "some project"    0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 29/29 bytes
+      ✓ Uploading "another project" 0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 32/32 bytes
+      ✓ Transcoding "some project"    0:00:00
+      ✓ Transcoding "another project" 0:00:00
                         ╷                           
         Title           │ URL                       
       ╶─────────────────┼──────────────────────────╴
@@ -261,10 +261,8 @@
     '''
       Warning: SoundCloud tracks response returned 250 tracks (limit 250); pagination 
       may be required.
-      ⚠ Uploading "some project.wav" (already uploaded)    0:00:00           0.0/1.2  
-                                                                             MB       
-      ⚠ Uploading "another project.wav" (already uploaded) 0:00:00           0.0/1.2  
-                                                                             MB       
+      ⚠ Uploading "some project" (already uploaded)    0:00:00              0.0/1.2 MB
+      ⚠ Uploading "another project" (already uploaded) 0:00:00              0.0/1.2 MB
   
     ''',
     '',
@@ -300,10 +298,8 @@
   tuple(
     None,
     '''
-      ⚠ Uploading "some project.wav" (already uploaded)    0:00:00           0.0/1.2  
-                                                                             MB       
-      ⚠ Uploading "another project.wav" (already uploaded) 0:00:00           0.0/1.2  
-                                                                             MB       
+      ⚠ Uploading "some project" (already uploaded)    0:00:00              0.0/1.2 MB
+      ⚠ Uploading "another project" (already uploaded) 0:00:00              0.0/1.2 MB
   
     ''',
     '',
@@ -339,10 +335,8 @@
   tuple(
     None,
     '''
-      ⚠ Uploading "some project.wav" (already uploaded)    0:00:00           0.0/1.2  
-                                                                             MB       
-      ⚠ Uploading "another project.wav" (already uploaded) 0:00:00           0.0/1.2  
-                                                                             MB       
+      ⚠ Uploading "some project" (already uploaded)    0:00:00              0.0/1.2 MB
+      ⚠ Uploading "another project" (already uploaded) 0:00:00              0.0/1.2 MB
   
     ''',
     '',
@@ -378,10 +372,10 @@
   tuple(
     SystemExit(2),
     '''
-      ✗ Uploading "some project.wav" (not found in SoundCloud)    0:00:…       0/29   
-                                                                               bytes  
-      ✗ Uploading "another project.wav" (not found in SoundCloud) 0:00:…       0/32   
-                                                                               bytes  
+      ✗ Uploading "some project" (not found in SoundCloud)    0:00:00         0/29    
+                                                                              bytes   
+      ✗ Uploading "another project" (not found in SoundCloud) 0:00:00         0/32    
+                                                                              bytes   
   
     ''',
     '''
@@ -421,8 +415,8 @@
   tuple(
     SystemExit(2),
     '''
-      ⠋ Uploading "some project.wav" 0:00:00                                0/29 bytes
-      Transcoding "some project.wav" (422, message='Unprocessable Entity (with body … 
+      ⠋ Uploading "some project" 0:00:00                                    0/29 bytes
+      Transcoding "some project" (422, message='Unprocessable Entity (with body "Tra… 
   
     ''',
     '''

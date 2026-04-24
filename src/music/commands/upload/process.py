@@ -174,7 +174,7 @@ class Process:
         """
         fil = item.fil
         task = self.progress_upload.add_task(
-            f'Uploading "{fil.name}"', total=fil.stat().st_size
+            f'Uploading "{item.track_title}"', total=fil.stat().st_size
         )
 
         track = tracks_by_title.get(item.track_title)
@@ -199,7 +199,7 @@ class Process:
                 self.progress_upload.fail_task(task, str(ex))
                 raise
 
-            task = self.progress_transcode.add_task(f'Transcoding "{fil.name}"')
+            task = self.progress_transcode.add_task(f'Transcoding "{item.track_title}"')
             self.progress_transcode.start_task(task)
 
             try:
