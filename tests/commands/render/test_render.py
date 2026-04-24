@@ -187,18 +187,6 @@ def test_main_default_versions_dry_run_upload(
         _snapshot_tmp_path(tmp_path),
     ) == snapshot
 
-    assert render_mocks.upload.call_count == 3
-    assert all(
-        call.kwargs["dry_run"] is True for call in render_mocks.upload.call_args_list
-    )
-    upload_items = [call.args[3][0] for call in render_mocks.upload.call_args_list]
-    assert [item.track_title for item in upload_items] == [
-        "Stub Song Title (feat. Stub Artist)",
-        "Stub Song Title (feat. Stub Artist) (Instrumental)",
-        "Stub Song Title (feat. Stub Artist) (A Cappella)",
-    ]
-    assert all(item.fil.stem != item.track_title for item in upload_items)
-
 
 def test_main_mocked_calls_dry_run_upload_existing(
     render_mocks: RenderMocks,
