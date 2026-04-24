@@ -13,6 +13,7 @@ from music.utils.project import ExtendedProject
 from music.utils.songversion import SongVersion
 
 from .process import Process as UploadProcess
+from .process import UploadItem
 
 
 @click.command("upload")
@@ -134,14 +135,14 @@ async def main(
         SongVersion.ACAPPELLA,
     )
 
-    files = [
-        fil
+    upload_items = [
+        UploadItem(fil, project_dir, version)
         for project_dir in project_dirs
         for version in versions
         if (fil := version.path_for_project_dir(project_dir)) and fil.is_file()
     ]
 
-    if not files:
+    if not upload_items:
         click.echo("Error: nothing to upload", err=True)
         raise click.exceptions.Exit(2)
 
@@ -150,7 +151,11 @@ async def main(
     with rich.live.Live(process.progress, console=console, refresh_per_second=10):
         async with aiohttp.ClientSession() as client:
             uploads = await process.process(
-                client, oauth_token, parsed_additional_headers, files, dry_run=dry_run
+                client,
+                oauth_token,
+                parsed_additional_headers,
+                upload_items,
+                dry_run=dry_run,
             )
 
     has_error = False

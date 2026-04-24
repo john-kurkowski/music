@@ -2778,7 +2778,11 @@
               'X-Test-Additional-Header': '1',
             }),
             list([
-              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).tmp.wav',
+              dict({
+                'fil': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).tmp.wav',
+                'project_dir': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)',
+                'version': <SongVersion.MAIN: 1>,
+              }),
             ]),
           ),
           dict({
@@ -2794,7 +2798,11 @@
               'X-Test-Additional-Header': '1',
             }),
             list([
-              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).tmp.wav',
+              dict({
+                'fil': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).tmp.wav',
+                'project_dir': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)',
+                'version': <SongVersion.INSTRUMENTAL: 2>,
+              }),
             ]),
           ),
           dict({
@@ -2810,7 +2818,11 @@
               'X-Test-Additional-Header': '1',
             }),
             list([
-              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).tmp.wav',
+              dict({
+                'fil': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (A Cappella).tmp.wav',
+                'project_dir': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)',
+                'version': <SongVersion.ACAPPELLA: 4>,
+              }),
             ]),
           ),
           dict({
@@ -6071,7 +6083,11 @@
               'X-Test-Additional-Header': '1',
             }),
             list([
-              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+              dict({
+                'fil': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+                'project_dir': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)',
+                'version': <SongVersion.INSTRUMENTAL: 2>,
+              }),
             ]),
           ),
           dict({
@@ -6087,7 +6103,11 @@
               'X-Test-Additional-Header': '1',
             }),
             list([
-              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
+              dict({
+                'fil': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).wav',
+                'project_dir': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)',
+                'version': <SongVersion.MAIN: 1>,
+              }),
             ]),
           ),
           dict({
@@ -6370,7 +6390,11 @@
               'X-Test-Additional-Header': '1',
             }),
             list([
-              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+              dict({
+                'fil': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist) (Instrumental).wav',
+                'project_dir': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)',
+                'version': <SongVersion.INSTRUMENTAL: 2>,
+              }),
             ]),
           ),
           dict({
@@ -6386,7 +6410,11 @@
               'X-Test-Additional-Header': '1',
             }),
             list([
-              'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).tmp.wav',
+              dict({
+                'fil': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)/Stub Song Title (feat. Stub Artist).tmp.wav',
+                'project_dir': 'TMP_PATH_HERE/Stub Song Title (feat. Stub Artist)',
+                'version': <SongVersion.MAIN: 1>,
+              }),
             ]),
           ),
           dict({

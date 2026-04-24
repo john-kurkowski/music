@@ -304,13 +304,13 @@ class _Command:
                         client,
                         self.oauth_token,
                         self.additional_headers,
-                        _existing_render_fils(project, self.versions),
+                        _existing_render_items(project, self.versions),
                         dry_run=self.dry_run,
                     )
                 )
             )
 
-        async for _, render in self.render_process.process(
+        async for version, render in self.render_process.process(
             project,
             *self.versions,
             dry_run=self.dry_run,
@@ -328,7 +328,11 @@ class _Command:
                             client,
                             self.oauth_token,
                             self.additional_headers,
-                            [render.fil],
+                            [
+                                music.commands.upload.process.UploadItem(
+                                    render.fil, Path(project.path), version
+                                )
+                            ],
                             dry_run=self.dry_run,
                         )
                     )
@@ -337,18 +341,19 @@ class _Command:
         return renders, uploads
 
 
-def _existing_render_fils(
+def _existing_render_items(
     project: project.ExtendedProject, versions: Collection[SongVersion]
-) -> list[Path]:
+) -> list[music.commands.upload.process.UploadItem]:
     """Return a project's existing render files to upload.
 
     Eases uploading newer files when the render was performed separately.
     """
     existing_versions = set(SongVersion).difference(versions)
+    project_dir = Path(project.path)
     return [
-        fil
+        music.commands.upload.process.UploadItem(fil, project_dir, version)
         for version in existing_versions
-        if (fil := version.path_for_project_dir(Path(project.path))) and fil.is_file()
+        if (fil := version.path_for_project_dir(project_dir)) and fil.is_file()
     ]
 
 

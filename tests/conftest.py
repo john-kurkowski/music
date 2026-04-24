@@ -30,6 +30,10 @@ class RequestsMocks:
         }
 
 
+def _is_dataclass_instance(data: Any) -> bool:
+    return dataclasses.is_dataclass(data) and not isinstance(data, type)
+
+
 @pytest.fixture(autouse=True)
 def envvars(monkeypatch: pytest.MonkeyPatch) -> None:
     """Stub environment variables, to avoid snapshotting secrets."""
@@ -57,6 +61,8 @@ def snapshot(
     def matcher(data: Any, path: Any) -> Any:
         if isinstance(data, aiohttp.ClientSession):
             return "CLIENT_SESSION_HERE"
+        elif _is_dataclass_instance(data):
+            return dataclasses.asdict(data)
         elif isinstance(data, AsyncIterable):
             return "ASYNC_ITERABLE_HERE"
         elif isinstance(data, Path | io.IOBase | str):
