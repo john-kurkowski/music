@@ -31,7 +31,6 @@ testing = [
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
-    "pytest-socket",
     "python-lsp-server",
     "ruff",
     "syrupy",
@@ -79,8 +78,6 @@ addopts = [
   'src',
   '--cov-report',
   'html',
-  '--disable-socket',
-  '--allow-unix-socket',
 ]
 
 [tool.uv.extra-build-dependencies]

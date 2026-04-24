@@ -15,6 +15,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from music.utils.http import ClientSession
 
+CURL_CFFI_GUARD_MESSAGE = "Unexpected curl_cffi request; mock HTTP in tests"
+
 
 @dataclasses.dataclass(kw_only=True)
 class RequestsMocks:
@@ -42,6 +44,16 @@ def envvars(monkeypatch: pytest.MonkeyPatch) -> None:
     """Stub environment variables, to avoid snapshotting secrets."""
     monkeypatch.setenv("SOUNDCLOUD_ADDITIONAL_HEADERS", "X-Test-Additional-Header: 1")
     monkeypatch.setenv("SOUNDCLOUD_OAUTH_TOKEN", "stub-fake-token")
+
+
+@pytest.fixture(autouse=True)
+def block_curl_cffi_requests() -> Iterator[mock.AsyncMock]:
+    """Block unmocked curl_cffi requests."""
+    with mock.patch(
+        "music.utils.http.AsyncSession.request",
+        new=mock.AsyncMock(side_effect=AssertionError(CURL_CFFI_GUARD_MESSAGE)),
+    ) as request:
+        yield request
 
 
 @pytest.fixture

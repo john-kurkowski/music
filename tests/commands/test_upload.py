@@ -7,7 +7,6 @@ from typing import Any
 from unittest import mock
 
 import pytest
-import pytest_socket  # type: ignore[import-untyped]
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,7 +14,7 @@ from music.commands.upload import process as upload_process
 from music.commands.upload.command import main as upload
 from music.utils.http import _redact_http_header_value
 
-from ..conftest import RequestsMocks
+from ..conftest import CURL_CFFI_GUARD_MESSAGE, RequestsMocks
 
 ST_MODE_IS_FILE = 33188
 
@@ -35,14 +34,8 @@ def some_paths(tmp_path: Path) -> list[Path]:
 
 
 def test_main_no_network_calls(some_paths: list[Path]) -> None:
-    """Test that main network calls are blocked."""
-    with (
-        mock.patch(
-            "music.utils.http.AsyncSession.request",
-            new=mock.AsyncMock(side_effect=pytest_socket.SocketBlockedError),
-        ),
-        pytest.raises(pytest_socket.SocketBlockedError),
-    ):
+    """Test that unmocked curl_cffi requests are blocked."""
+    with pytest.raises(AssertionError, match=CURL_CFFI_GUARD_MESSAGE):
         CliRunner(catch_exceptions=False).invoke(
             upload,
             [str(path.parent.resolve()) for path in some_paths],
