@@ -559,7 +559,7 @@ testing = [
 requires-dist = [
     { name = "aiofiles" },
     { name = "click" },
-    { name = "curl-cffi", specifier = ">=0.15.0" },
+    { name = "curl-cffi" },
     { name = "mypy", marker = "extra == 'testing'" },
     { name = "openai" },
     { name = "psutil" },
