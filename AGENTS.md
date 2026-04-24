@@ -1,5 +1,7 @@
 ## Tests
 
+- Before running checks or tests in a fresh or uncertain environment, run
+  `uv sync --all-extras`.
 - Run static checks with `uv run check --fix`.
   - Static checks should run repo-wide, regardless of which files changed.
 - Run focused tests `uv run pytest` for the code you changed.
