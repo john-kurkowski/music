@@ -19,4 +19,9 @@
     presence/absence check.
 - Avoid mixing styles unnecessarily within the same behavior.
   - Keep the main coverage in the style already used nearby, and add
-    supplemental assertions only when they add signal.
+    supplemental assertions only when they cover an enduring contract that is
+    clearer outside the snapshot.
+  - Avoid direct assertions that mainly document a historical regression or
+    migration.
+    - Prefer testing the desired steady-state behavior, not that the
+      implementation changed from an older behavior.
