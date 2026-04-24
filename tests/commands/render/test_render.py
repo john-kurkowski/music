@@ -329,6 +329,40 @@ def test_main_mixed_errors(
     assert _snapshot_tmp_path(tmp_path) == snapshot
 
 
+def test_main_dry_run_cleans_rendered_files_after_later_error(
+    render_mocks: RenderMocks,
+    subprocess_with_output: mock.Mock,
+    tmp_path: Path,
+) -> None:
+    """Test dry-run temporary files are cleaned when a later render fails."""
+    original_render = render_mocks.project.render.side_effect
+    render_count = 0
+
+    async def render_with_error(*args: Any, **kwargs: Any) -> Any:
+        nonlocal render_count
+        render_count += 1
+        if render_count >= 2:
+            raise RuntimeError("some error")
+
+        return await original_render(*args, **kwargs)
+
+    render_mocks.project.render.side_effect = render_with_error
+
+    result = CliRunner(catch_exceptions=True).invoke(
+        render,
+        [
+            "--dry-run",
+            "--include-main",
+            "--include-instrumental",
+        ],
+    )
+
+    assert isinstance(result.exception, RuntimeError)
+    assert list(tmp_path.glob("**/*.tmp.wav")) == []
+    assert list(tmp_path.glob("**/*.tmp.mp3")) == []
+    assert subprocess_with_output.mock_calls
+
+
 def test_main_filenames_all_versions(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,

@@ -264,11 +264,10 @@ class _Command:
                 renders = []
                 uploads = []
                 async for renders_, uploads_ in (
-                    await self._render_project(client, project)
+                    await self._render_project(client, project, managed_renders)
                     for project in self.projects
                 ):
                     renders.extend(renders_)
-                    managed_renders.extend(renders_)
                     uploads.extend(uploads_)
 
                 flattened_uploads = [
@@ -280,7 +279,10 @@ class _Command:
                 return renders, flattened_uploads
 
     async def _render_project(
-        self, client: aiohttp.ClientSession, project: project.ExtendedProject
+        self,
+        client: aiohttp.ClientSession,
+        project: project.ExtendedProject,
+        managed_renders: ManagedRenderResults,
     ) -> tuple[
         list[RenderResult],
         list[asyncio.Task[list[music.commands.upload.process.Track | BaseException]]],
@@ -317,6 +319,7 @@ class _Command:
             vocal_loudness_worth=self.vocal_loudness_worth,
         ):
             renders.append(render)
+            managed_renders.extend([render])
 
             if self.upload and render.fil.is_file():
                 uploads.append(
