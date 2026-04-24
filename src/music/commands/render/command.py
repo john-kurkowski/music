@@ -8,7 +8,6 @@ import warnings
 from collections.abc import Collection, Iterator
 from pathlib import Path
 
-import aiohttp
 import click
 import rich.console
 import rich.live
@@ -22,6 +21,7 @@ with warnings.catch_warnings():
 import music.commands.render.process
 import music.commands.upload.process
 import music.utils
+import music.utils.http
 from music.utils import project
 from music.utils.songversion import SongVersion
 
@@ -260,7 +260,7 @@ class _Command:
         with rich.live.Live(
             progress_group, console=self.console, refresh_per_second=10
         ):
-            async with aiohttp.ClientSession() as client:
+            async with music.utils.http.ClientSession() as client:
                 renders = []
                 uploads = []
                 async for renders_, uploads_ in (
@@ -280,7 +280,7 @@ class _Command:
 
     async def _render_project(
         self,
-        client: aiohttp.ClientSession,
+        client: music.utils.http.ClientSession,
         project: project.ExtendedProject,
         managed_renders: ManagedRenderResults,
     ) -> tuple[

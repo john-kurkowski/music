@@ -3,8 +3,8 @@
   tuple(
     None,
     '''
-      ⠋ Uploading "some project"    0:00:00                                 0/29 bytes
-      ⠋ Uploading "another project" 0:00:00                                 0/32 bytes
+      ✓ Uploading "some project"    0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 29/29 bytes
+      ✓ Uploading "another project" 0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 32/32 bytes
       ✓ Transcoding "some project"    0:00:00
       ✓ Transcoding "another project" 0:00:00
                         ╷                           
@@ -32,7 +32,7 @@
             'params': dict({
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': 10,
           }),
         ),
         _Call(
@@ -134,19 +134,6 @@
         _Call(
           '',
           tuple(
-            'https://some-url',
-          ),
-          dict({
-            'data': 'ASYNC_ITERABLE_HERE',
-            'headers': dict({
-              'some-uploader-id': 'some-uploader-value',
-            }),
-            'timeout': ClientTimeout(total=600, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
-          }),
-        ),
-        _Call(
-          '',
-          tuple(
             'https://api-v2.soundcloud.com/tracks/soundcloud:tracks:1',
           ),
           dict({
@@ -172,19 +159,6 @@
         _Call(
           '',
           tuple(
-            'https://some-url',
-          ),
-          dict({
-            'data': 'ASYNC_ITERABLE_HERE',
-            'headers': dict({
-              'some-uploader-id': 'some-uploader-value',
-            }),
-            'timeout': ClientTimeout(total=600, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
-          }),
-        ),
-        _Call(
-          '',
-          tuple(
             'https://api-v2.soundcloud.com/tracks/soundcloud:tracks:2',
           ),
           dict({
@@ -205,6 +179,36 @@
                 'title': 'another project',
               }),
             }),
+          }),
+        ),
+      ]),
+      'put_file': _CallList([
+        _Call(
+          '',
+          tuple(
+            'https://some-url',
+            'TMP_PATH_HERE/path/to/some project/some project.wav',
+          ),
+          dict({
+            'headers': dict({
+              'some-uploader-id': 'some-uploader-value',
+            }),
+            'progress': 'CALLABLE_HERE',
+            'timeout': 600,
+          }),
+        ),
+        _Call(
+          '',
+          tuple(
+            'https://some-url',
+            'TMP_PATH_HERE/path/to/another project/another project.wav',
+          ),
+          dict({
+            'headers': dict({
+              'some-uploader-id': 'some-uploader-value',
+            }),
+            'progress': 'CALLABLE_HERE',
+            'timeout': 600,
           }),
         ),
       ]),
@@ -244,13 +248,15 @@
             'params': dict({
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': 10,
           }),
         ),
       ]),
       'post': _CallList([
       ]),
       'put': _CallList([
+      ]),
+      'put_file': _CallList([
       ]),
     }),
   )
@@ -283,13 +289,15 @@
             'params': dict({
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': 10,
           }),
         ),
       ]),
       'post': _CallList([
       ]),
       'put': _CallList([
+      ]),
+      'put_file': _CallList([
       ]),
     }),
   )
@@ -320,13 +328,15 @@
             'params': dict({
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': 10,
           }),
         ),
       ]),
       'post': _CallList([
       ]),
       'put': _CallList([
+      ]),
+      'put_file': _CallList([
       ]),
     }),
   )
@@ -357,13 +367,15 @@
             'params': dict({
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': 10,
           }),
         ),
       ]),
       'post': _CallList([
       ]),
       'put': _CallList([
+      ]),
+      'put_file': _CallList([
       ]),
     }),
   )
@@ -400,13 +412,22 @@
             'params': dict({
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': 10,
+          }),
+        ),
+        _Call(
+          '().json',
+          tuple(
+          ),
+          dict({
           }),
         ),
       ]),
       'post': _CallList([
       ]),
       'put': _CallList([
+      ]),
+      'put_file': _CallList([
       ]),
     }),
   )
@@ -415,12 +436,12 @@
   tuple(
     SystemExit(2),
     '''
-      ⠋ Uploading "some project" 0:00:00                                    0/29 bytes
-      Transcoding "some project" (422, message='Unprocessable Entity (with body "Tra… 
+      ✓ Uploading "some project" 0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 29/29 bytes
+      Transcoding "some project" (HTTP Error 422: Unprocessable Content (with body "… 
   
     ''',
     '''
-      422, message='Unprocessable Entity (with body "Transcoding failed: Invalid audio format")', url='https://api-v2.soundcloud.com/uploads/stub-uid/track-transcoding'
+      HTTP Error 422: Unprocessable Content (with body "Transcoding failed: Invalid audio format")
   
     ''',
     dict({
@@ -440,7 +461,7 @@
             'params': dict({
               'limit': 250,
             }),
-            'timeout': ClientTimeout(total=10, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'timeout': 10,
           }),
         ),
         _Call(
@@ -493,17 +514,20 @@
         ),
       ]),
       'put': _CallList([
+      ]),
+      'put_file': _CallList([
         _Call(
           '',
           tuple(
             'https://some-url',
+            'TMP_PATH_HERE/path/to/some project/some project.wav',
           ),
           dict({
-            'data': 'ASYNC_ITERABLE_HERE',
             'headers': dict({
               'some-uploader-id': 'some-uploader-value',
             }),
-            'timeout': ClientTimeout(total=600, connect=None, sock_read=None, sock_connect=None, ceil_threshold=5),
+            'progress': 'CALLABLE_HERE',
+            'timeout': 600,
           }),
         ),
       ]),

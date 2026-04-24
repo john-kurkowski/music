@@ -5,7 +5,7 @@ import warnings
 from pathlib import Path
 from typing import Any, cast
 
-import aiohttp
+from music.utils import http
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -65,16 +65,14 @@ class ExtendedProject(reapy.core.Project):
         """
         port = reapy.config.WEB_INTERFACE_PORT
 
-        timeout_for_complex_project_stems = aiohttp.ClientTimeout(
-            total=60 * 60 * 2  # 2 hours
-        )
+        timeout_for_complex_project_stems = 60 * 60 * 2
 
-        async with aiohttp.ClientSession() as client:
+        async with http.ClientSession() as client:
             resp = await client.get(
                 f"http://localhost:{port}/_/{RENDER_CMD_ID}",
                 timeout=timeout_for_complex_project_stems,
             )
-            resp.raise_for_status()
+            http.raise_for_status(resp)
 
     @property
     def path(self) -> str:

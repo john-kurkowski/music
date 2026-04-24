@@ -3,15 +3,19 @@
 import dataclasses
 import io
 import re
+import types
 from collections.abc import AsyncIterable, Iterator
 from pathlib import Path
 from typing import Any
 from unittest import mock
 
-import aiohttp
 import pytest
 import syrupy
 from syrupy.assertion import SnapshotAssertion
+
+from music.utils.http import ClientSession
+
+CURL_CFFI_GUARD_MESSAGE = "Unexpected curl_cffi request; mock HTTP in tests"
 
 
 @dataclasses.dataclass(kw_only=True)
@@ -21,6 +25,7 @@ class RequestsMocks:
     get: mock.Mock
     post: mock.Mock
     put: mock.Mock
+    put_file: mock.Mock
 
     @property
     def mock_calls(self) -> dict[str, Any]:
@@ -41,6 +46,16 @@ def envvars(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SOUNDCLOUD_OAUTH_TOKEN", "stub-fake-token")
 
 
+@pytest.fixture(autouse=True)
+def block_curl_cffi_requests() -> Iterator[mock.AsyncMock]:
+    """Block unmocked curl_cffi requests."""
+    with mock.patch(
+        "music.utils.http.AsyncSession.request",
+        new=mock.AsyncMock(side_effect=AssertionError(CURL_CFFI_GUARD_MESSAGE)),
+    ) as request:
+        yield request
+
+
 @pytest.fixture
 def snapshot(
     monkeypatch: pytest.MonkeyPatch, snapshot: SnapshotAssertion, tmp_path: Path
@@ -59,12 +74,14 @@ def snapshot(
     tmp_id_re = re.compile(r"(?P<tmp_id>\s*\d+)(?P<ext>\.tmp)")
 
     def matcher(data: Any, path: Any) -> Any:
-        if isinstance(data, aiohttp.ClientSession):
+        if isinstance(data, ClientSession):
             return "CLIENT_SESSION_HERE"
         elif _is_dataclass_instance(data):
             return dataclasses.asdict(data)
         elif isinstance(data, AsyncIterable):
             return "ASYNC_ITERABLE_HERE"
+        elif isinstance(data, types.FunctionType):
+            return "CALLABLE_HERE"
         elif isinstance(data, Path | io.IOBase | str):
             without_tmp_id = tmp_id_re.sub(r"\g<ext>", str(data))
             without_path = without_tmp_id.replace(tmp_path_str, "TMP_PATH_HERE")
@@ -87,11 +104,27 @@ def requests_mocks() -> Iterator[RequestsMocks]:
     """Fake the network calls made during upload."""
 
     def request_mock() -> mock.Mock:
-        return mock.AsyncMock(return_value=mock.Mock(spec=aiohttp.ClientResponse))
+        return mock.AsyncMock(return_value=mock.Mock(status_code=200))
+
+    async def put_file(_url: str, fil: Path, *args: Any, **kwargs: Any) -> mock.Mock:
+        progress = kwargs.get("progress")
+        if progress:
+            progress(fil.stat().st_size)
+        return mock.Mock(status_code=200)
 
     with (
-        mock.patch("aiohttp.ClientSession.get", new_callable=request_mock) as get,
-        mock.patch("aiohttp.ClientSession.post", new_callable=request_mock) as post,
-        mock.patch("aiohttp.ClientSession.put", new_callable=request_mock) as put,
+        mock.patch(
+            "music.utils.http.ClientSession.get", new_callable=request_mock
+        ) as get,
+        mock.patch(
+            "music.utils.http.ClientSession.post", new_callable=request_mock
+        ) as post,
+        mock.patch(
+            "music.utils.http.ClientSession.put", new_callable=request_mock
+        ) as put,
+        mock.patch(
+            "music.utils.http.ClientSession.put_file",
+            new=mock.AsyncMock(side_effect=put_file),
+        ) as put_file,
     ):
-        yield RequestsMocks(get=get, post=post, put=put)
+        yield RequestsMocks(get=get, post=post, put=put, put_file=put_file)

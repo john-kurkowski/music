@@ -3,12 +3,12 @@
 import email
 from pathlib import Path
 
-import aiohttp
 import click
 import rich.console
 import rich.live
 
 import music.utils
+import music.utils.http
 from music.utils.project import ExtendedProject
 from music.utils.songversion import SongVersion
 
@@ -31,6 +31,12 @@ from .process import UploadItem
         "SoundCloud additional HTTP request headers. Read from the environment variable"
         " SOUNDCLOUD_ADDITIONAL_HEADERS."
     ),
+)
+@click.option(
+    "--debug-http",
+    default=False,
+    help="Print outgoing HTTP requests and responses for debugging.",
+    is_flag=True,
 )
 @click.option(
     "--dry-run",
@@ -96,6 +102,7 @@ from .process import UploadItem
 async def main(
     project_dirs: list[Path],
     additional_headers: str,
+    debug_http: bool,
     dry_run: bool,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
@@ -149,7 +156,10 @@ async def main(
     console = rich.console.Console()
     process = UploadProcess(console)
     with rich.live.Live(process.progress, console=console, refresh_per_second=10):
-        async with aiohttp.ClientSession() as client:
+        async with music.utils.http.ClientSession(
+            console=console,
+            debug_http=debug_http,
+        ) as client:
             uploads = await process.process(
                 client,
                 oauth_token,
