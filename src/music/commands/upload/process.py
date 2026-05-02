@@ -332,15 +332,23 @@ async def _raise_for_status(resp: Any) -> None:
     except HTTPError as ex:
         raise HTTPError(f'{ex.args[0]} (with body "{text}")', 0, resp) from ex
 
-    try:
-        reason = HTTPStatus(resp.status_code).phrase
-    except ValueError:
-        reason = "HTTP Error"
+    reason = _http_status_reason(resp.status_code)
     raise HTTPError(
         f'HTTP Error {resp.status_code}: {reason} (with body "{text}")',
         0,
         resp,
     )
+
+
+def _http_status_reason(status_code: int) -> str:
+    """Return stable HTTP reason phrases across supported Python versions."""
+    if status_code == HTTPStatus.UNPROCESSABLE_ENTITY:
+        return "Unprocessable Content"
+
+    try:
+        return HTTPStatus(status_code).phrase
+    except ValueError:
+        return "HTTP Error"
 
 
 def _response_json(resp: Any) -> dict[str, Any]:

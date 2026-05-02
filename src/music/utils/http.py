@@ -37,7 +37,7 @@ class ClientSession:
         """Initialize."""
         self.console = console
         self.debug_http = debug_http
-        self._session = AsyncSession(
+        self._session: AsyncSession[Response] = AsyncSession(
             default_headers=False,
             curl_options=curl_options,
             impersonate=DEFAULT_IMPERSONATE,
