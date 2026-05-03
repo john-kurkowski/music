@@ -37,6 +37,7 @@ def commands(root: Path, *, fix: bool) -> list[list[str]]:
         ["ruff", "check", "--fix", "."] if fix else ["ruff", "check", "."],
         ["ruff", "format", "."] if fix else ["ruff", "format", "--check", "."],
         ["mypy", "src", "tests"],
+        ["ty", "check", "src", "tests"],
     ]
 
 
