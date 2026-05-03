@@ -1,6 +1,7 @@
 """Analyze processing for Reaper project files."""
 
 import base64
+import binascii
 import re
 import subprocess
 import sys
@@ -500,5 +501,5 @@ def b64_ascii(s: str) -> str | None:
     """Try to decode a base64 string from a Reaper plugin chunk."""
     try:
         return base64.b64decode(s).decode("ascii")
-    except UnicodeDecodeError:
+    except (binascii.Error, UnicodeDecodeError):
         return None

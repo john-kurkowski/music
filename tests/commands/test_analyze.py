@@ -619,11 +619,16 @@ def test_main_plugins_no_args(
 
 def test_main_raw_mode_sections(snapshot: SnapshotAssertion, tmp_path: Path) -> None:
     """Test raw mode prints decoded settings within project sections."""
-    project_file = tmp_path / "Example.rpp"
+    project_dir = tmp_path / "Example"
+    project_dir.mkdir()
+    project_file = project_dir / "Example.rpp"
     project_file.write_text(
         """<REAPER_PROJECT 0.1 "6.0/x64" 0
   <TRACK
     <FXCHAIN
+      <VST "VST3: Instrument Metadata" "plugin" 0 "" 1234<
+        abcde
+      >
       <VST "VST3: Zebra2" "plugin" 0 "" 1234<
         dmFsaWQ=
       >
@@ -648,7 +653,7 @@ def test_main_raw_mode_sections(snapshot: SnapshotAssertion, tmp_path: Path) -> 
 """
     )
 
-    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_dir)])
 
     assert (result.stderr, result.exception, result.stdout) == snapshot
 

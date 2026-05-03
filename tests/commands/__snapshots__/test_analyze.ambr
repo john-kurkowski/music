@@ -221,6 +221,8 @@
       ─────────────────────────────────── Example ────────────────────────────────────
         Warning: Plugin "JS: Side Encoder" on track 1 "" does not appear to be 
       installed locally
+        Warning: Plugin "VST3: Instrument Metadata" on track 1 "" does not appear to 
+      be installed locally
         Warning: Plugin "VST3: Zebra2" on track 1 "" does not appear to be installed 
       locally
         more
