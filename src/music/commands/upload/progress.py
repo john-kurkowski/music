@@ -12,7 +12,6 @@ class DeterminateProgress:
 
     * Hardcode columns
     * Customize the success and failure indicators of individual tasks
-        * Monkeypatch a runtime property `status` on `rich.progress.Task` to coordinate with `_SpinnerColumn`, below
     """
 
     def __init__(self, console: rich.console.Console) -> None:
@@ -42,13 +41,13 @@ class DeterminateProgress:
             task = self._progress._tasks[task_id]
             remaining = cast(float, task.remaining)  # this class always sets a total
             if remaining <= 0:
-                task.status = "success"  # type: ignore[attr-defined]
+                task.fields["status"] = "success"
 
     def fail_task(self, task_id: rich.progress.TaskID, reason: str) -> None:
         """Finish a task, marking it failed."""
         with self._progress._lock:
             task = self._progress._tasks[task_id]
-            task.status = "failed"  # type: ignore[attr-defined]
+            task.fields["status"] = "failed"
             self._progress.update(
                 task_id,
                 description=f"{task.description} [red]({reason})",
@@ -59,7 +58,7 @@ class DeterminateProgress:
         """Finish a task, marking it skipped."""
         with self._progress._lock:
             task = self._progress._tasks[task_id]
-            task.status = "skipped"  # type: ignore[attr-defined]
+            task.fields["status"] = "skipped"
             self._progress.update(
                 task_id,
                 description=f"{task.description} [yellow]({reason})",
@@ -74,15 +73,12 @@ class DeterminateProgress:
 class _SpinnerColumn(rich.progress.SpinnerColumn):
     """Vary the "finished" text per task by providing our own text.
 
-    Read the monkeypatched property `status` on `rich.progress.Task` to coordinate with `Progress`, above.
+    Read task fields set by `DeterminateProgress`.
     """
 
     @override
     def render(self, task: rich.progress.Task) -> rich.console.RenderableType:
-        try:
-            status = task.status  # type: ignore[attr-defined]
-        except AttributeError:
-            status = ""
+        status = task.fields.get("status")
         if status == "success":
             return "[green]✓[/green]"
         elif status == "skipped":

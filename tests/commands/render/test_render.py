@@ -26,7 +26,7 @@ def test_render_result_render_speedup(
     [/FORMAT]
     """
     project = mock.Mock(path="some/path")
-    version = mock.Mock()
+    version = SongVersion.MAIN
 
     some_file = tmp_path / "foo.wav"
     some_file.touch()
@@ -44,7 +44,7 @@ def test_render_result_render_speedup(
 def test_render_result_close(tmp_path: Path) -> None:
     """Test RenderResult.close removes owned temporary files."""
     project = mock.Mock(path="some/path")
-    version = mock.Mock()
+    version = SongVersion.MAIN
 
     some_file = tmp_path / "foo.tmp.wav"
     some_secondary_file = tmp_path / "foo.tmp.mp3"

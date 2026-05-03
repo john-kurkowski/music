@@ -7,6 +7,7 @@ import itertools
 import warnings
 from collections.abc import Collection, Iterator
 from pathlib import Path
+from typing import Any, cast
 
 import click
 import rich.console
@@ -263,10 +264,10 @@ class _Command:
             async with music.utils.http.ClientSession() as client:
                 renders = []
                 uploads = []
-                async for renders_, uploads_ in (
-                    await self._render_project(client, project, managed_renders)
-                    for project in self.projects
-                ):
+                for project in self.projects:
+                    renders_, uploads_ = await self._render_project(
+                        client, project, managed_renders
+                    )
                     renders.extend(renders_)
                     uploads.extend(uploads_)
 
@@ -392,7 +393,7 @@ def _validate_global_render_settings(
     """
     project_ensuring_reaper_loaded = next(projects)
 
-    offlineinact = reapy.reascript_api.SNM_GetIntConfigVar(  # type: ignore[attr-defined]
+    offlineinact = cast(Any, reapy.reascript_api).SNM_GetIntConfigVar(
         "offlineinact", SWS_ERROR_SENTINEL
     )
     if offlineinact != 0:

@@ -13,6 +13,7 @@ import aiofiles
 import rich.box
 import rich.console
 import rich.progress
+import rich.table
 from curl_cffi.requests.exceptions import HTTPError
 
 from music.commands.render.progress import IndeterminateProgress

@@ -9,10 +9,11 @@ from scripts.check import commands, repo_root
 
 def test_commands_enable_autofix_when_requested(tmp_path: Path) -> None:
     """Switch Ruff into autofix mode when requested."""
-    assert commands(tmp_path, fix=True)[:3] == [
+    assert commands(tmp_path, fix=True) == [
         ["ruff", "check", "--fix", "."],
         ["ruff", "format", "."],
         ["mypy", "src", "tests"],
+        ["ty", "check", "src", "tests"],
     ]
 
 

@@ -14,6 +14,7 @@ def main(example_audio_file: Path) -> None:
     to maintain by hand. Have AI write it for us.
     """
     import openai
+    import openai.types.chat
 
     openai.api_key = os.environ["OPENAI_API_KEY"]
 

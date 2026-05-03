@@ -96,7 +96,12 @@ class RenderResult(ExistingRenderResult):
                 text=True,
             )
             proc_output = proc.stdout
-            delta_str = re.search(r"duration=(\S+)", proc_output).group(1)  # type: ignore[union-attr]
+            match = re.search(r"duration=(\S+)", proc_output)
+            if match is None:
+                raise ValueError(
+                    f"Could not find audio duration in ffprobe output: {fil}"
+                )
+            delta_str = match.group(1)
             return 0.0 if delta_str == "N/A" else float(delta_str)
 
         fils = self.fil.glob("**/*.wav") if self.fil.is_dir() else [self.fil]

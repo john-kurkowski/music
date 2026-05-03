@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
+from typing import Any, cast
 
 import rpp  # type: ignore[import-untyped]
 
@@ -135,7 +136,7 @@ class AnalyzeProject:
 
 def _plugin_name(plugin: rpp.Element) -> str:
     """Render a plugin's saved Reaper plugin chunk attributes as a display name."""
-    name = str(plugin.attrib[0])
+    name = _plugin_label(plugin)
     if plugin.tag == "JS":
         return f"JS: {_jsfx_display_name(name)}"
     return name
@@ -231,7 +232,7 @@ def _missing_plugin_warning(
             if _saved_plugin_basename(plugin) not in _installed_au_names():
                 return _warning_message(track_number, track_name, plugin)
         case "JS":
-            if _jsfx_file(str(plugin.attrib[0])) is None:
+            if _jsfx_file(_plugin_label(plugin)) is None:
                 return _warning_message(track_number, track_name, plugin)
         case "VST":
             if _is_builtin_cockos_vst(plugin):
@@ -290,7 +291,7 @@ def _warning_message(track_number: int, track_name: str, plugin: rpp.Element) ->
 
 def _saved_plugin_basename(plugin: rpp.Element) -> str:
     """Normalize a saved plugin label for installation lookup."""
-    name = str(plugin.attrib[0])
+    name = _plugin_label(plugin)
     name = re.sub(r"^[^:]+:\s*", "", name)
     name = re.sub(r"(?:\s+\([^()]*\))+$", "", name).strip()
     return _normalize_plugin_basename(name)
@@ -298,12 +299,17 @@ def _saved_plugin_basename(plugin: rpp.Element) -> str:
 
 def _is_builtin_apple_au(plugin: rpp.Element) -> bool:
     """Return whether a saved AU label refers to an Apple-built system effect."""
-    return str(plugin.attrib[0]).endswith("(Apple)")
+    return _plugin_label(plugin).endswith("(Apple)")
 
 
 def _is_builtin_cockos_vst(plugin: rpp.Element) -> bool:
     """Return whether a saved VST label refers to a bundled Cockos plugin."""
-    return str(plugin.attrib[0]).endswith("(Cockos)")
+    return _plugin_label(plugin).endswith("(Cockos)")
+
+
+def _plugin_label(plugin: rpp.Element) -> str:
+    """Return the saved plugin label from a parsed Reaper plugin chunk."""
+    return str(cast(tuple[Any, ...], plugin.attrib)[0])
 
 
 def _normalize_plugin_basename(name: str) -> str:

@@ -1,6 +1,7 @@
 """Utilities for working with Reaper's FX."""
 
 import warnings
+from typing import Any, cast
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
@@ -14,6 +15,6 @@ def set_param_value(param: reapy.core.FXParam, value: float) -> None:
     """
     parent_fx = param.parent_list.parent_fx
     parent = parent_fx.parent
-    param.functions["SetParamNormalized"](  # type: ignore[operator]
+    cast(Any, param.functions["SetParamNormalized"])(
         parent.id, parent_fx.index, param.index, value
     )

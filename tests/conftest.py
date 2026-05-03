@@ -11,6 +11,7 @@ from unittest import mock
 
 import pytest
 import syrupy
+import syrupy.types
 from syrupy.assertion import SnapshotAssertion
 
 from music.utils.http import ClientSession
@@ -112,6 +113,7 @@ def requests_mocks() -> Iterator[RequestsMocks]:
             progress(fil.stat().st_size)
         return mock.Mock(status_code=200)
 
+    put_file_mock = mock.AsyncMock(side_effect=put_file)
     with (
         mock.patch(
             "music.utils.http.ClientSession.get", new_callable=request_mock
@@ -124,7 +126,7 @@ def requests_mocks() -> Iterator[RequestsMocks]:
         ) as put,
         mock.patch(
             "music.utils.http.ClientSession.put_file",
-            new=mock.AsyncMock(side_effect=put_file),
-        ) as put_file,
+            new=put_file_mock,
+        ),
     ):
-        yield RequestsMocks(get=get, post=post, put=put, put_file=put_file)
+        yield RequestsMocks(get=get, post=post, put=put, put_file=put_file_mock)

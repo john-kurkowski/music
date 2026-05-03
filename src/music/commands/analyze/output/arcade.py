@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from contextlib import closing
 from pathlib import Path
+from typing import Any, cast
 
 import rpp  # type: ignore[import-untyped]
 
@@ -97,7 +98,7 @@ def arcade_state_xml(plugin: rpp.Element) -> bytes | None:
 def _is_arcade_plugin(plugin: rpp.Element) -> bool:
     """Return whether the plugin chunk belongs to Output Arcade in a supported format."""
     return getattr(plugin, "tag", None) in {"AU", "VST"} and "Arcade" in str(
-        plugin.attrib[0]
+        cast(tuple[Any, ...], plugin.attrib)[0]
     )
 
 

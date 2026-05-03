@@ -10,6 +10,9 @@ from music.utils import http
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
     import reapy
+    import reapy.config
+
+_reapy_dynamic = cast(Any, reapy)
 
 
 # File: Render project, using the most recent render settings, auto-close render dialog
@@ -42,13 +45,13 @@ class ExtendedProject(reapy.core.Project):
             if project_dir.suffix == ".rpp"
             else project_dir / f"{project_dir.name}.rpp"
         )
-        reapy.RPR.Main_openProject(str(project_file))  # type: ignore[attr-defined]
+        _reapy_dynamic.RPR.Main_openProject(str(project_file))
         return cls()
 
     @property
     def metadata(self) -> dict[str, Any]:
         """Parse optional author-idiosyncratic metadata from the project notes."""
-        notes = reapy.RPR.GetSetProjectNotes(-1, False, "", 999)[2]  # type: ignore[attr-defined]
+        notes = _reapy_dynamic.RPR.GetSetProjectNotes(-1, False, "", 999)[2]
         try:
             di = json.loads(notes)
         except json.JSONDecodeError:
@@ -81,5 +84,5 @@ class ExtendedProject(reapy.core.Project):
         Works around a bug in reapy 0.10.0's implementation of `Project.path`,
         which actually gets the _recording_ path of the project.
         """
-        filename = str(reapy.RPR.EnumProjects(-1, None, 999)[2])  # type: ignore[attr-defined]
+        filename = str(_reapy_dynamic.RPR.EnumProjects(-1, None, 999)[2])
         return str(Path(filename).parent)

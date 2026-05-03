@@ -5,6 +5,7 @@ from pathlib import Path
 import click
 
 import music.commands.render.process
+import music.commands.render.result
 from music.utils import project
 from music.utils.songversion import SongVersion
 

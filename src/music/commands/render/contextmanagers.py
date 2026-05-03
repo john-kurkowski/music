@@ -5,7 +5,7 @@ import warnings
 from collections.abc import Callable, Collection, Iterator
 from functools import partial
 from pathlib import Path
-from typing import TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from music.utils.fx import set_param_value
 from music.utils.project import ExtendedProject
@@ -19,9 +19,11 @@ from .tracks import is_muted
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
     import reapy
+    import reapy.errors
 
 
 T = TypeVar("T")
+_reapy_dynamic = cast(Any, reapy)
 
 
 def adjust_master_limiter_threshold(
@@ -83,7 +85,7 @@ def adjust_render_bounds(project: ExtendedProject) -> Iterator[None]:
     """
     custom_time_bounds = 0
 
-    with reapy.inside_reaper():
+    with _reapy_dynamic.inside_reaper():
         items = sorted(
             (
                 item
@@ -130,20 +132,20 @@ def avoid_fx_tails(project: ExtendedProject) -> Iterator[None]:
     with (
         get_set_restore(
             partial(
-                reapy.reascript_api.SNM_GetIntConfigVar,  # type: ignore[attr-defined]
+                _reapy_dynamic.reascript_api.SNM_GetIntConfigVar,
                 "runallonstop",
                 SWS_ERROR_SENTINEL,
             ),
-            partial(reapy.reascript_api.SNM_SetIntConfigVar, "runallonstop"),  # type: ignore[attr-defined]
+            partial(_reapy_dynamic.reascript_api.SNM_SetIntConfigVar, "runallonstop"),
             off,
         ),
         get_set_restore(
             partial(
-                reapy.reascript_api.SNM_GetIntConfigVar,  # type: ignore[attr-defined]
+                _reapy_dynamic.reascript_api.SNM_GetIntConfigVar,
                 "runafterstop",
                 SWS_ERROR_SENTINEL,
             ),
-            partial(reapy.reascript_api.SNM_SetIntConfigVar, "runafterstop"),  # type: ignore[attr-defined]
+            partial(_reapy_dynamic.reascript_api.SNM_SetIntConfigVar, "runafterstop"),
             off,
         ),
         get_set_restore(
@@ -187,7 +189,7 @@ def select_tracks_only(
     """Select only the tracks in the given collection, unselecting all other tracks, then restore track selection."""
     tracks_to_select = {track.id: track for track in tracks}
 
-    with reapy.inside_reaper():
+    with _reapy_dynamic.inside_reaper():
         original_selection = {track.id: track.is_selected for track in project.tracks}
 
         for track in project.tracks:
@@ -201,7 +203,7 @@ def select_tracks_only(
     try:
         yield
     finally:
-        with reapy.inside_reaper():
+        with _reapy_dynamic.inside_reaper():
             for track in project.tracks:
                 if track.is_selected != original_selection[track.id]:
                     if original_selection[track.id]:

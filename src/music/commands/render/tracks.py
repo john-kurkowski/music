@@ -1,6 +1,8 @@
 """Helpers for Reaper tracks."""
 
 import warnings
+from collections.abc import Callable
+from typing import Any, cast
 
 from music.utils import recurse_property
 
@@ -8,8 +10,15 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
     import reapy
 
+_reapy_dynamic = cast(Any, reapy)
 
-@reapy.inside_reaper()
+
+def _inside_reaper[**P, R](func: Callable[P, R]) -> Callable[P, R]:
+    """Run a function inside Reaper while preserving its Python signature."""
+    return cast(Callable[P, R], _reapy_dynamic.inside_reaper()(func))
+
+
+@_inside_reaper
 def find_acappella_tracks_to_mute(
     project: reapy.core.Project,
 ) -> list[reapy.core.Track]:
@@ -33,7 +42,7 @@ def find_acappella_tracks_to_mute(
     ]
 
 
-@reapy.inside_reaper()
+@_inside_reaper
 def find_vox_tracks_to_mute(
     project: reapy.core.Project,
 ) -> list[reapy.core.Track]:
@@ -49,7 +58,7 @@ def find_vox_tracks_to_mute(
     ]
 
 
-@reapy.inside_reaper()
+@_inside_reaper
 def find_stems(project: reapy.core.Project) -> list[reapy.core.Track]:
     """Find tracks to render as stems.
 
@@ -64,7 +73,7 @@ def find_stems(project: reapy.core.Project) -> list[reapy.core.Track]:
     ]
 
 
-@reapy.inside_reaper()
+@_inside_reaper
 def is_muted(track: reapy.core.Track) -> bool:
     """Check whether a track is muted more robustly than `reapy.core.Track.is_muted`."""
     return track.is_muted or any(
