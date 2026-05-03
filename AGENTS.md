@@ -11,8 +11,11 @@
 
 - This repo generally prefers snapshot tests for CLI output, rendered tables,
   mock call sequences, and similar structured results.
-- When extending an area that already uses snapshots, prefer updating an
-  existing snapshot test over adding a new one-off assertion test.
+- When extending an area that already uses snapshots, first try updating the
+  nearest existing snapshot fixture to cover the new behavior.
+  - Add a separate assertion test only when the behavior is a narrow invariant
+    that would be obscured by the snapshot, or when folding it into an existing
+    snapshot would make that snapshot noisy or less durable.
 - Use targeted non-snapshot assertions for one narrow contract where a snapshot
   would capture incidental detail.
   - Examples: one ordering rule, one field, one warning, one invariant, or one
