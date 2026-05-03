@@ -7,9 +7,10 @@ import xml.etree.ElementTree as ET
 from collections.abc import Iterator
 from contextlib import closing
 from pathlib import Path
-from typing import Any, cast
 
 import rpp  # type: ignore[import-untyped]
+
+from music.commands.analyze.utils import plugin_state
 
 
 def is_arcade_plugin(plugin: rpp.Element) -> bool:
@@ -17,8 +18,17 @@ def is_arcade_plugin(plugin: rpp.Element) -> bool:
     return _is_arcade_plugin(plugin)
 
 
+def is_plugin(plugin: rpp.Element) -> bool:
+    """Return whether the plugin chunk belongs to Output Arcade."""
+    return _is_arcade_plugin(plugin)
+
+
 def iter_warnings(
-    track_number: int, track_name: str, plugin: rpp.Element
+    project_dir: Path,
+    track_number: int,
+    track_name: str,
+    plugin_name: str,
+    plugin: rpp.Element,
 ) -> Iterator[str]:
     """Inspect an Arcade state blob for missing-content issues.
 
@@ -27,6 +37,7 @@ def iter_warnings(
     via ``Looper_Preset``, and Hyperion presets, which reference instrument
     source installs via ``Hyperion_Preset``.
     """
+    _ = project_dir, plugin_name
     state = arcade_state_xml(plugin)
     if state is None:
         return
@@ -44,9 +55,14 @@ def iter_warnings(
 
 
 def iter_plugin_warnings(
-    track_number: int, track_name: str, plugin: rpp.Element
+    project_dir: Path,
+    track_number: int,
+    track_name: str,
+    plugin_name: str,
+    plugin: rpp.Element,
 ) -> Iterator[tuple[str, str]]:
     """Return compact warning indicators for plugin-table rows."""
+    _ = project_dir, track_number, track_name, plugin_name
     state = arcade_state_xml(plugin)
     if state is None:
         return
@@ -95,10 +111,15 @@ def arcade_state_xml(plugin: rpp.Element) -> bytes | None:
     return decoded[state_start:state_end]
 
 
+def decoded_setting(plugin: rpp.Element) -> bytes | None:
+    """Return Arcade's nested state XML for raw analyze output."""
+    return arcade_state_xml(plugin)
+
+
 def _is_arcade_plugin(plugin: rpp.Element) -> bool:
     """Return whether the plugin chunk belongs to Output Arcade in a supported format."""
     return getattr(plugin, "tag", None) in {"AU", "VST"} and "Arcade" in str(
-        cast(tuple[Any, ...], plugin.attrib)[0]
+        plugin_state.plugin_label(plugin)
     )
 
 

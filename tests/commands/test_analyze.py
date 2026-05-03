@@ -14,6 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from music.commands.analyze import process
 from music.commands.analyze.command import main as analyze
+from music.commands.analyze.vendors.spitfire import labs
 
 
 def _plugin_sort_fixture_project(project_file: Path) -> None:
@@ -75,6 +76,7 @@ def clear_jsfx_file_cache() -> Iterator[None]:
     process._installed_vst_names.cache_clear()
     process._installed_vst_plugins_by_name.cache_clear()
     process._binary_architectures.cache_clear()
+    labs._installed_labs_families.cache_clear()
     yield
     process._jsfx_file.cache_clear()
     process._installed_au_names.cache_clear()
@@ -82,6 +84,7 @@ def clear_jsfx_file_cache() -> Iterator[None]:
     process._installed_vst_names.cache_clear()
     process._installed_vst_plugins_by_name.cache_clear()
     process._binary_architectures.cache_clear()
+    labs._installed_labs_families.cache_clear()
 
 
 def test_main_plugins_for_project_file(
@@ -741,6 +744,303 @@ def test_main_does_not_warn_for_existing_project_media_file(tmp_path: Path) -> N
     assert "Project media file" not in result.stdout
 
 
+def test_main_warns_for_reasamplomatic5000_missing_sample(tmp_path: Path) -> None:
+    """Test ReaSamplOmatic5000 sample paths warn when the target is missing."""
+    project_file = tmp_path / "Example.rpp"
+    sample_file = tmp_path / "Media" / "Kick.wav"
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Drums"
+    <FXCHAIN
+      <VST "VSTi: ReaSamplOmatic5000 (Cockos)" "reasamplomatic.vst.dylib" 0 "" 1234<
+        {_plugin_state_base64(f"prefix {sample_file}".encode())}
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    output = result.stdout.replace("\n", "")
+    assert (
+        'Plugin "VSTi: ReaSamplOmatic5000 (Cockos)" on track 1 "Drums" '
+        f"references missing sample: {sample_file}"
+    ) in output
+
+
+def test_main_plugins_warns_for_reasamplomatic5000_external_sample(
+    tmp_path: Path,
+) -> None:
+    """Test ReaSamplOmatic5000 external samples appear in plugin warning cells."""
+    project_dir = tmp_path / "Project"
+    project_dir.mkdir()
+    project_file = project_dir / "Example.rpp"
+    sample_file = tmp_path / "Samples" / "Kick.wav"
+    sample_file.parent.mkdir()
+    sample_file.write_text("audio")
+    vst_dir = tmp_path / "VST"
+    vst_dir.mkdir()
+    (vst_dir / "reasamplomatic.vst.dylib").write_text("")
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Drums"
+    <FXCHAIN
+      <VST "VSTi: ReaSamplOmatic5000 (Cockos)" "reasamplomatic.vst.dylib" 0 "" 1234<
+        {_plugin_state_base64(f"prefix {sample_file}".encode())}
+      >
+    >
+  >
+>
+"""
+    )
+
+    with mock.patch.object(process, "_vst_search_paths", return_value=(vst_dir,)):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "⛓️‍💥 Kick.wav" in result.stdout
+
+
+def test_main_does_not_warn_for_reasamplomatic5000_project_sample(
+    tmp_path: Path,
+) -> None:
+    """Test ReaSamplOmatic5000 stays quiet for existing project-local samples."""
+    project_file = tmp_path / "Example.rpp"
+    sample_file = tmp_path / "Media" / "Kick.wav"
+    sample_file.parent.mkdir()
+    sample_file.write_text("audio")
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Drums"
+    <FXCHAIN
+      <VST "VSTi: ReaSamplOmatic5000 (Cockos)" "reasamplomatic.vst.dylib" 0 "" 1234<
+        {_plugin_state_base64(f"prefix {sample_file}".encode())}
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "ReaSamplOmatic5000" not in result.stdout
+
+
+def test_main_warns_for_sitala_home_url_missing_sample(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test Sitala's home-relative file URLs are resolved before checking files."""
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    project_file = tmp_path / "Example.rpp"
+    sitala_state = _sitala_state(
+        "file://:home:/Samples/Kick%20One.wav",
+        sound_name="Kick One",
+    )
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Sitala"
+    <FXCHAIN
+      <VST "VST3i: Sitala (Decomposer) (32 out)" "Sitala.vst3" 0 "" 1234<
+        {_plugin_state_base64(sitala_state)}
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    output = result.stdout.replace("\n", "")
+    assert (
+        'Plugin "VST3i: Sitala (Decomposer) (32 out)" on track 1 "Sitala" '
+        "references missing sample: file://:home:/Samples/Kick%20One.wav"
+    ) in output
+
+
+def test_main_plugins_warns_for_sitala_missing_sample_once(tmp_path: Path) -> None:
+    """Test duplicate Sitala locations produce one compact warning."""
+    project_file = tmp_path / "Example.rpp"
+    missing_sample = tmp_path / "Media" / "Kick.wav"
+    vst_dir = tmp_path / "VST3"
+    vst_dir.mkdir()
+    (vst_dir / "Sitala.vst3").write_text("")
+    sitala_state = _sitala_state(str(missing_sample), str(missing_sample))
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Sitala"
+    <FXCHAIN
+      <VST "VST3i: Sitala (Decomposer) (32 out)" "Sitala.vst3" 0 "" 1234<
+        {_plugin_state_base64(sitala_state)}
+      >
+    >
+  >
+>
+"""
+    )
+
+    with mock.patch.object(process, "_vst_search_paths", return_value=(vst_dir,)):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert result.stdout.count("⛓️‍💥 Kick.wav") == 1
+
+
+def test_main_does_not_warn_for_sitala_project_sample(tmp_path: Path) -> None:
+    """Test Sitala stays quiet for existing project-local samples."""
+    project_file = tmp_path / "Example.rpp"
+    sample_file = tmp_path / "Media" / "Kick.wav"
+    sample_file.parent.mkdir()
+    sample_file.write_text("audio")
+    sitala_state = _sitala_state(str(sample_file))
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Sitala"
+    <FXCHAIN
+      <VST "VST3i: Sitala (Decomposer) (32 out)" "Sitala.vst3" 0 "" 1234<
+        {_plugin_state_base64(sitala_state)}
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "Sitala" not in result.stdout
+
+
+def test_main_warns_for_labs_missing_au_library(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test AU LABS state warns when the saved family is not installed."""
+    project_file = tmp_path / "Example.rpp"
+    properties = tmp_path / "Spitfire.properties"
+    properties.write_text('{"Labs": {"samples": []}}')
+    monkeypatch.setenv("SPITFIRE_PROPERTIES_PATH", str(properties))
+    labs._installed_labs_families.cache_clear()
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Choir"
+    <FXCHAIN
+      <AU "AUi: LABS (Spitfire Audio)" "Spitfire Audio: LABS" "" 1234<
+        {_labs_au_state_base64(family="Gaelic Voices", preset_name="Oh Riser")}
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    output = result.stdout.replace("\n", "")
+    assert (
+        'Plugin "AUi: LABS (Spitfire Audio)" on track 1 "Choir" '
+        'references missing LABS library "Gaelic Voices" preset "Oh Riser"'
+    ) in output
+    labs._installed_labs_families.cache_clear()
+
+
+def test_main_plugins_warns_for_labs_missing_vst_library(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test VST LABS state appears in plugin warning cells."""
+    project_file = tmp_path / "Example.rpp"
+    properties = tmp_path / "Spitfire.properties"
+    properties.write_text('{"Labs": {"patches": []}}')
+    monkeypatch.setenv("SPITFIRE_PROPERTIES_PATH", str(properties))
+    labs._installed_labs_families.cache_clear()
+    vst_dir = tmp_path / "VST3"
+    vst_dir.mkdir()
+    (vst_dir / "LABS.vst3").write_text("")
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Cello"
+    <FXCHAIN
+      <VST "VST3i: LABS (Spitfire Audio)" "LABS.vst3" 0 "" 1234<
+        {_plugin_state_base64(_labs_xml(family="Cello Moods", preset_name="Gm Melancholy"))}
+      >
+    >
+  >
+>
+"""
+    )
+
+    with mock.patch.object(process, "_vst_search_paths", return_value=(vst_dir,)):
+        result = CliRunner(catch_exceptions=False).invoke(
+            analyze, ["--plugins", str(project_file)]
+        )
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "⛓️‍💥 Gm Melancholy" in result.stdout
+    labs._installed_labs_families.cache_clear()
+
+
+def test_main_does_not_warn_for_labs_installed_library(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test LABS stays quiet when Spitfire metadata includes the saved family."""
+    project_file = tmp_path / "Example.rpp"
+    properties = tmp_path / "Spitfire.properties"
+    properties.write_text(
+        '{"Labs": {"samples": ["/Library/Spitfire/LABS Cello Moods/Samples"]}}'
+    )
+    monkeypatch.setenv("SPITFIRE_PROPERTIES_PATH", str(properties))
+    labs._installed_labs_families.cache_clear()
+    project_file.write_text(
+        f"""<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Cello"
+    <FXCHAIN
+      <VST "VST3i: LABS (Spitfire Audio)" "LABS.vst3" 0 "" 1234<
+        {_plugin_state_base64(_labs_xml(family="Cello Moods", preset_name="Gm Melancholy"))}
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "references missing LABS library" not in result.stdout
+    labs._installed_labs_families.cache_clear()
+
+
 def test_main_raw_mode_reassembles_chunked_arcade_state(
     snapshot: SnapshotAssertion, tmp_path: Path
 ) -> None:
@@ -1068,6 +1368,39 @@ def _arcade_au_state_base64(juce_state: bytes) -> str:
             "jucePluginState": b"prefix-bytes" + juce_state + b"trailing-bytes",
             "name": "Untitled",
         }
+    )
+    return base64.b64encode(outer).decode("ascii")
+
+
+def _plugin_state_base64(state: bytes) -> str:
+    """Build a base64 plugin state chunk for tests."""
+    return base64.b64encode(state).decode("ascii")
+
+
+def _sitala_state(*locations: str, sound_name: str = "Kick") -> bytes:
+    """Build minimal Sitala XML state for tests."""
+    sounds = "\n".join(
+        f'<sound slot="{slot}" location="{location}" name="{sound_name}"/>'
+        for slot, location in enumerate(locations)
+    )
+    return (
+        b'<?xml version="1.0" encoding="UTF-8"?>'
+        + f"<sitala><state><sounds>{sounds}</sounds></state></sitala>".encode()
+    )
+
+
+def _labs_xml(*, family: str, preset_name: str) -> bytes:
+    """Build minimal LABS XML state for tests."""
+    return (
+        b'<?xml version="1.0" encoding="UTF-8"?>'
+        + f'<Labs><META family="{family}" name="{preset_name}"/></Labs>'.encode()
+    )
+
+
+def _labs_au_state_base64(*, family: str, preset_name: str) -> str:
+    """Build a minimal LABS AU state chunk for tests."""
+    outer = plistlib.dumps(
+        {"jucePluginState": _labs_xml(family=family, preset_name=preset_name)}
     )
     return base64.b64encode(outer).decode("ascii")
 

@@ -1,1 +1,0 @@
-"""Vendor-specific analyze helpers."""

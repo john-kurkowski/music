@@ -13,7 +13,7 @@ from typing import Any, cast
 
 import rpp  # type: ignore[import-untyped]
 
-from .output import arcade
+from . import vendors
 
 _PLUGIN_TAGS = ("AU", "CLAP", "DX", "JS", "LV2", "VST")
 
@@ -73,8 +73,8 @@ class AnalyzeProject:
             for plugin in self.parsed_project.findall(f".//{tag}")
         )
         for plugin in plugins:
-            if arcade_state := arcade.arcade_state_xml(plugin):
-                yield arcade_state.decode("utf-8")
+            if decoded_setting := vendors.decoded_setting(plugin):
+                yield decoded_setting.decode("utf-8")
                 continue
 
             raw = "".join(
@@ -103,6 +103,7 @@ class AnalyzeProject:
 
     def iter_plugin_rows(self) -> Iterator[PluginRow]:
         """Return plugins with track locations and compact row warnings."""
+        project_dir = self.project_file.parent
         for track_number, track, track_muted in _iter_tracks_with_mute_state(
             self.parsed_project
         ):
@@ -117,13 +118,14 @@ class AnalyzeProject:
                     mute=track_muted or plugin_bypassed,
                     warnings=tuple(
                         _plugin_row_warnings(
-                            track_number, track_name, plugin, architecture
+                            project_dir, track_number, track_name, plugin, architecture
                         )
                     ),
                 )
 
     def iter_warnings(self) -> Iterator[str]:
         """Return warnings from the parsed project."""
+        project_dir = self.project_file.parent
         yield from self.iter_media_file_warnings()
         for track_number, track in enumerate(
             self.parsed_project.findall(".//TRACK"), start=1
@@ -132,8 +134,9 @@ class AnalyzeProject:
             for plugin in _track_plugins(track):
                 if warning := _missing_plugin_warning(track_number, track_name, plugin):
                     yield warning
-                if arcade.is_arcade_plugin(plugin):
-                    yield from arcade.iter_warnings(track_number, track_name, plugin)
+                yield from vendors.iter_warnings(
+                    project_dir, track_number, track_name, _plugin_name(plugin), plugin
+                )
 
     def iter_media_file_warnings(self) -> Iterator[str]:
         """Return warnings for project media files that are missing or external."""
@@ -280,7 +283,11 @@ def _missing_plugin_warning(
 
 
 def _plugin_row_warnings(
-    track_number: int, track_name: str, plugin: rpp.Element, architecture: str
+    project_dir: Path,
+    track_number: int,
+    track_name: str,
+    plugin: rpp.Element,
+    architecture: str,
 ) -> Iterator[PluginWarning]:
     """Return compact warning indicators for a plugin table row."""
     if _missing_plugin_warning(track_number, track_name, plugin):
@@ -289,11 +296,10 @@ def _plugin_row_warnings(
     if architecture == "Intel-only":
         yield PluginWarning(symbol="⚠️", detail="Intel-only")
 
-    if arcade.is_arcade_plugin(plugin):
-        for symbol, detail in arcade.iter_plugin_warnings(
-            track_number, track_name, plugin
-        ):
-            yield PluginWarning(symbol=symbol, detail=detail)
+    for symbol, detail in vendors.iter_plugin_warnings(
+        project_dir, track_number, track_name, _plugin_name(plugin), plugin
+    ):
+        yield PluginWarning(symbol=symbol, detail=detail)
 
 
 def _plugin_architecture(plugin: rpp.Element) -> str:
