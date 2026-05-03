@@ -912,6 +912,9 @@ def test_main_does_not_warn_for_sitala_project_sample(tmp_path: Path) -> None:
     """Test Sitala stays quiet for existing project-local samples."""
     project_file = tmp_path / "Example.rpp"
     sample_file = tmp_path / "Media" / "Kick.wav"
+    vst_dir = tmp_path / "VST3"
+    vst_dir.mkdir()
+    (vst_dir / "Sitala.vst3").write_text("")
     sample_file.parent.mkdir()
     sample_file.write_text("audio")
     sitala_state = _sitala_state(str(sample_file))
@@ -929,7 +932,8 @@ def test_main_does_not_warn_for_sitala_project_sample(tmp_path: Path) -> None:
 """
     )
 
-    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+    with mock.patch.object(process, "_vst_search_paths", return_value=(vst_dir,)):
+        result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
 
     assert result.stderr == ""
     assert result.exception is None
