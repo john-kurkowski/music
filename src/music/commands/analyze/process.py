@@ -124,6 +124,7 @@ class AnalyzeProject:
 
     def iter_warnings(self) -> Iterator[str]:
         """Return warnings from the parsed project."""
+        yield from self.iter_media_file_warnings()
         for track_number, track in enumerate(
             self.parsed_project.findall(".//TRACK"), start=1
         ):
@@ -133,6 +134,16 @@ class AnalyzeProject:
                     yield warning
                 if arcade.is_arcade_plugin(plugin):
                     yield from arcade.iter_warnings(track_number, track_name, plugin)
+
+    def iter_media_file_warnings(self) -> Iterator[str]:
+        """Return warnings for project media files that are missing or external."""
+        project_dir = self.project_file.parent
+        for file_path in _media_file_paths(self.parsed_project):
+            media_file = _resolve_project_media_file(project_dir, file_path)
+            if not media_file.exists():
+                yield f'Project media file "{file_path}" does not exist at {media_file}'
+            elif not _path_is_relative_to(media_file, project_dir):
+                yield f'Project media file "{file_path}" is outside the project folder: {media_file}'
 
 
 def _plugin_name(plugin: rpp.Element) -> str:
@@ -149,6 +160,31 @@ def _track_name(track: rpp.Element) -> str:
         if isinstance(child, list) and child and child[0] == "NAME":
             return str(child[1])
     return ""
+
+
+def _media_file_paths(project: rpp.Element) -> Iterator[str]:
+    """Yield media file paths saved in source chunks throughout a project."""
+    for source in project.findall(".//SOURCE"):
+        for child in source.children:
+            if isinstance(child, list) and len(child) > 1 and child[0] == "FILE":
+                yield str(child[1])
+
+
+def _resolve_project_media_file(project_dir: Path, file_path: str) -> Path:
+    """Resolve a saved media reference the same way project-relative paths behave."""
+    path = Path(file_path).expanduser()
+    if not path.is_absolute():
+        path = project_dir / path
+    return path.resolve(strict=False)
+
+
+def _path_is_relative_to(path: Path, parent: Path) -> bool:
+    """Return whether a resolved path is within a resolved parent directory."""
+    try:
+        path.relative_to(parent.resolve(strict=False))
+    except ValueError:
+        return False
+    return True
 
 
 def _track_plugins(track: rpp.Element) -> Iterator[rpp.Element]:

@@ -658,6 +658,89 @@ def test_main_raw_mode_sections(snapshot: SnapshotAssertion, tmp_path: Path) -> 
     assert (result.stderr, result.exception, result.stdout) == snapshot
 
 
+def test_main_warns_for_missing_project_media_file(tmp_path: Path) -> None:
+    """Test saved media references warn when the target file is missing."""
+    project_file = tmp_path / "Example.rpp"
+    project_file.write_text(
+        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Audio"
+    <ITEM
+      <SOURCE WAVE
+        FILE "Media/kick.wav"
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    output = result.stdout.replace("\n", "")
+    assert 'Project media file "Media/kick.wav" does not exist' in output
+    assert str(tmp_path / "Media" / "kick.wav") in output
+
+
+def test_main_warns_for_external_project_media_file(tmp_path: Path) -> None:
+    """Test saved media references warn when they live outside the project folder."""
+    project_file = tmp_path / "Project" / "Example.rpp"
+    project_file.parent.mkdir()
+    external_file = tmp_path / "Samples" / "kick.wav"
+    external_file.parent.mkdir()
+    external_file.write_text("audio")
+    project_file.write_text(
+        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Audio"
+    <ITEM
+      <SOURCE WAVE
+        FILE "../Samples/kick.wav"
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    output = result.stdout.replace("\n", "")
+    assert 'Project media file "../Samples/kick.wav" is outside' in output
+    assert str(external_file) in output
+
+
+def test_main_does_not_warn_for_existing_project_media_file(tmp_path: Path) -> None:
+    """Test project-local media references stay quiet when the target file exists."""
+    project_file = tmp_path / "Example.rpp"
+    media_file = tmp_path / "Media" / "kick.wav"
+    media_file.parent.mkdir()
+    media_file.write_text("audio")
+    project_file.write_text(
+        """<REAPER_PROJECT 0.1 "6.0/x64" 0
+  <TRACK
+    NAME "Audio"
+    <ITEM
+      <SOURCE WAVE
+        FILE "Media/kick.wav"
+      >
+    >
+  >
+>
+"""
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(analyze, [str(project_file)])
+
+    assert result.stderr == ""
+    assert result.exception is None
+    assert "Project media file" not in result.stdout
+
+
 def test_main_raw_mode_reassembles_chunked_arcade_state(
     snapshot: SnapshotAssertion, tmp_path: Path
 ) -> None:
