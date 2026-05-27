@@ -74,11 +74,12 @@ class Process:
         additional_headers: dict[str, Any],
         upload_items: list[UploadItem],
         *,
+        create_missing: bool = False,
         dry_run: bool = False,
     ) -> list[Track | BaseException]:
         """Upload the given audio files to SoundCloud.
 
-        Matches the files to SoundCloud tracks by exact filename. then uploads them
+        Matches the files to SoundCloud tracks by exact filename, then uploads them
         to SoundCloud sequentially.
 
         Returns the first non-zero exit code encountered, or zero if all uploads succeeded.
@@ -123,6 +124,7 @@ class Process:
                     headers,
                     tracks_by_title,
                     item,
+                    create_missing=create_missing,
                     dry_run=dry_run,
                 )
             )
@@ -160,17 +162,18 @@ class Process:
         tracks_by_title: dict[str, Track],
         item: UploadItem,
         *,
+        create_missing: bool = False,
         dry_run: bool = False,
     ) -> Track:
-        """Perform the API requests for the given audio file to become the new version of the existing SoundCloud track.
+        """Upload the given audio file to an existing or newly created SoundCloud track.
 
         0. Validate the local file.
         1. Request an AWS S3 upload URL.
         2. Upload the audio file there.
         3. Request transcoding of the uploaded audio file.
         4. Poll for transcoding to finish.
-        5. Confirm the transcoded file is what we want as the new file. Send the
-           minimal metadata of the original track.
+        5. Confirm the transcoded file as the existing track's replacement, or
+           create a new private track for the transcoded file.
 
         Returns the track metadata if the upload is successful, otherwise
         raises an exception.
@@ -182,8 +185,9 @@ class Process:
 
         track = tracks_by_title.get(item.track_title)
         if not track:
-            self.progress_upload.fail_task(task, "not found in SoundCloud")
-            raise ValueError(f"not found in SoundCloud: {fil}")
+            if not create_missing:
+                self.progress_upload.fail_task(task, "not found in SoundCloud")
+                raise ValueError(f"not found in SoundCloud: {fil}")
         elif not _is_track_older_than_file(track, fil):
             self.progress_upload.skip_task(task, "already uploaded")
             return track
@@ -191,29 +195,10 @@ class Process:
         async with _CONCURRENCY:
             self.progress_upload.start_task(task)
 
-            try:
-                if dry_run:
-                    upload = self._prepare_upload_dry_run(fil)
-                    self._upload_dry_run(task, fil)
-                else:
-                    upload = await self._prepare_upload(client, headers, fil)
-                    await self._upload(client, task, fil, upload)
-            except Exception as ex:
-                self.progress_upload.fail_task(task, str(ex))
-                raise
-
-            task = self.progress_transcode.add_task(f'Transcoding "{item.track_title}"')
-            self.progress_transcode.start_task(task)
-
-            try:
-                if not dry_run:
-                    await self._transcode(client, headers, upload)
-                    await self._confirm_upload(client, headers, track, fil, upload)
-            except Exception as ex:
-                self.progress_transcode.fail_task(task, str(ex))
-                raise
-            else:
-                self.progress_transcode.succeed_task(task)
+            upload = await self._upload_file(client, headers, task, fil, dry_run)
+            track = await self._finish_track(
+                client, headers, item, upload, track, dry_run
+            )
 
         if not self.results_table.columns:
             self.results_table.add_column("Title", header_style="bold blue")
@@ -225,6 +210,88 @@ class Process:
         )
 
         return track
+
+    async def _upload_file(
+        self,
+        client: http.ClientSession,
+        headers: dict[str, str],
+        task: rich.progress.TaskID,
+        fil: Path,
+        dry_run: bool,
+    ) -> _PrepareUploadResponse:
+        """Upload the local audio file, or simulate that upload in dry-run mode."""
+        try:
+            if dry_run:
+                upload = self._prepare_upload_dry_run(fil)
+                self._upload_dry_run(task, fil)
+            else:
+                upload = await self._prepare_upload(client, headers, fil)
+                await self._upload(client, task, fil, upload)
+        except Exception as ex:
+            self.progress_upload.fail_task(task, str(ex))
+            raise
+        return upload
+
+    async def _finish_track(
+        self,
+        client: http.ClientSession,
+        headers: dict[str, str],
+        item: UploadItem,
+        upload: _PrepareUploadResponse,
+        track: Track | None,
+        dry_run: bool,
+    ) -> Track:
+        """Transcode the upload, then update an existing track or create a new one."""
+        task = self.progress_transcode.add_task(f'Transcoding "{item.track_title}"')
+        self.progress_transcode.start_task(task)
+
+        try:
+            if dry_run:
+                track = track or self._create_track_dry_run(item)
+            else:
+                await self._transcode(client, headers, upload)
+                if track:
+                    await self._confirm_upload(client, headers, track, item.fil, upload)
+                else:
+                    track = await self._create_track(client, headers, item, upload)
+        except Exception as ex:
+            self.progress_transcode.fail_task(task, str(ex))
+            raise
+        else:
+            self.progress_transcode.succeed_task(task)
+            return track
+
+    async def _create_track(
+        self,
+        client: http.ClientSession,
+        headers: dict[str, str],
+        item: UploadItem,
+        upload: _PrepareUploadResponse,
+    ) -> Track:
+        """Create a private SoundCloud track from an uploaded and transcoded file."""
+        fil = item.fil
+        resp = await client.post(
+            "https://api-v2.soundcloud.com/tracks",
+            headers=headers,
+            json={
+                "track": {
+                    "title": item.track_title,
+                    "sharing": "private",
+                    "original_filename": fil.name,
+                    "uid": upload["uid"],
+                    "snippet_presets": {"start_seconds": 0, "end_seconds": 20},
+                },
+            },
+        )
+        await _raise_for_status(resp)
+        return _response_json(resp)
+
+    def _create_track_dry_run(self, item: UploadItem) -> Track:
+        """Return track-shaped metadata for a dry-run create."""
+        return {
+            "title": item.track_title,
+            "permalink_url": f"dry-run://soundcloud/{item.track_title}",
+        }
 
     async def _confirm_upload(
         self,

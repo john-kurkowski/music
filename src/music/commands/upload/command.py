@@ -48,6 +48,15 @@ from .process import UploadItem
     is_flag=True,
 )
 @click.option(
+    "--create-missing",
+    default=False,
+    help=(
+        "Whether to create private SoundCloud tracks when no existing track"
+        " matches a render title."
+    ),
+    is_flag=True,
+)
+@click.option(
     "--include-main",
     default=None,
     flag_value=SongVersion.MAIN,
@@ -104,6 +113,7 @@ async def main(
     additional_headers: str,
     debug_http: bool,
     dry_run: bool,
+    create_missing: bool,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_instrumental_dj: SongVersion | None,
@@ -113,7 +123,7 @@ async def main(
     """Upload PROJECT_DIRS renders.
 
     Uploads to SoundCloud. Renders with matching name must exist in SoundCloud
-    already, and will be overwritten.
+    already, and will be overwritten unless missing track creation is requested.
 
     Defaults to uploading all rendered versions of the currently open project.
     """
@@ -165,6 +175,7 @@ async def main(
                 oauth_token,
                 parsed_additional_headers,
                 upload_items,
+                create_missing=create_missing,
                 dry_run=dry_run,
             )
 

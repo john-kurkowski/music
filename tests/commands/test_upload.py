@@ -124,6 +124,102 @@ def test_main_tracks_not_found(
     ) == snapshot
 
 
+def test_main_create_missing(
+    requests_mocks: RequestsMocks, snapshot: SnapshotAssertion, some_paths: list[Path]
+) -> None:
+    """Test main can create private tracks when no upstream title matches."""
+
+    def mock_get(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
+        if re.search(r"^https://api-v2.soundcloud.com/users/.*/tracks", url):
+            return mock.Mock(
+                status_code=200,
+                json=mock.Mock(return_value={"collection": []}),
+            )
+        elif re.search(
+            r"^https://api-v2.soundcloud.com/uploads/.*/track-transcoding", url
+        ):
+            return mock.Mock(
+                status_code=200,
+                json=mock.Mock(return_value={"status": "finished"}),
+            )
+
+        return mock.Mock(status_code=200)
+
+    def mock_post(url: str, *args: Any, **kwargs: Any) -> mock.Mock:
+        if re.search(
+            r"^https://api-v2.soundcloud.com/uploads/track-upload-policy", url
+        ):
+            return mock.Mock(
+                status_code=200,
+                json=mock.Mock(
+                    return_value={
+                        "headers": {"some-uploader-id": "some-uploader-value"},
+                        "url": "https://some-url",
+                        "uid": "stub-uid",
+                    }
+                ),
+            )
+        elif url == "https://api-v2.soundcloud.com/tracks":
+            title = kwargs["json"]["track"]["title"]
+            permalink = title.replace(" ", "-")
+            return mock.Mock(
+                status_code=200,
+                json=mock.Mock(
+                    return_value={
+                        "id": len(requests_mocks.post.mock_calls),
+                        "title": title,
+                        "permalink_url": f"https://soundcloud.com/{permalink}",
+                    }
+                ),
+            )
+
+        return mock.Mock(status_code=200)
+
+    requests_mocks.get.side_effect = mock_get
+    requests_mocks.post.side_effect = mock_post
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        upload,
+        [
+            "--create-missing",
+            *[str(path.parent.resolve()) for path in some_paths],
+        ],
+    )
+
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        requests_mocks.mock_calls,
+    ) == snapshot
+
+
+def test_main_create_missing_dry_run(
+    requests_mocks: RequestsMocks, snapshot: SnapshotAssertion, some_paths: list[Path]
+) -> None:
+    """Test dry run simulates creating missing tracks without writes."""
+    requests_mocks.get.return_value = mock.Mock(
+        status_code=200,
+        json=mock.Mock(return_value={"collection": []}),
+    )
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        upload,
+        [
+            "--dry-run",
+            "--create-missing",
+            *[str(path.parent.resolve()) for path in some_paths],
+        ],
+    )
+
+    assert (
+        result.exception,
+        result.stdout,
+        result.stderr,
+        requests_mocks.mock_calls,
+    ) == snapshot
+
+
 def test_main_tracks_newer(
     requests_mocks: RequestsMocks,
     snapshot: SnapshotAssertion,
