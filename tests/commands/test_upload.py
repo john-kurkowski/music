@@ -167,7 +167,6 @@ def test_main_create_missing(
                 json=mock.Mock(
                     return_value={
                         "id": len(requests_mocks.post.mock_calls),
-                        "title": title,
                         "permalink_url": f"https://soundcloud.com/{permalink}",
                     }
                 ),

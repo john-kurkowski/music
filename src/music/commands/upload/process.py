@@ -284,7 +284,14 @@ class Process:
             },
         )
         await _raise_for_status(resp)
-        return _response_json(resp)
+        payload = _response_json(resp)
+        # SoundCloud create responses can be sparse or wrapped; normalize the
+        # fields this command needs for result reporting.
+        track = cast(dict[str, Any], payload.get("track", payload))
+        return {
+            **track,
+            "title": track.get("title") or item.track_title,
+        }
 
     def _create_track_dry_run(self, item: UploadItem) -> Track:
         """Return track-shaped metadata for a dry-run create."""
