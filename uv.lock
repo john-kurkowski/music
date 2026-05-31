@@ -581,7 +581,7 @@ requires-dist = [
     { name = "rpp" },
     { name = "ruff", marker = "extra == 'testing'" },
     { name = "syrupy", marker = "extra == 'testing'" },
-    { name = "ty", marker = "extra == 'testing'", specifier = ">=0.0.34" },
+    { name = "ty", marker = "extra == 'testing'" },
     { name = "types-aiofiles", marker = "extra == 'testing'" },
 ]
 provides-extras = ["testing"]
