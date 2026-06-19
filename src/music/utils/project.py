@@ -15,8 +15,8 @@ with warnings.catch_warnings():
 _reapy_dynamic = cast(Any, reapy)
 
 
-# File: Render project, using the most recent render settings, auto-close render dialog
-RENDER_CMD_ID = 42230
+RENDER_CMD_ID = 41824
+RENDER_AND_CLOSE_DIALOG_CMD_ID = 42230
 
 
 class ExtendedProject(reapy.core.Project):
@@ -59,7 +59,7 @@ class ExtendedProject(reapy.core.Project):
 
         return cast(dict[str, Any], di)
 
-    async def render(self) -> None:
+    async def render(self, *, keep_render_dialog_open: bool = False) -> None:
         """Trigger Reaper to render the currently open project.
 
         Unlike sending a command via Reaper's Python API
@@ -67,12 +67,15 @@ class ExtendedProject(reapy.core.Project):
         API, to work async.
         """
         port = reapy.config.WEB_INTERFACE_PORT
+        command_id = (
+            RENDER_CMD_ID if keep_render_dialog_open else RENDER_AND_CLOSE_DIALOG_CMD_ID
+        )
 
         timeout_for_complex_project_stems = 60 * 60 * 2
 
         async with http.ClientSession() as client:
             resp = await client.get(
-                f"http://localhost:{port}/_/{RENDER_CMD_ID}",
+                f"http://localhost:{port}/_/{command_id}",
                 timeout=timeout_for_complex_project_stems,
             )
             http.raise_for_status(resp)

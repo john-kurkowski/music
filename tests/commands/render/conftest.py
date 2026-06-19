@@ -126,7 +126,7 @@ def render_mocks(
             elif key == "RENDER_FORMAT2":
                 render_format2s.append(value)
 
-        async def render_fake_file() -> None:
+        async def render_fake_file(*, keep_render_dialog_open: bool = False) -> None:
             path = Path(project.path) / f"{render_patterns[-1]}.wav"
             path.parent.mkdir(exist_ok=True, parents=True)
             path.touch()

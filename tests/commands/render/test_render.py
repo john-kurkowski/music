@@ -125,6 +125,33 @@ def test_main_main_version(
     ) == snapshot
 
 
+def test_main_keep_render_dialog_open(
+    render_mocks: RenderMocks, subprocess_with_output: mock.Mock, tmp_path: Path
+) -> None:
+    """Test keeping Reaper's render dialog open after only the final render."""
+    project_dirs = [tmp_path / "one", tmp_path / "two"]
+    for project_dir in project_dirs:
+        project_dir.mkdir()
+
+    result = CliRunner(catch_exceptions=False).invoke(
+        render,
+        [
+            "--include-main",
+            "--include-stems",
+            "--keep-render-dialog-open",
+            *map(str, project_dirs),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert render_mocks.project.render.mock_calls == [
+        mock.call(keep_render_dialog_open=False),
+        mock.call(keep_render_dialog_open=False),
+        mock.call(keep_render_dialog_open=False),
+        mock.call(keep_render_dialog_open=True),
+    ]
+
+
 def test_main_default_versions(
     render_mocks: RenderMocks,
     snapshot: SnapshotAssertion,

@@ -169,6 +169,7 @@
       tuple(
       ),
       dict({
+        'keep_render_dialog_open': False,
       }),
     ),
     _Call(
@@ -306,6 +307,7 @@
       tuple(
       ),
       dict({
+        'keep_render_dialog_open': False,
       }),
     ),
     _Call(
@@ -443,6 +445,7 @@
       tuple(
       ),
       dict({
+        'keep_render_dialog_open': False,
       }),
     ),
     _Call(
@@ -580,6 +583,7 @@
       tuple(
       ),
       dict({
+        'keep_render_dialog_open': False,
       }),
     ),
     _Call(
@@ -751,6 +755,7 @@
       tuple(
       ),
       dict({
+        'keep_render_dialog_open': False,
       }),
     ),
     _Call(
@@ -1098,6 +1103,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -1235,6 +1241,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -1372,6 +1379,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -1672,6 +1680,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -1809,6 +1818,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -1946,6 +1956,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -2329,6 +2340,7 @@
           tuple(
           ),
           dict({
+            'keep_render_dialog_open': False,
           }),
         ),
         _Call(
@@ -2466,6 +2478,7 @@
           tuple(
           ),
           dict({
+            'keep_render_dialog_open': False,
           }),
         ),
         _Call(
@@ -2603,6 +2616,7 @@
           tuple(
           ),
           dict({
+            'keep_render_dialog_open': False,
           }),
         ),
         _Call(
@@ -3149,6 +3163,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -3286,6 +3301,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -3423,6 +3439,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -3560,6 +3577,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -3731,6 +3749,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -3909,6 +3928,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -4046,6 +4066,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -4183,6 +4204,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -4320,6 +4342,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -4491,6 +4514,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -5005,6 +5029,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -5215,6 +5240,7 @@
         tuple(
         ),
         dict({
+          'keep_render_dialog_open': False,
         }),
       ),
       _Call(
@@ -5441,6 +5467,7 @@
       tuple(
       ),
       dict({
+        'keep_render_dialog_open': False,
       }),
     ),
     _Call(
@@ -5578,6 +5605,7 @@
       tuple(
       ),
       dict({
+        'keep_render_dialog_open': False,
       }),
     ),
     _Call(
@@ -5715,6 +5743,7 @@
       tuple(
       ),
       dict({
+        'keep_render_dialog_open': False,
       }),
     ),
     _Call(
@@ -5980,6 +6009,7 @@
           tuple(
           ),
           dict({
+            'keep_render_dialog_open': False,
           }),
         ),
         _Call(
@@ -6287,6 +6317,7 @@
           tuple(
           ),
           dict({
+            'keep_render_dialog_open': False,
           }),
         ),
         _Call(

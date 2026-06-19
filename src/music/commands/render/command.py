@@ -79,6 +79,12 @@ _CONSOLE_WIDTH: int | None = None
     type=SongVersion,
 )
 @click.option(
+    "--keep-render-dialog-open",
+    default=False,
+    help="Keep Reaper's render dialog open after the final render.",
+    is_flag=True,
+)
+@click.option(
     "--include-instrumental",
     default=None,
     flag_value=SongVersion.INSTRUMENTAL,
@@ -168,6 +174,7 @@ async def main(
     include_instrumental_dj: SongVersion | None,
     include_acappella: SongVersion | None,
     include_stems: SongVersion | None,
+    keep_render_dialog_open: bool,
     oauth_token: str,
     upload: bool,
     upload_existing: bool,
@@ -210,10 +217,12 @@ async def main(
         parsed_additional_headers,
         dry_run,
         exit_,
+        keep_render_dialog_open,
         oauth_token,
         upload,
         upload_existing,
         vocal_loudness_worth,
+        len(project_dirs) if project_dirs else 1,
         projects,
         versions,
     )
@@ -230,10 +239,12 @@ class _Command:
     additional_headers: dict[str, str]
     dry_run: bool
     exit_: bool
+    keep_render_dialog_open: bool
     oauth_token: str
     upload: bool
     upload_existing: bool
     vocal_loudness_worth: float | None
+    project_count: int
     projects: Iterator[project.ExtendedProject]
     versions: Collection[SongVersion]
 
@@ -264,9 +275,14 @@ class _Command:
             async with music.utils.http.ClientSession() as client:
                 renders = []
                 uploads = []
-                for project in self.projects:
+                for i, project in enumerate(self.projects):
                     renders_, uploads_ = await self._render_project(
-                        client, project, managed_renders
+                        client,
+                        project,
+                        managed_renders,
+                        keep_render_dialog_open=(
+                            self.keep_render_dialog_open and i == self.project_count - 1
+                        ),
                     )
                     renders.extend(renders_)
                     uploads.extend(uploads_)
@@ -284,6 +300,8 @@ class _Command:
         client: music.utils.http.ClientSession,
         project: project.ExtendedProject,
         managed_renders: ManagedRenderResults,
+        *,
+        keep_render_dialog_open: bool,
     ) -> tuple[
         list[RenderResult],
         list[asyncio.Task[list[music.commands.upload.process.Track | BaseException]]],
@@ -316,6 +334,7 @@ class _Command:
             *self.versions,
             dry_run=self.dry_run,
             exit_=self.exit_,
+            keep_render_dialog_open=keep_render_dialog_open,
             verbose=0,
             vocal_loudness_worth=self.vocal_loudness_worth,
         ):

@@ -46,7 +46,7 @@ from .result import ExistingRenderResult, RenderResult
 from .tracks import find_acappella_tracks_to_mute, find_stems, find_vox_tracks_to_mute
 
 RenderTask = tuple[
-    SongVersion, Callable[[], Awaitable[RenderResult]], rich.progress.TaskID
+    SongVersion, Callable[[bool], Awaitable[RenderResult]], rich.progress.TaskID
 ]
 
 
@@ -55,6 +55,7 @@ async def render_version(
     version: SongVersion,
     *,
     dry_run: bool,
+    keep_render_dialog_open: bool,
     postprocess: Callable[[Path], None] | None = None,
 ) -> RenderResult:
     """Trigger Reaper to render the current project audio. Returns the output file.
@@ -77,7 +78,7 @@ async def render_version(
         adjust_render_pattern(project, Path(in_name).joinpath(*version.pattern)),
     ):
         time_start = timer()
-        await project.render()
+        await project.render(keep_render_dialog_open=keep_render_dialog_open)
         time_end = timer()
 
     out_fil = version.path_for_project_dir(Path(project.path))
@@ -173,7 +174,11 @@ def _encode_shareable_render_format() -> str:
 
 
 async def _render_main(
-    project: ExtendedProject, *vocals: reapy.core.Track, dry_run: bool, verbose: int
+    project: ExtendedProject,
+    *vocals: reapy.core.Track,
+    dry_run: bool,
+    keep_render_dialog_open: bool,
+    verbose: int,
 ) -> RenderResult:
     for vocal in vocals:
         vocal.unsolo()
@@ -184,7 +189,12 @@ async def _render_main(
         partial(project.set_info_string, "RENDER_FORMAT2"),
         _encode_shareable_render_format(),
     ):
-        return await render_version(project, SongVersion.MAIN, dry_run=dry_run)
+        return await render_version(
+            project,
+            SongVersion.MAIN,
+            dry_run=dry_run,
+            keep_render_dialog_open=keep_render_dialog_open,
+        )
 
 
 async def _render_version_with_muted_tracks(
@@ -192,6 +202,7 @@ async def _render_version_with_muted_tracks(
     project: ExtendedProject,
     *tracks_to_mute: reapy.core.Track,
     dry_run: bool,
+    keep_render_dialog_open: bool,
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
@@ -204,13 +215,19 @@ async def _render_version_with_muted_tracks(
             _encode_shareable_render_format(),
         ),
     ):
-        return await render_version(project, version, dry_run=dry_run)
+        return await render_version(
+            project,
+            version,
+            dry_run=dry_run,
+            keep_render_dialog_open=keep_render_dialog_open,
+        )
 
 
 async def _render_a_cappella(
     project: ExtendedProject,
     *,
     dry_run: bool,
+    keep_render_dialog_open: bool,
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
@@ -229,6 +246,7 @@ async def _render_a_cappella(
             project,
             SongVersion.ACAPPELLA,
             dry_run=dry_run,
+            keep_render_dialog_open=keep_render_dialog_open,
             postprocess=trim_silence,
         )
 
@@ -237,6 +255,7 @@ async def _render_stems(
     project: ExtendedProject,
     *vocals: reapy.core.Track,
     dry_run: bool,
+    keep_render_dialog_open: bool,
     verbose: int,
 ) -> RenderResult:
     """Set the `project` FX, track selection, and render settings for stems, render, then restore original settings.
@@ -298,7 +317,12 @@ async def _render_stems(
             render_format2,
         ),
     ):
-        return await render_version(project, SongVersion.STEMS, dry_run=dry_run)
+        return await render_version(
+            project,
+            SongVersion.STEMS,
+            keep_render_dialog_open=keep_render_dialog_open,
+            dry_run=dry_run,
+        )
 
 
 class Process:
@@ -318,6 +342,7 @@ class Process:
         *versions: SongVersion,
         dry_run: bool,
         exit_: bool,
+        keep_render_dialog_open: bool,
         verbose: int,
         vocal_loudness_worth: float | None,
     ) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
@@ -344,7 +369,13 @@ class Process:
 
             try:
                 new_render_result = await self._render_and_print_stats(
-                    existing_render_result, render, i=i, verbose=verbose
+                    existing_render_result,
+                    render,
+                    i=i,
+                    keep_render_dialog_open=(
+                        keep_render_dialog_open and i == len(render_tasks) - 1
+                    ),
+                    verbose=verbose,
                 )
             except Exception as ex:
                 self.progress.fail_task(task, str(ex))
@@ -386,8 +417,12 @@ class Process:
             results.append(
                 (
                     SongVersion.MAIN,
-                    lambda: _render_main(
-                        project, *vocals, dry_run=dry_run, verbose=verbose
+                    lambda keep_render_dialog_open: _render_main(
+                        project,
+                        *vocals,
+                        dry_run=dry_run,
+                        keep_render_dialog_open=keep_render_dialog_open,
+                        verbose=verbose,
                     ),
                     self._add_task(project, SongVersion.MAIN),
                 )
@@ -397,11 +432,12 @@ class Process:
             results.append(
                 (
                     SongVersion.INSTRUMENTAL,
-                    lambda: _render_version_with_muted_tracks(
+                    lambda keep_render_dialog_open: _render_version_with_muted_tracks(
                         SongVersion.INSTRUMENTAL,
                         project,
                         *[track for track in [*vocals, *vox_tracks_to_mute] if track],
                         dry_run=dry_run,
+                        keep_render_dialog_open=keep_render_dialog_open,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
@@ -413,11 +449,12 @@ class Process:
             results.append(
                 (
                     SongVersion.INSTRUMENTAL_DJ,
-                    lambda: _render_version_with_muted_tracks(
+                    lambda keep_render_dialog_open: _render_version_with_muted_tracks(
                         SongVersion.INSTRUMENTAL_DJ,
                         project,
                         *vocals,
                         dry_run=dry_run,
+                        keep_render_dialog_open=keep_render_dialog_open,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
@@ -429,9 +466,10 @@ class Process:
             results.append(
                 (
                     SongVersion.ACAPPELLA,
-                    lambda: _render_a_cappella(
+                    lambda keep_render_dialog_open: _render_a_cappella(
                         project,
                         dry_run=dry_run,
+                        keep_render_dialog_open=keep_render_dialog_open,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
@@ -443,8 +481,12 @@ class Process:
             results.append(
                 (
                     SongVersion.STEMS,
-                    lambda: _render_stems(
-                        project, *vocals, dry_run=dry_run, verbose=verbose
+                    lambda keep_render_dialog_open: _render_stems(
+                        project,
+                        *vocals,
+                        dry_run=dry_run,
+                        keep_render_dialog_open=keep_render_dialog_open,
+                        verbose=verbose,
                     ),
                     self._add_task(project, SongVersion.STEMS),
                 )
@@ -492,9 +534,10 @@ class Process:
     async def _render_and_print_stats(
         self,
         existing_render: ExistingRenderResult,
-        render: Callable[[], Awaitable[RenderResult]],
+        render: Callable[[bool], Awaitable[RenderResult]],
         *,
         i: int,
+        keep_render_dialog_open: bool,
         verbose: int,
     ) -> RenderResult:
         """Collect before statistics, execute the given render, and print a before and after summary.
@@ -505,7 +548,7 @@ class Process:
             self.console.print()
 
         before_stats = existing_render.summary_stats
-        out = await render()
+        out = await render(keep_render_dialog_open)
         after_stats = out.summary_stats
 
         self.console.print(f"[b default]{out.name}[/b default]")

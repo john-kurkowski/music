@@ -60,3 +60,19 @@ async def test_project_render(
     """Test invoking Reaper to render a project."""
     await music.utils.project.ExtendedProject().render()
     assert requests_mocks.mock_calls == snapshot
+
+
+@pytest.mark.asyncio
+@mock.patch("reapy.core.Project.__init__")
+async def test_project_render_keep_dialog_open(
+    open_project: mock.Mock, requests_mocks: RequestsMocks
+) -> None:
+    """Test rendering without automatically closing REAPER's render dialog."""
+    await music.utils.project.ExtendedProject().render(keep_render_dialog_open=True)
+
+    assert requests_mocks.get.mock_calls == [
+        mock.call(
+            "http://localhost:2307/_/41824",
+            timeout=60 * 60 * 2,
+        )
+    ]
