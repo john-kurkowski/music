@@ -3,6 +3,7 @@
 import contextlib
 import warnings
 from collections.abc import Callable, Collection, Iterator
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from typing import Any, TypeVar, cast
@@ -24,6 +25,19 @@ with warnings.catch_warnings():
 
 T = TypeVar("T")
 _reapy_dynamic = cast(Any, reapy)
+
+
+@dataclass(frozen=True)
+class RenderBounds:
+    """Start, end, and duration of the audio included in a render."""
+
+    start: float
+    end: float
+
+    @property
+    def duration(self) -> float:
+        """Return the number of seconds between the render bounds."""
+        return self.end - self.start
 
 
 def adjust_master_limiter_threshold(
@@ -75,13 +89,15 @@ def adjust_render_pattern(
 
 
 @contextlib.contextmanager
-def adjust_render_bounds(project: ExtendedProject) -> Iterator[None]:
+def adjust_render_bounds(project: ExtendedProject) -> Iterator[RenderBounds]:
     """Set `project` render bounds, then restore the original values.
 
     This sets the render start and end times to contain all unmuted media
     items. Different song versions may therefore have different starts and ends
     and durations. This is more flexible than a human remembering to set fixed,
     custom times in the Reaper GUI, per song version.
+
+    Yields the active render bounds for consumers that need their duration.
     """
     custom_time_bounds = 0
 
@@ -120,7 +136,7 @@ def adjust_render_bounds(project: ExtendedProject) -> Iterator[None]:
             endpos,
         ),
     ):
-        yield
+        yield RenderBounds(start=startpos, end=endpos)
 
 
 @contextlib.contextmanager

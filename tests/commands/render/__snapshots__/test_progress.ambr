@@ -1,0 +1,8 @@
+# serializer version: 1
+# name: test_progress_bar_follows_elapsed_time_and_persists
+  '''
+  ⠋ Rendering "Song" 0:00:00 ━━━━━━━━━━━━━━━━━━━━                    
+  ✓ Rendering "Song" 0:00:00 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  
+  '''
+# ---
