@@ -21,9 +21,7 @@ Configure OpenSpec for your coding agent:
 openspec init
 ```
 
-Restart the agent after setup so it discovers the generated workflows. Agent
-integration files are intentionally ignored by this repository and remain local
-to each developer.
+Restart the agent after setup so it discovers the generated workflows.
 
 Useful commands:
 
