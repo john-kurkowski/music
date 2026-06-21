@@ -1,8 +1,11 @@
 """Custom render progress reporting."""
 
 import asyncio
+import contextlib
+import math
 import re
 import subprocess
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import override
@@ -119,22 +122,130 @@ class _SpinnerColumn(rich.progress.SpinnerColumn):
         return super().render(task)
 
 
+class ProgressProjection:
+    """Smooth display progress between authoritative render measurements.
+
+    Authoritative measurements (rendered-audio duration) arrive only every probe
+    interval. To move the bar near the console refresh rate, this state derives a
+    render rate from the two most recent valid measurements and projects forward
+    from the latest one. It is deliberately independent from Rich and takes an
+    injectable monotonic clock so projection is deterministic under test.
+
+    Projected values are display-only: real measurements stay authoritative, but
+    displayed progress never moves backward, stays below one, and stops advancing
+    once measurements go stale. Reaching exactly one and preserving progress on
+    failure are the Rich layer's responsibility, not this state's.
+    """
+
+    def __init__(
+        self,
+        total_seconds: float,
+        *,
+        clock: Callable[[], float] = time.monotonic,
+        stale_threshold: float = 2.0,
+        ceiling: float = 0.99,
+        max_rate: float = 1000.0,
+    ) -> None:
+        """Initialize projection bounds and the two-sample measurement window."""
+        self._total = total_seconds
+        self._clock = clock
+        self._stale_threshold = stale_threshold
+        self._ceiling = ceiling
+        self._max_rate = max_rate
+        # The two most recent valid (rendered duration, observation time) samples.
+        self._samples: list[tuple[float, float]] = []
+        self._last_displayed = 0.0
+
+    def measure(self, duration: float | None) -> None:
+        """Record an authoritative rendered-duration measurement, if usable.
+
+        Malformed, out-of-range, decreasing, or implausibly fast samples are
+        ignored so they cannot corrupt the observed rate.
+        """
+        if duration is None or not math.isfinite(duration) or duration < 0:
+            return
+
+        now = self._clock()
+        if self._samples:
+            prev_duration, prev_time = self._samples[-1]
+            delta_duration = duration - prev_duration
+            delta_time = now - prev_time
+            if delta_duration < 0 or delta_time <= 0:
+                return
+            if delta_duration / delta_time > self._max_rate:
+                return
+
+        self._samples.append((duration, now))
+        self._samples = self._samples[-2:]
+
+    def fraction(self) -> float:
+        """Return the current display fraction in the range zero through one.
+
+        Monotonic across calls: a projection that has run ahead of a trailing
+        measurement holds its position rather than regressing.
+        """
+        clamped = min(max(self._project(), 0.0), self._ceiling)
+        self._last_displayed = max(self._last_displayed, clamped)
+        return self._last_displayed
+
+    def _project(self) -> float:
+        if not self._samples:
+            return 0.0
+
+        latest_duration, latest_time = self._samples[-1]
+        if len(self._samples) < 2:
+            return latest_duration / self._total
+
+        prev_duration, prev_time = self._samples[-2]
+        age = self._clock() - latest_time
+        if age > self._stale_threshold:
+            return latest_duration / self._total
+
+        rate = (latest_duration - prev_duration) / (latest_time - prev_time)
+        return (latest_duration + rate * age) / self._total
+
+
 async def monitor_render_progress(
     output: Path,
     total_seconds: float,
     update: Callable[[float], None],
     *,
     poll_interval: float = 0.5,
+    refresh_interval: float = 0.1,
+    clock: Callable[[], float] = time.monotonic,
 ) -> None:
-    """Report progress from the duration of REAPER's actively written output."""
+    """Report progress from the duration of REAPER's actively written output.
+
+    A measurement loop probes the authoritative output duration every
+    `poll_interval`. A separate display loop projects between measurements and
+    invokes `update` near the console refresh rate without probing more often.
+    """
     if total_seconds <= 0:
         return
 
-    while True:
-        duration = await asyncio.to_thread(_rendered_duration, output)
-        if duration is not None:
-            update(min(duration / total_seconds, 1))
-        await asyncio.sleep(poll_interval)
+    projection = ProgressProjection(total_seconds, clock=clock)
+
+    async def measure_loop() -> None:
+        while True:
+            duration = await asyncio.to_thread(_rendered_duration, output)
+            projection.measure(duration)
+            await asyncio.sleep(poll_interval)
+
+    async def display_loop() -> None:
+        while True:
+            update(projection.fraction())
+            await asyncio.sleep(refresh_interval)
+
+    measure = asyncio.create_task(measure_loop())
+    display = asyncio.create_task(display_loop())
+    try:
+        await asyncio.gather(measure, display)
+    finally:
+        for task in (measure, display):
+            task.cancel()
+        for task in (measure, display):
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
 
 
 def _rendered_duration(output: Path) -> float | None:

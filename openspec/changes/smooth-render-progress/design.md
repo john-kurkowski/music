@@ -60,6 +60,26 @@ The measurement and display loops share lifecycle ownership in
 `monitor_render_progress`. Completion or cancellation stops both promptly, and
 monitor cleanup must not replace the render exception.
 
+### Resolved projection policy
+
+- **Observed-rate estimator:** the latest observed rate, computed from the two
+  most recent valid samples as `(d2 - d1) / (t2 - t1)` rendered-audio seconds per
+  wall-clock second. Encapsulated so a short moving average can replace it later.
+- **Measurement interval:** the existing 0.5-second authoritative probe interval
+  stays universal for this change; format-specific cadences are out of scope.
+- **Display refresh interval:** 0.1 seconds (~10 Hz), matching Rich's refresh.
+- **Stale threshold:** 2.0 seconds (four missed probes). Past it, projection
+  stops advancing until another valid measurement arrives.
+- **Final projection ceiling:** 0.99. Projection never displays one; reaching
+  exactly one is reserved for explicit render success.
+- **Implausible-rate bound:** 1000.0 rendered-audio seconds per wall-clock
+  second. A sample whose delta implies a faster rate does not update the
+  observed rate (guards against corrupt probes).
+- **Terminal states:** exactly-one on success and last-displayed preservation on
+  failure are owned by the Rich `RenderProgress` layer (`succeed_task` /
+  `fail_task`), which outlives the cancelled monitor. The projection's only
+  terminal guarantee is staying below one.
+
 ## Risks / Trade-offs
 
 - **Risk:** A latest-sample rate can visibly jitter as render speed changes. →
@@ -79,8 +99,7 @@ state and display loop to be reverted without changing file inspection.
 
 ## Open Questions
 
-- Should inexpensive formats eventually use a shorter measurement interval, or
-  should 0.5 seconds remain universal?
-- Should the estimator use the latest observed rate or a short moving average?
-- What stale threshold and final projection ceiling provide the best behavior?
-- What upper bound should classify a measurement delta as implausible?
+- Should inexpensive formats eventually use a shorter measurement interval? For
+  now 0.5 seconds remains universal (see Resolved projection policy).
+- Should the estimator use a short moving average instead of the latest observed
+  rate, to reduce jitter as render speed changes?
