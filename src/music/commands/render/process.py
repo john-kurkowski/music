@@ -114,6 +114,9 @@ async def render_version(
         progress_task = asyncio.create_task(
             monitor_render_progress(tmp_fil, render_bounds.duration, progress)
         )
+        # Time REAPER's render only. This narrower boundary is the realtime
+        # performance denominator, distinct from the progress task's end-to-end
+        # elapsed time that surrounds pre- and post-render application work.
         time_start = timer()
         try:
             await project.render(keep_render_dialog_open=keep_render_dialog_open)
@@ -608,10 +611,7 @@ class Process:
 
         table = rich.table.Table(
             box=rich.box.MINIMAL,
-            caption=(
-                f"Rendered in [b]{out.render_delta}[/b], a"
-                f" [b]{out.render_speedup:.1f}x[/b] speedup"
-            ),
+            caption=f"Rendered at [b]{out.render_speedup:.1f}x[/b] realtime",
         )
         table.add_column("", style="blue")
         table.add_column("Before", header_style="bold blue")
