@@ -435,10 +435,11 @@ class Process:
             self._exit_daw()
 
     def _add_task(
-        self, project: ExtendedProject, version: SongVersion
+        self, project: ExtendedProject, version: SongVersion, *, visible: bool = True
     ) -> rich.progress.TaskID:
         return self.progress.add_task(
             f'Rendering "{version.name_for_project_dir(Path(project.path))}"',
+            visible=visible,
         )
 
     def _build_render_tasks(
@@ -467,7 +468,9 @@ class Process:
                         progress=options.progress,
                         verbose=verbose,
                     ),
-                    progress_task_id=self._add_task(project, SongVersion.MAIN),
+                    progress_task_id=self._add_task(
+                        project, SongVersion.MAIN, visible=bool(results)
+                    ),
                 )
             )
 
@@ -485,7 +488,9 @@ class Process:
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
-                    progress_task_id=self._add_task(project, SongVersion.INSTRUMENTAL),
+                    progress_task_id=self._add_task(
+                        project, SongVersion.INSTRUMENTAL, visible=bool(results)
+                    ),
                 )
             )
 
@@ -504,7 +509,7 @@ class Process:
                         verbose=verbose,
                     ),
                     progress_task_id=self._add_task(
-                        project, SongVersion.INSTRUMENTAL_DJ
+                        project, SongVersion.INSTRUMENTAL_DJ, visible=bool(results)
                     ),
                 )
             )
@@ -521,7 +526,9 @@ class Process:
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
-                    progress_task_id=self._add_task(project, SongVersion.ACAPPELLA),
+                    progress_task_id=self._add_task(
+                        project, SongVersion.ACAPPELLA, visible=bool(results)
+                    ),
                 )
             )
 
@@ -537,7 +544,9 @@ class Process:
                         progress=options.progress,
                         verbose=verbose,
                     ),
-                    progress_task_id=self._add_task(project, SongVersion.STEMS),
+                    progress_task_id=self._add_task(
+                        project, SongVersion.STEMS, visible=bool(results)
+                    ),
                 )
             )
 

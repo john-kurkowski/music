@@ -13,6 +13,33 @@ from syrupy.assertion import SnapshotAssertion
 from music.commands.render import progress
 
 
+def test_progress_bar_can_be_hidden_until_render_starts() -> None:
+    """Do not show Rich's pulsing waiting state for an immediately started render."""
+    output = io.StringIO()
+    console = rich.console.Console(file=output, width=100, color_system=None)
+    render_progress = progress.RenderProgress(console)
+    task = render_progress.add_task('Rendering "Song"', visible=False)
+
+    console.print(render_progress)
+    assert 'Rendering "Song"' not in output.getvalue()
+
+    render_progress.start_task(task)
+    console.print(render_progress)
+    assert 'Rendering "Song"' in output.getvalue()
+
+
+def test_queued_progress_bar_is_visible_before_render_starts() -> None:
+    """Show Rich's default waiting state for renders queued behind active work."""
+    output = io.StringIO()
+    console = rich.console.Console(file=output, width=100, color_system=None)
+    render_progress = progress.RenderProgress(console)
+    render_progress.add_task('Rendering "Song"')
+
+    console.print(render_progress)
+
+    assert 'Rendering "Song"' in output.getvalue()
+
+
 def test_progress_bar_follows_elapsed_time_and_persists(
     snapshot: SnapshotAssertion,
 ) -> None:

@@ -48,6 +48,7 @@ class _TaskProgress:
     def start_task(self, task_id: rich.progress.TaskID) -> None:
         """Start a task."""
         self._progress.start_task(task_id)
+        self._progress.update(task_id, visible=True)
 
     def _mark_succeeded(self, task_id: rich.progress.TaskID) -> None:
         """Set a task's shared success status."""
@@ -69,9 +70,13 @@ class RenderProgress(_TaskProgress):
             rich.progress.BarColumn(),
         )
 
-    def add_task(self, description: str) -> rich.progress.TaskID:
+    def add_task(
+        self, description: str, *, visible: bool = True
+    ) -> rich.progress.TaskID:
         """Add a render task with fractional progress from zero to one."""
-        return self._progress.add_task(description, start=False, total=1)
+        return self._progress.add_task(
+            description, start=False, total=1, visible=visible
+        )
 
     def update_task(self, task_id: rich.progress.TaskID, completed: float) -> None:
         """Report a task's completion as a fraction from zero to one."""
