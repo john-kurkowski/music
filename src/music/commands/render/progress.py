@@ -6,7 +6,8 @@ import math
 import re
 import subprocess
 import time
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import override
 
@@ -251,6 +252,27 @@ async def monitor_render_progress(
         for task in (measure, display):
             with contextlib.suppress(asyncio.CancelledError):
                 await task
+
+
+@asynccontextmanager
+async def render_progress_monitor(
+    output: Path,
+    total_seconds: float,
+    update: Callable[[float], None],
+) -> AsyncIterator[None]:
+    """Run best-effort progress UI without changing the render outcome.
+
+    The monitor task observes render output for display only. If it is already
+    cancelled or failed by cleanup time, the render operation's own success or
+    exception remains authoritative.
+    """
+    task = asyncio.create_task(monitor_render_progress(output, total_seconds, update))
+    try:
+        yield
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await task
 
 
 def _rendered_duration(output: Path) -> float | None:

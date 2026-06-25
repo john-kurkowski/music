@@ -1,8 +1,6 @@
 """Render processing class and functions to handle the possible versions of a song."""
 
-import asyncio
 import base64
-import contextlib
 import datetime
 import random
 import shutil
@@ -44,7 +42,7 @@ from .contextmanagers import (
     select_tracks_only,
     toggle_fx_for_tracks,
 )
-from .progress import RenderProgress, monitor_render_progress
+from .progress import RenderProgress, render_progress_monitor
 from .result import ExistingRenderResult, RenderResult
 from .tracks import find_acappella_tracks_to_mute, find_stems, find_vox_tracks_to_mute
 
@@ -111,20 +109,13 @@ async def render_version(
         adjust_render_bounds(project) as render_bounds,
         adjust_render_pattern(project, Path(in_name).joinpath(*version.pattern)),
     ):
-        progress_task = asyncio.create_task(
-            monitor_render_progress(tmp_fil, render_bounds.duration, progress)
-        )
-        # Time REAPER's render only. This narrower boundary is the realtime
-        # performance denominator, distinct from the progress task's end-to-end
-        # elapsed time that surrounds pre- and post-render application work.
-        time_start = timer()
-        try:
+        async with render_progress_monitor(tmp_fil, render_bounds.duration, progress):
+            # Time REAPER's render only. This narrower boundary is the realtime
+            # performance denominator, distinct from the progress task's end-to-end
+            # elapsed time that surrounds pre- and post-render application work.
+            time_start = timer()
             await project.render(keep_render_dialog_open=keep_render_dialog_open)
-        finally:
-            progress_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await progress_task
-        time_end = timer()
+            time_end = timer()
 
     final_fil = tmp_fil if dry_run else out_fil
 

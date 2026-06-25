@@ -57,7 +57,9 @@ from observed-rate calculation.
 
 ### Requirement: Terminal render progress
 The render monitor SHALL display exactly complete progress only after success and
-SHALL preserve the last displayed progress when reporting failure.
+SHALL preserve the last displayed progress when reporting failure. Failures from
+progress monitoring SHALL NOT replace the render operation's success or
+exception.
 
 #### Scenario: Render succeeds
 - **WHEN** the render reports success
@@ -66,3 +68,7 @@ SHALL preserve the last displayed progress when reporting failure.
 #### Scenario: Render fails
 - **WHEN** the render reports failure
 - **THEN** the failure indicator retains the last displayed progress value
+
+#### Scenario: Progress monitor fails during render cleanup
+- **WHEN** the progress monitor fails before render cleanup completes
+- **THEN** the render operation's own result or exception remains authoritative

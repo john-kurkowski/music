@@ -58,7 +58,10 @@ failure preserves the last displayed value.
 
 The measurement and display loops share lifecycle ownership in
 `monitor_render_progress`. Completion or cancellation stops both promptly, and
-monitor cleanup must not replace the render exception.
+monitor cleanup must not replace the render operation's success or exception.
+Render cleanup treats monitor failures as best-effort UI failures after
+requesting cancellation, so the renderer remains the authoritative source of
+workflow outcome.
 
 ### Resolved projection policy
 
