@@ -8,19 +8,14 @@ from functools import partial
 from pathlib import Path
 from typing import Any, TypeVar, cast
 
-from music.utils.fx import set_param_value
 from music.utils.project import ExtendedProject
 
-from .consts import (
-    LIMITER_RANGE,
-    SWS_ERROR_SENTINEL,
-)
+from .consts import SWS_ERROR_SENTINEL
 from .tracks import is_muted
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="Can't reach distant API")
     import reapy
-    import reapy.errors
 
 
 T = TypeVar("T")
@@ -38,43 +33,6 @@ class RenderBounds:
     def duration(self) -> float:
         """Return the number of seconds between the render bounds."""
         return self.end - self.start
-
-
-def adjust_master_limiter_threshold(
-    project: reapy.core.Project, vocal_loudness_worth: float
-) -> contextlib.AbstractContextManager[None]:
-    """Find the `project` master track's master limiter's threshold parameter and adjust its value without the vocal, then restore the original value."""
-    if vocal_loudness_worth == 0.0:
-        return contextlib.nullcontext()
-
-    limiters = [fx for fx in project.master_track.fxs[::-1] if "Limit" in fx.name]
-    if not limiters:
-        raise ValueError("Master limiter not found")
-    limiter = limiters[0]
-
-    def safe_param_name(param: reapy.core.FXParam) -> str:
-        """Work around uncaught exception for non-UTF-8 strings in parameter names."""
-        try:
-            return param.name
-        except reapy.errors.DistError as ex:
-            if "UnicodeDecodeError" in str(ex):
-                return ""
-            raise
-
-    thresholds = [
-        param for param in limiter.params if "Threshold" in safe_param_name(param)
-    ]
-    threshold = thresholds[0]
-    threshold_previous_value = threshold.normalized
-    threshold_louder_value = (
-        (threshold_previous_value * LIMITER_RANGE) - vocal_loudness_worth
-    ) / LIMITER_RANGE
-
-    return get_set_restore(
-        lambda: threshold_previous_value,
-        partial(set_param_value, threshold),
-        threshold_louder_value,
-    )
 
 
 def adjust_render_pattern(

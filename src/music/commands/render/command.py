@@ -26,10 +26,7 @@ import music.utils.http
 from music.utils import project
 from music.utils.songversion import SongVersion
 
-from .consts import (
-    SWS_ERROR_SENTINEL,
-    VOCAL_LOUDNESS_WORTH,
-)
+from .consts import SWS_ERROR_SENTINEL
 from .result import ManagedRenderResults, RenderResult
 
 # Test-only property. Set to a large number to avoid text wrapping in the console.
@@ -152,18 +149,6 @@ _CONSOLE_WIDTH: int | None = None
     ),
     is_flag=True,
 )
-@click.option(
-    "--vocal-loudness-worth",
-    "-vlw",
-    default=None,
-    help=(
-        "How many dBs the vocals in the given track account for, to make up when they"
-        " are not present, when rendering only the instrumental or a cappella."
-        " Defaults to the `vocal-loudness-worth` setting in project notes, or"
-        f" {VOCAL_LOUDNESS_WORTH} if unset."
-    ),
-    type=float,
-)
 async def main(
     project_dirs: list[Path],
     additional_headers: str,
@@ -178,7 +163,6 @@ async def main(
     oauth_token: str,
     upload: bool,
     upload_existing: bool,
-    vocal_loudness_worth: float | None,
 ) -> None:
     """Render vocal, instrumental, etc versions of projects.
 
@@ -221,7 +205,6 @@ async def main(
         oauth_token,
         upload,
         upload_existing,
-        vocal_loudness_worth,
         len(project_dirs) if project_dirs else 1,
         projects,
         versions,
@@ -243,7 +226,6 @@ class _Command:
     oauth_token: str
     upload: bool
     upload_existing: bool
-    vocal_loudness_worth: float | None
     project_count: int
     projects: Iterator[project.ExtendedProject]
     versions: Collection[SongVersion]
@@ -336,7 +318,6 @@ class _Command:
             exit_=self.exit_,
             keep_render_dialog_open=keep_render_dialog_open,
             verbose=0,
-            vocal_loudness_worth=self.vocal_loudness_worth,
         ):
             renders.append(render)
             managed_renders.extend([render])

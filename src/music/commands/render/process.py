@@ -30,10 +30,8 @@ from music.utils.songversion import SongVersion
 from .consts import (
     MONO_TRACKS_TO_MONO_FILES,
     SELECTED_TRACKS_VIA_MASTER,
-    VOCAL_LOUDNESS_WORTH,
 )
 from .contextmanagers import (
-    adjust_master_limiter_threshold,
     adjust_render_bounds,
     adjust_render_pattern,
     avoid_fx_tails,
@@ -230,11 +228,9 @@ async def _render_version_with_muted_tracks(
     dry_run: bool,
     keep_render_dialog_open: bool,
     progress: Callable[[float], None],
-    vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
     with (
-        adjust_master_limiter_threshold(project, vocal_loudness_worth),
         mute_tracks(tracks_to_mute),
         get_set_restore(
             partial(project.get_info_string, "RENDER_FORMAT2"),
@@ -257,13 +253,11 @@ async def _render_a_cappella(
     dry_run: bool,
     keep_render_dialog_open: bool,
     progress: Callable[[float], None],
-    vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
     tracks_to_mute = find_acappella_tracks_to_mute(project)
 
     with (
-        adjust_master_limiter_threshold(project, vocal_loudness_worth),
         mute_tracks(tracks_to_mute),
         get_set_restore(
             partial(project.get_info_string, "RENDER_FORMAT2"),
@@ -376,7 +370,6 @@ class Process:
         exit_: bool,
         keep_render_dialog_open: bool,
         verbose: int,
-        vocal_loudness_worth: float | None,
     ) -> AsyncIterator[tuple[SongVersion, RenderResult]]:
         """Render the given versions of the given Reaper project.
 
@@ -389,9 +382,6 @@ class Process:
             *versions,
             dry_run=dry_run,
             verbose=verbose,
-            vocal_loudness_worth=self._get_vocal_loudness_worth(
-                project, vocal_loudness_worth
-            ),
         )
 
         for i, render_task in enumerate(render_tasks):
@@ -439,7 +429,6 @@ class Process:
         *versions: SongVersion,
         dry_run: bool,
         verbose: int,
-        vocal_loudness_worth: float,
     ) -> list[RenderTask]:
         """Build list of render tasks based on requested versions and project content."""
         vocals = self._get_vocals(project)
@@ -476,7 +465,6 @@ class Process:
                         dry_run=dry_run,
                         keep_render_dialog_open=options.keep_render_dialog_open,
                         progress=options.progress,
-                        vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
                     progress_task_id=self._add_task(
@@ -496,7 +484,6 @@ class Process:
                         dry_run=dry_run,
                         keep_render_dialog_open=options.keep_render_dialog_open,
                         progress=options.progress,
-                        vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
                     progress_task_id=self._add_task(
@@ -514,7 +501,6 @@ class Process:
                         dry_run=dry_run,
                         keep_render_dialog_open=options.keep_render_dialog_open,
                         progress=options.progress,
-                        vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
                     progress_task_id=self._add_task(
@@ -570,15 +556,6 @@ class Process:
     def _get_vocals(self, project: ExtendedProject) -> list[reapy.core.Track]:
         """Get vocal tracks from project."""
         return [track for track in project.tracks if track.name == "Vocals"]
-
-    def _get_vocal_loudness_worth(
-        self, project: ExtendedProject, vocal_loudness_worth: float | None
-    ) -> float:
-        """Get vocal loudness worth with fallback to project metadata."""
-        if vocal_loudness_worth is not None:
-            return vocal_loudness_worth
-
-        return float(project.metadata.get("vocal-loudness-worth", VOCAL_LOUDNESS_WORTH))
 
     async def _render_and_print_stats(
         self,

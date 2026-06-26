@@ -50,16 +50,6 @@ the project, so that empty or duplicate output is never produced.
 - **WHEN** the DJ instrumental is requested but the project has no vocal samples beyond the lead vocal
 - **THEN** the DJ instrumental is skipped because it would be identical to the instrumental
 
-### Requirement: Reduced versions compensate for removed vocal loudness
-The render command SHALL raise the master limiter threshold by the
-vocal-loudness-worth amount when rendering a version that mutes vocals, so the
-reduced mix is not quieter than the main version.
-
-#### Scenario: Rendering an instrumental or a cappella version
-- **WHEN** a version that mutes vocal content is rendered
-- **THEN** the master limiter threshold is adjusted by the vocal-loudness-worth amount
-- **AND** the amount defaults to the project's `vocal-loudness-worth` note when not given on the command line
-
 ### Requirement: Version output naming and files
 The render command SHALL name each version's output after the project, suffixed
 by the version, and SHALL write a single audio file per version except stems,
