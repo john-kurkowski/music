@@ -8,6 +8,7 @@ import struct
 import subprocess
 import warnings
 from collections.abc import AsyncIterator, Awaitable, Callable, Collection
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from timeit import default_timer as timer
@@ -41,13 +42,31 @@ from .contextmanagers import (
     select_tracks_only,
     toggle_fx_for_tracks,
 )
-from .progress import IndeterminateProgress
+from .progress import RenderProgress, render_progress_monitor
 from .result import ExistingRenderResult, RenderResult
 from .tracks import find_acappella_tracks_to_mute, find_stems, find_vox_tracks_to_mute
 
-RenderTask = tuple[
-    SongVersion, Callable[[bool], Awaitable[RenderResult]], rich.progress.TaskID
-]
+type ProgressCallback = Callable[[float], None]
+
+
+@dataclass(frozen=True)
+class RenderOptions:
+    """Values that vary for each invocation of a queued render."""
+
+    keep_render_dialog_open: bool
+    progress: ProgressCallback
+
+
+type RenderCallable = Callable[[RenderOptions], Awaitable[RenderResult]]
+
+
+@dataclass(frozen=True)
+class RenderTask:
+    """A song version queued for rendering and its progress display task."""
+
+    progress_task_id: rich.progress.TaskID
+    render: RenderCallable
+    version: SongVersion
 
 
 async def render_version(
@@ -57,6 +76,7 @@ async def render_version(
     dry_run: bool,
     keep_render_dialog_open: bool,
     postprocess: Callable[[Path], None] | None = None,
+    progress: Callable[[float], None],
 ) -> RenderResult:
     """Trigger Reaper to render the current project audio. Returns the output file.
 
@@ -72,15 +92,6 @@ async def render_version(
     rand_id = random.randrange(10**5, 10**6)
     in_name = f"{out_name} {rand_id}.tmp"
 
-    with (
-        avoid_fx_tails(project),
-        adjust_render_bounds(project),
-        adjust_render_pattern(project, Path(in_name).joinpath(*version.pattern)),
-    ):
-        time_start = timer()
-        await project.render(keep_render_dialog_open=keep_render_dialog_open)
-        time_end = timer()
-
     out_fil = version.path_for_project_dir(Path(project.path))
     if version == SongVersion.STEMS:
         tmp_fil = out_fil.parent / in_name
@@ -92,6 +103,19 @@ async def render_version(
 
         tmp_secondary = tmp_fil.with_suffix(".mp3")
         final_secondary = out_fil.with_suffix(".mp3")
+
+    with (
+        avoid_fx_tails(project),
+        adjust_render_bounds(project) as render_bounds,
+        adjust_render_pattern(project, Path(in_name).joinpath(*version.pattern)),
+    ):
+        async with render_progress_monitor(tmp_fil, render_bounds.duration, progress):
+            # Time REAPER's render only. This narrower boundary is the realtime
+            # performance denominator, distinct from the progress task's end-to-end
+            # elapsed time that surrounds pre- and post-render application work.
+            time_start = timer()
+            await project.render(keep_render_dialog_open=keep_render_dialog_open)
+            time_end = timer()
 
     final_fil = tmp_fil if dry_run else out_fil
 
@@ -178,6 +202,7 @@ async def _render_main(
     *vocals: reapy.core.Track,
     dry_run: bool,
     keep_render_dialog_open: bool,
+    progress: Callable[[float], None],
     verbose: int,
 ) -> RenderResult:
     for vocal in vocals:
@@ -194,6 +219,7 @@ async def _render_main(
             SongVersion.MAIN,
             dry_run=dry_run,
             keep_render_dialog_open=keep_render_dialog_open,
+            progress=progress,
         )
 
 
@@ -203,6 +229,7 @@ async def _render_version_with_muted_tracks(
     *tracks_to_mute: reapy.core.Track,
     dry_run: bool,
     keep_render_dialog_open: bool,
+    progress: Callable[[float], None],
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
@@ -220,6 +247,7 @@ async def _render_version_with_muted_tracks(
             version,
             dry_run=dry_run,
             keep_render_dialog_open=keep_render_dialog_open,
+            progress=progress,
         )
 
 
@@ -228,6 +256,7 @@ async def _render_a_cappella(
     *,
     dry_run: bool,
     keep_render_dialog_open: bool,
+    progress: Callable[[float], None],
     vocal_loudness_worth: float,
     verbose: int,
 ) -> RenderResult:
@@ -248,6 +277,7 @@ async def _render_a_cappella(
             dry_run=dry_run,
             keep_render_dialog_open=keep_render_dialog_open,
             postprocess=trim_silence,
+            progress=progress,
         )
 
 
@@ -256,6 +286,7 @@ async def _render_stems(
     *vocals: reapy.core.Track,
     dry_run: bool,
     keep_render_dialog_open: bool,
+    progress: Callable[[float], None],
     verbose: int,
 ) -> RenderResult:
     """Set the `project` FX, track selection, and render settings for stems, render, then restore original settings.
@@ -320,8 +351,9 @@ async def _render_stems(
         return await render_version(
             project,
             SongVersion.STEMS,
-            keep_render_dialog_open=keep_render_dialog_open,
             dry_run=dry_run,
+            keep_render_dialog_open=keep_render_dialog_open,
+            progress=progress,
         )
 
 
@@ -334,7 +366,7 @@ class Process:
         """Initialize."""
         self.console = console
         self.console_err = console_err
-        self.progress = IndeterminateProgress(self.console)
+        self.progress = RenderProgress(self.console)
 
     async def process(
         self,
@@ -362,28 +394,29 @@ class Process:
             ),
         )
 
-        for i, (version, render, task) in enumerate(render_tasks):
-            existing_render_result = ExistingRenderResult(project, version)
+        for i, render_task in enumerate(render_tasks):
+            existing_render_result = ExistingRenderResult(project, render_task.version)
 
-            self.progress.start_task(task)
+            self.progress.start_task(render_task.progress_task_id)
 
             try:
                 new_render_result = await self._render_and_print_stats(
                     existing_render_result,
-                    render,
+                    render_task.render,
                     i=i,
                     keep_render_dialog_open=(
                         keep_render_dialog_open and i == len(render_tasks) - 1
                     ),
+                    task=render_task.progress_task_id,
                     verbose=verbose,
                 )
             except Exception as ex:
-                self.progress.fail_task(task, str(ex))
+                self.progress.fail_task(render_task.progress_task_id, str(ex))
                 raise
 
-            self.progress.succeed_task(task)
+            self.progress.succeed_task(render_task.progress_task_id)
 
-            yield (version, new_render_result)
+            yield (render_task.version, new_render_result)
 
         if len(render_tasks):
             # Render causes a project to have unsaved changes, no matter what. Save the user a step.
@@ -393,10 +426,11 @@ class Process:
             self._exit_daw()
 
     def _add_task(
-        self, project: ExtendedProject, version: SongVersion
+        self, project: ExtendedProject, version: SongVersion, *, visible: bool = True
     ) -> rich.progress.TaskID:
         return self.progress.add_task(
             f'Rendering "{version.name_for_project_dir(Path(project.path))}"',
+            visible=visible,
         )
 
     def _build_render_tasks(
@@ -415,80 +449,95 @@ class Process:
 
         if self._should_render_main(versions):
             results.append(
-                (
-                    SongVersion.MAIN,
-                    lambda keep_render_dialog_open: _render_main(
+                RenderTask(
+                    version=SongVersion.MAIN,
+                    render=lambda options: _render_main(
                         project,
                         *vocals,
                         dry_run=dry_run,
-                        keep_render_dialog_open=keep_render_dialog_open,
+                        keep_render_dialog_open=options.keep_render_dialog_open,
+                        progress=options.progress,
                         verbose=verbose,
                     ),
-                    self._add_task(project, SongVersion.MAIN),
+                    progress_task_id=self._add_task(
+                        project, SongVersion.MAIN, visible=bool(results)
+                    ),
                 )
             )
 
         if self._should_render_instrumental(versions, vocals, vox_tracks_to_mute):
             results.append(
-                (
-                    SongVersion.INSTRUMENTAL,
-                    lambda keep_render_dialog_open: _render_version_with_muted_tracks(
+                RenderTask(
+                    version=SongVersion.INSTRUMENTAL,
+                    render=lambda options: _render_version_with_muted_tracks(
                         SongVersion.INSTRUMENTAL,
                         project,
                         *[track for track in [*vocals, *vox_tracks_to_mute] if track],
                         dry_run=dry_run,
-                        keep_render_dialog_open=keep_render_dialog_open,
+                        keep_render_dialog_open=options.keep_render_dialog_open,
+                        progress=options.progress,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
-                    self._add_task(project, SongVersion.INSTRUMENTAL),
+                    progress_task_id=self._add_task(
+                        project, SongVersion.INSTRUMENTAL, visible=bool(results)
+                    ),
                 )
             )
 
         if self._should_render_instrumental_dj(versions, vocals, vox_tracks_to_mute):
             results.append(
-                (
-                    SongVersion.INSTRUMENTAL_DJ,
-                    lambda keep_render_dialog_open: _render_version_with_muted_tracks(
+                RenderTask(
+                    version=SongVersion.INSTRUMENTAL_DJ,
+                    render=lambda options: _render_version_with_muted_tracks(
                         SongVersion.INSTRUMENTAL_DJ,
                         project,
                         *vocals,
                         dry_run=dry_run,
-                        keep_render_dialog_open=keep_render_dialog_open,
+                        keep_render_dialog_open=options.keep_render_dialog_open,
+                        progress=options.progress,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
-                    self._add_task(project, SongVersion.INSTRUMENTAL_DJ),
+                    progress_task_id=self._add_task(
+                        project, SongVersion.INSTRUMENTAL_DJ, visible=bool(results)
+                    ),
                 )
             )
 
         if self._should_render_acappella(versions, vocals):
             results.append(
-                (
-                    SongVersion.ACAPPELLA,
-                    lambda keep_render_dialog_open: _render_a_cappella(
+                RenderTask(
+                    version=SongVersion.ACAPPELLA,
+                    render=lambda options: _render_a_cappella(
                         project,
                         dry_run=dry_run,
-                        keep_render_dialog_open=keep_render_dialog_open,
+                        keep_render_dialog_open=options.keep_render_dialog_open,
+                        progress=options.progress,
                         vocal_loudness_worth=vocal_loudness_worth,
                         verbose=verbose,
                     ),
-                    self._add_task(project, SongVersion.ACAPPELLA),
+                    progress_task_id=self._add_task(
+                        project, SongVersion.ACAPPELLA, visible=bool(results)
+                    ),
                 )
             )
 
         if self._should_render_stems(versions):
             results.append(
-                (
-                    SongVersion.STEMS,
-                    lambda keep_render_dialog_open: _render_stems(
+                RenderTask(
+                    version=SongVersion.STEMS,
+                    render=lambda options: _render_stems(
                         project,
                         *vocals,
                         dry_run=dry_run,
-                        keep_render_dialog_open=keep_render_dialog_open,
+                        keep_render_dialog_open=options.keep_render_dialog_open,
+                        progress=options.progress,
                         verbose=verbose,
                     ),
-                    self._add_task(project, SongVersion.STEMS),
+                    progress_task_id=self._add_task(
+                        project, SongVersion.STEMS, visible=bool(results)
+                    ),
                 )
             )
 
@@ -534,10 +583,11 @@ class Process:
     async def _render_and_print_stats(
         self,
         existing_render: ExistingRenderResult,
-        render: Callable[[bool], Awaitable[RenderResult]],
+        render: RenderCallable,
         *,
         i: int,
         keep_render_dialog_open: bool,
+        task: rich.progress.TaskID,
         verbose: int,
     ) -> RenderResult:
         """Collect before statistics, execute the given render, and print a before and after summary.
@@ -548,7 +598,12 @@ class Process:
             self.console.print()
 
         before_stats = existing_render.summary_stats
-        out = await render(keep_render_dialog_open)
+        out = await render(
+            RenderOptions(
+                keep_render_dialog_open=keep_render_dialog_open,
+                progress=partial(self.progress.update_task, task),
+            )
+        )
         after_stats = out.summary_stats
 
         self.console.print(f"[b default]{out.name}[/b default]")
@@ -556,10 +611,7 @@ class Process:
 
         table = rich.table.Table(
             box=rich.box.MINIMAL,
-            caption=(
-                f"Rendered in [b]{out.render_delta}[/b], a"
-                f" [b]{out.render_speedup:.1f}x[/b] speedup"
-            ),
+            caption=f"Rendered at [b]{out.render_speedup:.1f}x[/b] realtime",
         )
         table.add_column("", style="blue")
         table.add_column("Before", header_style="bold blue")

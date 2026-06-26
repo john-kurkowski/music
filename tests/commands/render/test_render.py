@@ -1,11 +1,13 @@
 """Render tests."""
 
+import asyncio
 import datetime
 import math
 from pathlib import Path
 from typing import Any
 from unittest import mock
 
+import pytest
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
@@ -349,6 +351,34 @@ def test_main_mixed_errors(
     assert subprocess_with_output.mock_calls == snapshot
 
     assert _snapshot_tmp_path(tmp_path) == snapshot
+
+
+def test_main_render_error_is_not_masked_by_progress_monitor_error(
+    monkeypatch: pytest.MonkeyPatch,
+    render_mocks: RenderMocks,
+    subprocess_with_output: mock.Mock,
+) -> None:
+    """Keep render failures authoritative when progress monitoring also fails."""
+    monitor_failed = asyncio.Event()
+
+    async def monitor_with_error(*args: Any, **kwargs: Any) -> None:
+        monitor_failed.set()
+        raise RuntimeError("progress monitor failed")
+
+    async def render_with_error(*args: Any, **kwargs: Any) -> None:
+        await monitor_failed.wait()
+        raise RuntimeError("render failed")
+
+    monkeypatch.setattr(
+        "music.commands.render.progress.monitor_render_progress", monitor_with_error
+    )
+    render_mocks.project.render.side_effect = render_with_error
+
+    result = CliRunner(catch_exceptions=True).invoke(render, ["--include-main"])
+
+    assert isinstance(result.exception, RuntimeError)
+    assert str(result.exception) == "render failed"
+    assert subprocess_with_output.mock_calls == []
 
 
 def test_main_dry_run_cleans_rendered_files_after_later_error(
