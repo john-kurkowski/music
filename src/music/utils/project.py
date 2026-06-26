@@ -1,6 +1,5 @@
 """Utilities for working with Reaper projects."""
 
-import json
 import warnings
 from pathlib import Path
 from typing import Any, cast
@@ -47,17 +46,6 @@ class ExtendedProject(reapy.core.Project):
         )
         _reapy_dynamic.RPR.Main_openProject(str(project_file))
         return cls()
-
-    @property
-    def metadata(self) -> dict[str, Any]:
-        """Parse optional author-idiosyncratic metadata from the project notes."""
-        notes = _reapy_dynamic.RPR.GetSetProjectNotes(-1, False, "", 999)[2]
-        try:
-            di = json.loads(notes)
-        except json.JSONDecodeError:
-            return {}
-
-        return cast(dict[str, Any], di)
 
     async def render(self, *, keep_render_dialog_open: bool = False) -> None:
         """Trigger Reaper to render the currently open project.

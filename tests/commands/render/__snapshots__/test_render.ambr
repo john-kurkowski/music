@@ -60,22 +60,6 @@
 # name: test_main_all_versions.1
   _CallList([
     _Call(
-      'metadata.get',
-      tuple(
-        'vocal-loudness-worth',
-        2.0,
-      ),
-      dict({
-      }),
-    ),
-    _Call(
-      'metadata.get().__float__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
-    _Call(
       'get_info_string',
       tuple(
         'RENDER_FORMAT2',
@@ -991,22 +975,6 @@
     '',
     _CallList([
       _Call(
-        'metadata.get',
-        tuple(
-          'vocal-loudness-worth',
-          2.0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'metadata.get().__float__',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
         'get_info_string',
         tuple(
           'RENDER_FORMAT2',
@@ -1564,22 +1532,6 @@
     ''',
     '',
     _CallList([
-      _Call(
-        'metadata.get',
-        tuple(
-          'vocal-loudness-worth',
-          2.0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'metadata.get().__float__',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
       _Call(
         'get_info_string',
         tuple(
@@ -2221,22 +2173,6 @@
         ),
       ]),
       'project': _CallList([
-        _Call(
-          'metadata.get',
-          tuple(
-            'vocal-loudness-worth',
-            2.0,
-          ),
-          dict({
-          }),
-        ),
-        _Call(
-          'metadata.get().__float__',
-          tuple(
-          ),
-          dict({
-          }),
-        ),
         _Call(
           'get_info_string',
           tuple(
@@ -3037,22 +2973,6 @@
     '',
     _CallList([
       _Call(
-        'metadata.get',
-        tuple(
-          'vocal-loudness-worth',
-          2.0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'metadata.get().__float__',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
         'get_info_string',
         tuple(
           'RENDER_FORMAT2',
@@ -3796,22 +3716,6 @@
       ),
       _Call(
         'save',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'metadata.get',
-        tuple(
-          'vocal-loudness-worth',
-          2.0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'metadata.get().__float__',
         tuple(
         ),
         dict({
@@ -4902,22 +4806,6 @@
     '',
     _CallList([
       _Call(
-        'metadata.get',
-        tuple(
-          'vocal-loudness-worth',
-          2.0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'metadata.get().__float__',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
-      _Call(
         'get_info_string',
         tuple(
           'RENDER_FORMAT2',
@@ -5111,22 +4999,6 @@
     ''',
     '',
     _CallList([
-      _Call(
-        'metadata.get',
-        tuple(
-          'vocal-loudness-worth',
-          2.0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'metadata.get().__float__',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
       _Call(
         'get_info_string',
         tuple(
@@ -5336,22 +5208,6 @@
 # ---
 # name: test_main_mixed_errors.2
   _CallList([
-    _Call(
-      'metadata.get',
-      tuple(
-        'vocal-loudness-worth',
-        2.0,
-      ),
-      dict({
-      }),
-    ),
-    _Call(
-      'metadata.get().__float__',
-      tuple(
-      ),
-      dict({
-      }),
-    ),
     _Call(
       'get_info_string',
       tuple(
@@ -5878,22 +5734,6 @@
       ]),
       'project': _CallList([
         _Call(
-          'metadata.get',
-          tuple(
-            'vocal-loudness-worth',
-            2.0,
-          ),
-          dict({
-          }),
-        ),
-        _Call(
-          'metadata.get().__float__',
-          tuple(
-          ),
-          dict({
-          }),
-        ),
-        _Call(
           'get_info_string',
           tuple(
             'RENDER_FORMAT2',
@@ -6185,22 +6025,6 @@
       ]),
       'project': _CallList([
         _Call(
-          'metadata.get',
-          tuple(
-            'vocal-loudness-worth',
-            2.0,
-          ),
-          dict({
-          }),
-        ),
-        _Call(
-          'metadata.get().__float__',
-          tuple(
-          ),
-          dict({
-          }),
-        ),
-        _Call(
           'get_info_string',
           tuple(
             'RENDER_FORMAT2',
@@ -6465,22 +6289,6 @@
   
     ''',
     _CallList([
-      _Call(
-        'metadata.get',
-        tuple(
-          'vocal-loudness-worth',
-          2.0,
-        ),
-        dict({
-        }),
-      ),
-      _Call(
-        'metadata.get().__float__',
-        tuple(
-        ),
-        dict({
-        }),
-      ),
     ]),
     list([
     ]),

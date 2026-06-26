@@ -175,18 +175,11 @@ def render_mocks(
 @pytest.fixture
 def master_track() -> mock.Mock:
     """Mock the master track of a project, with the typical FX I use."""
-    threshold = mock.Mock()
-    threshold.name = "Threshold"
-    threshold.normalized = -42.0
-    threshold.functions = {"SetParamNormalized": mock.Mock()}
-    threshold.index = 0
-    threshold.parent_list = mock.Mock()
-
     rv = Track("Master Track")
     rv.fxs = [
         Fx("ReaEQ"),
         Fx("ReaXComp"),
-        Fx("Master Limiter", params=[threshold]),
+        Fx("Master Limiter"),
     ]
 
     return rv
