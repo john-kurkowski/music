@@ -13,6 +13,7 @@ import rich.console
 import wrapture
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
+from wrapture.export import canonical
 
 from music.commands.upload import process as upload_process
 from music.commands.upload.command import main as upload
@@ -62,6 +63,7 @@ def test_main_no_network_calls(some_paths: list[Path]) -> None:
 @pytest.mark.asyncio
 async def test_process_records_missing_track_before_upload(
     some_paths: list[Path],
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test missing tracks are found before the upload workflow starts."""
     items = [
@@ -84,6 +86,7 @@ async def test_process_records_missing_track_before_upload(
             tape.assert_order(lookup, upload_one)
 
     assert all(isinstance(result, ValueError) for result in results)
+    assert canonical(tape) == snapshot
 
 
 @pytest.mark.asyncio

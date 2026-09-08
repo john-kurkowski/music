@@ -17,7 +17,9 @@ separate evaluation.
 The focused examples are:
 
 - `tests/commands/test_upload.py` observes the real upload workflow while
-  stubbing only its `ClientSession` boundary.
+  stubbing only its `ClientSession` boundary. Its canonical tape snapshot is
+  the reference for a small interaction transcript alongside direct ordering
+  and absence assertions.
 - `tests/commands/render/test_render.py` uses phased behavior to inject the
   third render failure in the existing mixed-error scenario.
 
@@ -29,6 +31,21 @@ existing mocking tools at those boundaries.
 Strict `wrapture.mock(Spec)` doubles check their declared surface and method
 signatures. An unconfigured method returns `None`; attempting to use that
 result cannot produce a fabricated `MagicMock` call chain.
+
+## Tape snapshots
+
+When selected interactions are a durable workflow contract, snapshot
+`wrapture.export.canonical(tape)`. It is Wrapture's public renderer for
+snapshot tests and omits volatile recording details such as timings, sequence
+numbers, captured values, and thread identity. Bind only the small,
+project-owned workflow boundary that the test intends to describe; retain
+direct assertions for required absences and outcomes.
+
+Do not snapshot `Tape` directly or inspect its private event storage. The
+canonical exporter made the upload transcript clearer than a flat mock-call
+chain because it shows selected calls as a tree without incidental mock
+children. It does not justify replacing existing request-shape snapshots or
+rewriting the dynamic REAPER fixture.
 
 ## Alpha dependency maintenance
 

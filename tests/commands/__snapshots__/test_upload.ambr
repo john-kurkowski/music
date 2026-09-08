@@ -805,3 +805,10 @@
     }),
   )
 # ---
+# name: test_process_records_missing_track_before_upload
+  '''
+  call music.utils.http:ClientSession.get (injected)
+  call music.commands.upload.process:Process._upload_one_file_to_track !! ValueError
+  call music.commands.upload.process:Process._upload_one_file_to_track !! ValueError
+  '''
+# ---
