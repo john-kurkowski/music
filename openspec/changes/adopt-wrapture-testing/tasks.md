@@ -9,6 +9,7 @@
 - [x] 2.2 Add a function-scoped wrapture timeline test for the real upload `Process` and project-owned `ClientSession` methods; stub only the initial track lookup and verify the lookup completes before upload work begins while no outbound mutation method is called for a missing track.
 - [x] 2.3 Add a function-scoped error-path timeline test that injects failure at the upload-policy request; verify the real upload workflow returns the expected failure result and never streams the file or requests transcoding after that failure.
 - [x] 2.4 Keep the existing `requests_mocks` fixture and snapshot tests unchanged except where a focused test needs a shared literal; verify the new tests pass independently with `uv run pytest tests/commands/test_upload.py` and pass twice in the same pytest invocation without patch-lifecycle leakage.
+- [ ] 2.5 Add one concise snapshot of `wrapture.export.canonical(tape)` to an upload-pilot workflow; verify it records only the selected project-owned bindings, retains direct absence assertions, and passes both the focused upload test and its duplicate invocation without unstable snapshot data.
 
 ## 3. Compare the render fixture on a failure workflow
 
@@ -22,3 +23,4 @@
 - [x] 4.1 Create `tests/README.md` with concise contributor guidance describing when to choose wrapture (real control-flow/order or absence assertions across project-owned Python methods, including the upload and render comparisons) and when to retain `mock` or `monkeypatch`; verify it excludes direct bindings on reapy/curl-cffi, process, filesystem, environment, and open-ended doubles.
 - [x] 4.2 Document the alpha upgrade, rollback, and render-comparison decision procedure in `tests/README.md`; verify it requires an explicit exact-pin update, focused pilot runs, a full suite run, and removal of the test-only dependency/pilot as the rollback. Add only a short link from the top-level README if needed for discoverability.
 - [x] 4.3 Run `uv run check --fix`, `uv run pytest tests/commands/test_upload.py`, `uv run pytest tests/commands/render/test_render.py`, and `uv run pytest`; verify static checks pass, both focused pilots pass, and the full suite passes with no test isolation failures.
+- [ ] 4.4 Document the tape-snapshot comparison outcome in `tests/README.md`; verify it requires Wrapture's documented canonical exporter, a small explicitly bound workflow boundary, and retained direct absence assertions rather than private tape internals or a full mock-fixture migration.

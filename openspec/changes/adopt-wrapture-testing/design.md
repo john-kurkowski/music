@@ -6,7 +6,8 @@ pytest's `monkeypatch`. The dominant mocks isolate SoundCloud HTTP,
 REAPER/reapy, subprocesses, and host configuration. In particular,
 `tests/conftest.py` blocks real curl-cffi requests by patching this project's
 `ClientSession.request`, while upload tests use `Mock` response trees and
-snapshot flat mock-call lists.
+snapshot flat mock-call lists. The suite already treats selected interaction
+transcripts as durable test evidence, not merely as implementation detail.
 
 The render suite has a separate `render_mocks` fixture that replaces the
 project class, REAPER configuration calls, upload processing, and project/track
@@ -32,6 +33,9 @@ describe this as complementary to, rather than a replacement for,
   Python versions before allowing any wider use.
 - Make the pilot test's protocol and error-path assertions depend on calls that
   occurred, not on chained `MagicMock` values.
+- Compare one concise Wrapture tape snapshot with the existing mock-call
+  snapshot style, using Wrapture's documented canonical exporter rather than
+  private event data or an unstable object representation.
 - Make binding lifetime and alpha upgrades explicit, deterministic, and easy to
   remove.
 - Compare a wrapture-based render test with the current fixture on a meaningful
@@ -90,6 +94,30 @@ Alternative considered: rewrite the reusable `requests_mocks` fixture and all
 upload snapshots. Rejected because it would turn an evaluation into a broad
 fixture migration before the first pilot establishes the library's lifecycle
 and async behavior.
+
+### Compare a canonical tape snapshot with mock-call snapshots
+
+Extend one upload pilot with a snapshot of `wrapture.export.canonical(tape)`.
+This public exporter is specifically designed for snapshot tests: it renders a
+small call tree while omitting unstable sequence numbers, timings, captured
+values, and thread identity. The snapshot will cover only the explicitly bound
+project-owned methods, so it records the workflow boundary selected by the
+test, rather than every incidental internal call.
+
+Keep direct assertions for the narrowly important absence and outcome
+contracts. The comparison evaluates whether the canonical tape is clearer and
+less coupled to `Mock` child-call plumbing than a flat `mock_calls` snapshot;
+it does not replace the existing HTTP request-shape snapshots or assert
+Wrapture's internal event implementation. Record the result in the test
+guidance, including the rule that a tape snapshot must use a documented public
+renderer and remain small enough to review.
+
+Alternative considered: continue with only `tape.assert_order`. Rejected for
+this evaluation because it exercises the tape but does not compare its primary
+review affordance—a readable interaction transcript—against the suite's
+established mock-call snapshots. Alternative considered: snapshot `Tape` or
+its private event list. Rejected because the former is only a count summary and
+the latter is not a supported alpha API or a stable snapshot contract.
 
 ### Compare, rather than exclude, a render-fixture alternative
 
@@ -168,9 +196,10 @@ choice and obscure the alpha library's lifecycle boundaries.
 
 - [Alpha behavior or packaging changes] → exact-pin the test extra, lock it,
   document upgrade checks, and keep it absent from production dependencies.
-- [A tape makes refactoring tests brittle] → assert only protocol-level order
-  and necessary absences; retain snapshots for detailed request payloads and
-  CLI output.
+- [A tape snapshot makes refactoring tests brittle] → use the documented
+  canonical exporter, bind only the selected workflow boundary, and retain
+  direct assertions for narrow absences plus existing snapshots for detailed
+  request payloads and CLI output.
 - [A binding leaks into following tests] → own each binding in one
   function-scoped context manager; do not add shared applied bindings or the
   pytest plugin during the pilot.
@@ -193,8 +222,9 @@ choice and obscure the alpha library's lifecycle boundaries.
 ## Migration Plan
 
 1. Add the exact test extra and regenerate the lockfile.
-2. Add minimal response doubles and the upload pilot; leave existing upload
-   fixtures and snapshots unchanged.
+2. Add minimal response doubles and the upload pilot; add one canonical tape
+   snapshot as a comparison while leaving existing upload fixtures and request
+   snapshots unchanged.
 3. Add the render comparison beside its current baseline, run both, and record
    the gate outcome before changing the shared render fixture.
 4. Run static checks, focused upload and render tests, and the full suite on
