@@ -110,8 +110,8 @@ truthful, not whether it can make REAPER available in CI.
 The comparison passes only if it:
 
 - preserves the existing scenario's observable CLI failure behavior;
-- makes an unconfigured collaborator method or an invalid call shape fail
-  loudly rather than fabricate a value;
+- makes use of an unconfigured collaborator result, or an invalid call shape,
+  fail loudly rather than fabricate a value or call chain;
 - provides a useful assertion for render ordering or the absence of later work
   after the third-render failure;
 - removes all bindings after the test, including when the assertion fails; and
