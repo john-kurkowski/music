@@ -1,22 +1,39 @@
 """Upload tests."""
 
 import datetime
+import io
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from unittest import mock
 
 import pytest
+import rich.console
+import wrapture
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
 from music.commands.upload import process as upload_process
 from music.commands.upload.command import main as upload
-from music.utils.http import _redact_http_header_value
+from music.utils.http import ClientSession, _redact_http_header_value
+from music.utils.songversion import SongVersion
 
 from ..conftest import CURL_CFFI_GUARD_MESSAGE, RequestsMocks
 
 ST_MODE_IS_FILE = 33188
+
+
+@dataclass(frozen=True)
+class Response:
+    """Minimal HTTP response shape needed by the wrapture pilot tests."""
+
+    payload: dict[str, Any]
+    status_code: int = 200
+
+    def json(self) -> dict[str, Any]:
+        """Return the fixed JSON response payload."""
+        return self.payload
 
 
 @pytest.fixture
@@ -40,6 +57,76 @@ def test_main_no_network_calls(some_paths: list[Path]) -> None:
             upload,
             [str(path.parent.resolve()) for path in some_paths],
         )
+
+
+@pytest.mark.asyncio
+async def test_process_records_missing_track_before_upload(
+    some_paths: list[Path],
+) -> None:
+    """Test missing tracks are found before the upload workflow starts."""
+    items = [
+        upload_process.UploadItem(path, path.parent, SongVersion.MAIN)
+        for path in some_paths
+    ]
+    process = upload_process.Process(rich.console.Console(file=io.StringIO()))
+    lookup = wrapture.binding(ClientSession, "get")
+    upload_one = wrapture.binding(upload_process.Process, "_upload_one_file_to_track")
+    post = wrapture.binding(ClientSession, "post")
+    lookup.on_call.returns(Response({"collection": []}))
+
+    async with ClientSession() as client:
+        with wrapture.timeline(lookup, upload_one, post) as tape:
+            results = await process.process(client, "token", {}, items)
+
+            lookup.events.assert_once()
+            assert upload_one.events.count == len(items)
+            post.events.assert_never()
+            tape.assert_order(lookup, upload_one)
+
+    assert all(isinstance(result, ValueError) for result in results)
+
+
+@pytest.mark.asyncio
+async def test_process_stops_after_upload_policy_failure(
+    some_paths: list[Path],
+) -> None:
+    """Test a failed upload policy request never streams or confirms a file."""
+    item = upload_process.UploadItem(
+        some_paths[0], some_paths[0].parent, SongVersion.MAIN
+    )
+    process = upload_process.Process(rich.console.Console(file=io.StringIO()))
+    lookup = wrapture.binding(ClientSession, "get")
+    post = wrapture.binding(ClientSession, "post")
+    put_file = wrapture.binding(ClientSession, "put_file")
+    put = wrapture.binding(ClientSession, "put")
+    lookup.on_call.returns(
+        Response(
+            {
+                "collection": [
+                    {
+                        "id": 1,
+                        "last_modified": "2000-01-01T00:00:00+00:00",
+                        "title": item.track_title,
+                    }
+                ]
+            }
+        )
+    )
+    post.on_call.raises(OSError("upload policy unavailable"))
+
+    async with ClientSession() as client:
+        with wrapture.timeline(lookup, post, put_file, put) as tape:
+            results = await process.process(client, "token", {}, [item])
+
+            lookup.events.assert_once()
+            post.events.assert_once()
+            put_file.events.assert_never()
+            put.events.assert_never()
+            tape.assert_order(lookup, post)
+
+    assert len(results) == 1
+    assert isinstance(results[0], OSError)
+    assert str(results[0]) == "upload policy unavailable"
 
 
 def test_main_debug_http_enables_trace_config(some_paths: list[Path]) -> None:

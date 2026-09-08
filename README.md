@@ -100,6 +100,8 @@ uv run check --fix  # apply autofixes, where supported
 uv run pytest       # test suite
 ```
 
+See [tests/README.md](tests/README.md) for test-double and fixture guidance.
+
 ### Debug
 
 When using `breakpoint()`, to make the Python interactive debugger easier to
