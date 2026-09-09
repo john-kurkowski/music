@@ -26,7 +26,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
@@ -44,7 +44,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
           }),
@@ -58,7 +58,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
           }),
@@ -74,7 +74,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'json': dict({
@@ -92,7 +92,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
           }),
@@ -106,7 +106,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'json': dict({
@@ -132,7 +132,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'json': dict({
@@ -150,7 +150,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
           }),
@@ -164,7 +164,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'json': dict({
@@ -244,7 +244,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
@@ -297,7 +297,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
@@ -315,7 +315,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
           }),
@@ -329,7 +329,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
           }),
@@ -345,7 +345,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'json': dict({
@@ -363,7 +363,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
           }),
@@ -377,7 +377,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'json': dict({
@@ -395,7 +395,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
           }),
@@ -411,7 +411,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'json': dict({
@@ -436,7 +436,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'json': dict({
@@ -513,7 +513,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
@@ -554,7 +554,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
@@ -593,7 +593,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
@@ -632,7 +632,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
@@ -677,7 +677,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
@@ -726,7 +726,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'params': dict({
@@ -744,7 +744,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
           }),
@@ -760,7 +760,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
             'json': dict({
@@ -778,7 +778,7 @@
             'headers': dict({
               'Accept': 'application/json',
               'Authorization': 'OAuth stub-fake-token',
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
               'X-Test-Additional-Header': '1',
             }),
           }),

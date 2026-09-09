@@ -89,7 +89,7 @@ class Process:
             "Authorization": f"OAuth {oauth_token}",
             "User-Agent": (
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,"
-                " like Gecko) Chrome/105.0.0.0 Safari/537.36"
+                " like Gecko) Chrome/152.0.0.0 Safari/537.36"
             ),
             **additional_headers,
         }
