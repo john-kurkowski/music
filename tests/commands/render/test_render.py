@@ -4,15 +4,18 @@ import asyncio
 import datetime
 import math
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from unittest import mock
 
 import pytest
+import wrapture
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
+from music.commands.render import process as render_process
 from music.commands.render.command import main as render
 from music.commands.render.result import RenderResult
+from music.utils.project import ExtendedProject
 from music.utils.songversion import SongVersion
 
 from .conftest import RenderMocks
@@ -351,6 +354,48 @@ def test_main_mixed_errors(
     assert subprocess_with_output.mock_calls == snapshot
 
     assert _snapshot_tmp_path(tmp_path) == snapshot
+
+
+def test_main_mixed_errors_with_wrapture(
+    render_mocks: RenderMocks,
+    subprocess_with_output: mock.Mock,
+) -> None:
+    """Test the third render failure with a phased render-version binding."""
+    render_version = wrapture.binding(render_process, "render_version")
+    render_version.on_call.then(after=2).raises(RuntimeError("some error"))
+
+    with wrapture.timeline(render_version) as tape:
+        result = CliRunner(catch_exceptions=True).invoke(
+            render,
+            [
+                "--include-main",
+                "--include-instrumental",
+                "--include-acappella",
+            ],
+        )
+
+        assert isinstance(result.exception, RuntimeError)
+        assert str(result.exception) == "some error"
+        assert not result.stderr
+        assert render_version.events.count == 3
+        render_version.events.raising(RuntimeError).assert_once()
+        tape.assert_order(render_version, render_version, render_version, exact=True)
+
+    assert subprocess_with_output.mock_calls
+    assert render_mocks.project.render.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_extended_project_double_is_strict_about_results_and_arguments() -> None:
+    """Test strict doubles cannot fabricate a project render result chain."""
+    project = wrapture.mock(ExtendedProject)
+
+    result = await project.render()
+    assert result is None
+    with pytest.raises(AttributeError):
+        _ = cast(Any, result).path
+    with pytest.raises(TypeError):
+        await project.render(unexpected=True)
 
 
 def test_main_render_error_is_not_masked_by_progress_monitor_error(
