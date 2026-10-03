@@ -18,7 +18,6 @@ dependencies = [
     "aiofiles",
     "click",
     "curl-cffi",
-    "openai",
     "psutil",
     "python-reapy @ git+https://github.com/RomeoDespres/reapy.git@refs/pull/138/head",
     "rich",
@@ -48,11 +47,6 @@ include = ["music*", "scripts*"]
 
 [tool.mypy]
 strict = true
-
-[tool.ruff]
-extend-exclude = [
-    "__codegen__",
-]
 
 [tool.ruff.lint]
 select = [

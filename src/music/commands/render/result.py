@@ -1,8 +1,8 @@
 """Helpers for managing and querying render ouput."""
 
 import datetime
+import json
 import math
-import re
 import subprocess
 from collections.abc import Iterable
 from contextlib import AbstractContextManager
@@ -10,7 +10,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Self
 
-from music.commands.__codegen__ import stats
+from music.commands.render import stats
 from music.utils import rm_rf
 from music.utils.project import ExtendedProject
 from music.utils.songversion import SongVersion
@@ -90,19 +90,28 @@ class RenderResult(ExistingRenderResult):
 
         def delta_for_audio(fil: Path) -> float:
             proc = subprocess.run(
-                ["ffprobe", "-i", fil, "-show_entries", "format=duration"],
+                [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-i",
+                    fil,
+                    "-show_entries",
+                    "format=duration",
+                    "-of",
+                    "json",
+                ],
                 capture_output=True,
                 check=True,
                 text=True,
             )
-            proc_output = proc.stdout
-            match = re.search(r"duration=(\S+)", proc_output)
-            if match is None:
+            data = json.loads(proc.stdout)
+            duration = data.get("format", {}).get("duration")
+            if duration is None:
                 raise ValueError(
                     f"Could not find audio duration in ffprobe output: {fil}"
                 )
-            delta_str = match.group(1)
-            return 0.0 if delta_str == "N/A" else float(delta_str)
+            return 0.0 if duration == "N/A" else float(duration)
 
         fils = self.fil.glob("**/*.wav") if self.fil.is_dir() else [self.fil]
         deltas = [delta_for_audio(fil) for fil in fils]

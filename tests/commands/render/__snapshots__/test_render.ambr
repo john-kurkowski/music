@@ -6301,10 +6301,14 @@
       tuple(
         list([
           'ffprobe',
+          '-v',
+          'error',
           '-i',
           'TMP_PATH_HERE/foo.wav',
           '-show_entries',
           'format=duration',
+          '-of',
+          'json',
         ]),
       ),
       dict({

@@ -98,7 +98,7 @@ def render_mocks(
     """
     with (
         mock.patch(
-            "music.commands.__codegen__.stats.parse_summary_stats"
+            "music.commands.render.stats.parse_summary_stats"
         ) as mock_parse_summary_stats,
         mock.patch("music.utils.project.ExtendedProject") as mock_project_class,
         mock.patch(

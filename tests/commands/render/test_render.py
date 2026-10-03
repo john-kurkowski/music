@@ -22,11 +22,7 @@ def test_render_result_render_speedup(
     snapshot: SnapshotAssertion, subprocess: mock.Mock, tmp_path: Path
 ) -> None:
     """Test RenderResult.render_speedup."""
-    subprocess.return_value.stdout = """
-    [FORMAT]
-    duration=23.209501
-    [/FORMAT]
-    """
+    subprocess.return_value.stdout = '{"format": {"duration": "23.209501"}}'
     project = mock.Mock(path="some/path")
     version = SongVersion.MAIN
 
@@ -495,3 +491,36 @@ def test_main_mocked_calls(
 
 def _snapshot_tmp_path(tmp_path: Path) -> list[Path]:
     return sorted(p for p in tmp_path.rglob("*") if p.is_file())
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        ('{"format": {"duration": "N/A"}}', 0),
+        ('{"format": {"duration": "0.49"}}', 0),
+        ('{"format": {"duration": "0.51"}}', 1),
+    ],
+)
+def test_duration_json(subprocess: mock.Mock, data: str, expected: int) -> None:
+    """Read structured duration and round seconds for display."""
+    subprocess.return_value.stdout = data
+    result = RenderResult(
+        mock.Mock(path="."),
+        SongVersion.MAIN,
+        Path("tone.wav"),
+        datetime.timedelta(seconds=1),
+    )
+    assert result.duration_delta == datetime.timedelta(seconds=expected)
+
+
+def test_duration_missing(subprocess: mock.Mock) -> None:
+    """Report files with no available duration field."""
+    subprocess.return_value.stdout = '{"format": {}}'
+    result = RenderResult(
+        mock.Mock(path="."),
+        SongVersion.MAIN,
+        Path("tone.wav"),
+        datetime.timedelta(seconds=1),
+    )
+    with pytest.raises(ValueError, match="Could not find audio duration"):
+        _ = result.duration_delta
