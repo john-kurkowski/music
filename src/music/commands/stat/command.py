@@ -4,8 +4,7 @@ from pathlib import Path
 
 import click
 
-import music.commands.render.process
-import music.commands.render.result
+from music.commands.render.stats import summary_stats_for_file
 from music.utils import project
 from music.utils.songversion import SongVersion
 
@@ -39,9 +38,7 @@ def main(files_or_project_dirs: list[Path], verbose: int) -> None:
             print()
         if len(files) > 1:
             print(fil)
-        for k, v in music.commands.render.result.summary_stats_for_file(
-            fil, verbose=verbose
-        ).items():
+        for k, v in summary_stats_for_file(fil, verbose=verbose).items():
             print(f"{k:<16}: {v:<32}")
 
 

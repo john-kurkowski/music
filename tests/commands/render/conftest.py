@@ -98,8 +98,8 @@ def render_mocks(
     """
     with (
         mock.patch(
-            "music.commands.render.stats.parse_summary_stats"
-        ) as mock_parse_summary_stats,
+            "music.commands.render.result.summary_stats_for_file"
+        ) as mock_summary_stats,
         mock.patch("music.utils.project.ExtendedProject") as mock_project_class,
         mock.patch(
             "music.commands.render.process.RenderResult.duration_delta",
@@ -145,7 +145,7 @@ def render_mocks(
 
         project.set_info_string.side_effect = collect_render_patterns
         project.render.side_effect = render_fake_file
-        mock_parse_summary_stats.side_effect = itertools.cycle(
+        mock_summary_stats.side_effect = itertools.cycle(
             [
                 {"duration": 1.0, "size": 42.0},
                 {"duration": 250.1, "size": 1024},

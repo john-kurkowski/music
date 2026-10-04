@@ -303,7 +303,6 @@ def test_main_all_versions(
     assert not result.stderr
 
     assert render_mocks.project.mock_calls == snapshot
-    assert subprocess_with_output.mock_calls
     assert subprocess_with_output.mock_calls == snapshot
 
     assert _snapshot_tmp_path(tmp_path) == snapshot
@@ -343,7 +342,6 @@ def test_main_mixed_errors(
     assert not result.stderr
 
     assert render_mocks.project.mock_calls == snapshot
-    assert subprocess_with_output.mock_calls
     assert subprocess_with_output.mock_calls == snapshot
 
     assert _snapshot_tmp_path(tmp_path) == snapshot
@@ -408,7 +406,6 @@ def test_main_dry_run_cleans_rendered_files_after_later_error(
     assert isinstance(result.exception, RuntimeError)
     assert list(tmp_path.glob("**/*.tmp.wav")) == []
     assert list(tmp_path.glob("**/*.tmp.mp3")) == []
-    assert subprocess_with_output.mock_calls
 
 
 def test_main_filenames_all_versions(

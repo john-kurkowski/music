@@ -1,16 +1,14 @@
 """Helpers for managing and querying render ouput."""
 
 import datetime
-import json
 import math
-import subprocess
 from collections.abc import Iterable
 from contextlib import AbstractContextManager
 from functools import cached_property
 from pathlib import Path
 from typing import Self
 
-from music.commands.render import stats
+from music.commands.render.stats import duration_for_file, summary_stats_for_file
 from music.utils import rm_rf
 from music.utils.project import ExtendedProject
 from music.utils.songversion import SongVersion
@@ -87,34 +85,8 @@ class RenderResult(ExistingRenderResult):
         If the file a directory, sums the length of all audio files in the
         directory, recursively.
         """
-
-        def delta_for_audio(fil: Path) -> float:
-            proc = subprocess.run(
-                [
-                    "ffprobe",
-                    "-v",
-                    "error",
-                    "-i",
-                    fil,
-                    "-show_entries",
-                    "format=duration",
-                    "-of",
-                    "json",
-                ],
-                capture_output=True,
-                check=True,
-                text=True,
-            )
-            data = json.loads(proc.stdout)
-            duration = data.get("format", {}).get("duration")
-            if duration is None:
-                raise ValueError(
-                    f"Could not find audio duration in ffprobe output: {fil}"
-                )
-            return 0.0 if duration == "N/A" else float(duration)
-
         fils = self.fil.glob("**/*.wav") if self.fil.is_dir() else [self.fil]
-        deltas = [delta_for_audio(fil) for fil in fils]
+        deltas = [duration_for_file(fil) for fil in fils]
         return datetime.timedelta(seconds=round(sum(deltas)))
 
     @property
@@ -144,26 +116,3 @@ class ManagedRenderResults(AbstractContextManager["ManagedRenderResults"]):
     def extend(self, renders: Iterable[RenderResult]) -> None:
         """Track more render results for later cleanup."""
         self.renders.extend(renders)
-
-
-def summary_stats_for_file(fil: Path, *, verbose: int = 0) -> dict[str, float | str]:
-    """Print statistics for the given audio file, like LUFS-I and LRA."""
-    cmd = _cmd_for_stats(fil)
-    proc = subprocess.run(cmd, check=True, stderr=subprocess.PIPE, text=True)
-    proc_output = proc.stderr
-    return stats.parse_summary_stats(proc_output)
-
-
-def _cmd_for_stats(fil: Path) -> list[str | Path]:
-    return [
-        "ffmpeg",
-        "-i",
-        fil,
-        "-filter:a",
-        ",".join(("volumedetect", "ebur128=framelog=verbose")),
-        "-hide_banner",
-        "-nostats",
-        "-f",
-        "null",
-        "/dev/null",
-    ]
