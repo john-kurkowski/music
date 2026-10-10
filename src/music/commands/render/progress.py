@@ -6,7 +6,7 @@ import math
 import re
 import subprocess
 import time
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import override
@@ -259,7 +259,7 @@ async def render_progress_monitor(
     output: Path,
     total_seconds: float,
     update: Callable[[float], None],
-) -> AsyncIterator[None]:
+) -> AsyncGenerator[None]:
     """Run best-effort progress UI without changing the render outcome.
 
     The monitor task observes render output for display only. If it is already

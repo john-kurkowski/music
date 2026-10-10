@@ -2,7 +2,7 @@
 
 import contextlib
 import warnings
-from collections.abc import Callable, Collection, Iterator
+from collections.abc import Callable, Collection, Generator
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
@@ -47,7 +47,7 @@ def adjust_render_pattern(
 
 
 @contextlib.contextmanager
-def adjust_render_bounds(project: ExtendedProject) -> Iterator[RenderBounds]:
+def adjust_render_bounds(project: ExtendedProject) -> Generator[RenderBounds]:
     """Set `project` render bounds, then restore the original values.
 
     This sets the render start and end times to contain all unmuted media
@@ -98,7 +98,7 @@ def adjust_render_bounds(project: ExtendedProject) -> Iterator[RenderBounds]:
 
 
 @contextlib.contextmanager
-def avoid_fx_tails(project: ExtendedProject) -> Iterator[None]:
+def avoid_fx_tails(project: ExtendedProject) -> Generator[None]:
     """Change global settings to avoid FX tails at the beginning of the render, then restore the global settings' original values."""
     off = 0
     start_time = 0.0
@@ -134,7 +134,7 @@ def avoid_fx_tails(project: ExtendedProject) -> Iterator[None]:
 @contextlib.contextmanager
 def get_set_restore[T](
     getter: Callable[[], T], setter: Callable[[T], None], during_value: T
-) -> Iterator[None]:
+) -> Generator[None]:
     """Get the previous value from `getter`, set `during_value` with the `setter`, then restore the original value."""
     prev_value = getter()
     try:
@@ -145,7 +145,7 @@ def get_set_restore[T](
 
 
 @contextlib.contextmanager
-def mute_tracks(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
+def mute_tracks(tracks: Collection[reapy.core.Track]) -> Generator[None]:
     """Mute all tracks in the given collection, then unmute them."""
     for track in tracks:
         track.mute()
@@ -159,7 +159,7 @@ def mute_tracks(tracks: Collection[reapy.core.Track]) -> Iterator[None]:
 @contextlib.contextmanager
 def select_tracks_only(
     project: ExtendedProject, tracks: Collection[reapy.core.Track]
-) -> Iterator[None]:
+) -> Generator[None]:
     """Select only the tracks in the given collection, unselecting all other tracks, then restore track selection."""
     tracks_to_select = {track.id: track for track in tracks}
 
@@ -189,7 +189,7 @@ def select_tracks_only(
 @contextlib.contextmanager
 def toggle_fx_for_tracks(
     tracks: Collection[reapy.core.Track], is_enabled: bool
-) -> Iterator[None]:
+) -> Generator[None]:
     """Toggle all effects in the given collection of tracks, then toggle them back."""
     fxs = [
         fx
