@@ -35,6 +35,7 @@ testing = [
     "syrupy",
     "ty",
     "types-aiofiles",
+    "wrapture==1.0.0a21",
 ]
 
 [project.scripts]
