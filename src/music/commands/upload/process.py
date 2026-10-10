@@ -74,8 +74,8 @@ class Process:
         additional_headers: dict[str, Any],
         upload_items: list[UploadItem],
         *,
-        create_missing: bool = False,
         dry_run: bool = False,
+        force: bool = False,
     ) -> list[Track | BaseException]:
         """Upload the given audio files to SoundCloud.
 
@@ -124,8 +124,8 @@ class Process:
                     headers,
                     tracks_by_title,
                     item,
-                    create_missing=create_missing,
                     dry_run=dry_run,
+                    force=force,
                 )
             )
             for item in upload_items
@@ -162,8 +162,8 @@ class Process:
         tracks_by_title: dict[str, Track],
         item: UploadItem,
         *,
-        create_missing: bool = False,
         dry_run: bool = False,
+        force: bool = False,
     ) -> Track:
         """Upload the given audio file to an existing or newly created SoundCloud track.
 
@@ -185,10 +185,10 @@ class Process:
 
         track = tracks_by_title.get(item.track_title)
         if not track:
-            if not create_missing:
+            if not force:
                 self.progress_upload.fail_task(task, "not found in SoundCloud")
                 raise ValueError(f"not found in SoundCloud: {fil}")
-        elif not _is_track_older_than_file(track, fil):
+        elif not force and not _is_track_older_than_file(track, fil):
             self.progress_upload.skip_task(task, "already uploaded")
             return track
 

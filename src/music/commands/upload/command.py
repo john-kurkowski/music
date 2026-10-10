@@ -48,11 +48,11 @@ from .process import UploadItem
     is_flag=True,
 )
 @click.option(
-    "--create-missing",
+    "--force",
     default=False,
     help=(
         "Whether to create private SoundCloud tracks when no existing track"
-        " matches a render title."
+        " matches a render title, or upload even when the upstream is newer."
     ),
     is_flag=True,
 )
@@ -113,7 +113,7 @@ async def main(
     additional_headers: str,
     debug_http: bool,
     dry_run: bool,
-    create_missing: bool,
+    force: bool,
     include_main: SongVersion | None,
     include_instrumental: SongVersion | None,
     include_instrumental_dj: SongVersion | None,
@@ -122,8 +122,8 @@ async def main(
 ) -> None:
     """Upload PROJECT_DIRS renders.
 
-    Uploads to SoundCloud. Renders with matching name must exist in SoundCloud
-    already, and will be overwritten unless missing track creation is requested.
+    Uploads newer renders to matching SoundCloud tracks. Use --force to upload
+    regardless of timestamps or create missing private tracks.
 
     Defaults to uploading all rendered versions of the currently open project.
     """
@@ -175,8 +175,8 @@ async def main(
                 oauth_token,
                 parsed_additional_headers,
                 upload_items,
-                create_missing=create_missing,
                 dry_run=dry_run,
+                force=force,
             )
 
     has_error = False

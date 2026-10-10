@@ -7,12 +7,14 @@ from typing import Any
 from unittest import mock
 
 import pytest
+import rich.console
 from click.testing import CliRunner
 from syrupy.assertion import SnapshotAssertion
 
 from music.commands.upload import process as upload_process
 from music.commands.upload.command import main as upload
 from music.utils.http import _redact_http_header_value
+from music.utils.songversion import SongVersion
 
 from ..conftest import CURL_CFFI_GUARD_MESSAGE, RequestsMocks
 
@@ -180,7 +182,7 @@ def test_main_create_missing(
     result = CliRunner(catch_exceptions=False).invoke(
         upload,
         [
-            "--create-missing",
+            "--force",
             *[str(path.parent.resolve()) for path in some_paths],
         ],
     )
@@ -206,7 +208,7 @@ def test_main_create_missing_dry_run(
         upload,
         [
             "--dry-run",
-            "--create-missing",
+            "--force",
             *[str(path.parent.resolve()) for path in some_paths],
         ],
     )
@@ -288,6 +290,48 @@ def test_main_tracks_newer(
         result.stderr,
         requests_mocks.mock_calls,
     ) == snapshot
+
+
+@pytest.mark.asyncio
+async def test_force_uploads_when_upstream_track_is_newer(
+    some_paths: list[Path],
+) -> None:
+    """Test force uploads a render even when SoundCloud has a newer track."""
+    process = upload_process.Process(rich.console.Console())
+    item = upload_process.UploadItem(
+        some_paths[0], some_paths[0].parent, SongVersion.MAIN
+    )
+    track = {
+        "title": item.track_title,
+        "last_modified": "2999-10-01T00:00:00Z",
+        "permalink_url": "https://soundcloud.com/some-project",
+    }
+    prepared_upload = {
+        "headers": {},
+        "uid": "stub-uid",
+        "url": "https://some-url",
+    }
+
+    with (
+        mock.patch.object(
+            process,
+            "_upload_file",
+            new=mock.AsyncMock(return_value=prepared_upload),
+        ) as upload_file,
+        mock.patch.object(
+            process, "_finish_track", new=mock.AsyncMock(return_value=track)
+        ),
+    ):
+        result = await process._upload_one_file_to_track(
+            mock.Mock(),
+            {},
+            {item.track_title: track},
+            item,
+            force=True,
+        )
+
+    assert result == track
+    upload_file.assert_awaited_once()
 
 
 def test_main_tracks_newer_dry_run(
